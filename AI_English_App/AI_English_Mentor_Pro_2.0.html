@@ -641,6 +641,11 @@ url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMExce
 })();</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="AI English">
+    <link rel="apple-touch-icon" href="https://img.icons8.com/emoji/192/000000/speaking-head.png">
     <title>AI English Mentor Pro - Học &amp; Ôn Luyện Giao Tiếp Đời Thực</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -2521,6 +2526,13 @@ url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMExce
             // Nạp trước danh sách giọng đọc của trình duyệt để sẵn sàng cho chức năng TTS
             if ('speechSynthesis' in window) {
                 window.speechSynthesis.getVoices();
+            }
+
+            // Đăng ký Service Worker cho PWA
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+                    .catch(err => console.log('Service Worker registration failed:', err));
             }
         };
     </script>
