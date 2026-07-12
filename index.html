@@ -1,1 +1,499 @@
-<meta http-equiv="refresh" content="0; URL=hw1/index.html" />
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My App Space - Do Van Thien</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        :root {
+            --bg-color: #080b11;
+            --card-bg: rgba(17, 24, 39, 0.6);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --text-primary: #f8fafc;
+            --text-secondary: #94a3b8;
+            --font-family: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            
+            /* Theme colors for apps */
+            --color-english: #6366f1; /* Indigo */
+            --color-english-glow: rgba(99, 102, 241, 0.15);
+            --color-calendar: #10b981; /* Emerald */
+            --color-calendar-glow: rgba(16, 185, 129, 0.15);
+            --color-hw1: #f43f5e; /* Rose */
+            --color-hw1-glow: rgba(244, 63, 94, 0.15);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            font-family: var(--font-family);
+            min-height: 100vh;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* Ambient Glow Background Blobs */
+        .ambient-blobs {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.4;
+            animation: float 20s infinite alternate;
+        }
+
+        .blob-1 {
+            top: -10%;
+            left: -10%;
+            width: 50vw;
+            height: 50vw;
+            background: radial-gradient(circle, var(--color-english) 0%, transparent 70%);
+            animation-duration: 25s;
+        }
+
+        .blob-2 {
+            bottom: -10%;
+            right: -10%;
+            width: 60vw;
+            height: 60vw;
+            background: radial-gradient(circle, var(--color-calendar) 0%, transparent 70%);
+            animation-duration: 30s;
+            animation-delay: -5s;
+        }
+
+        .blob-3 {
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40vw;
+            height: 40vw;
+            background: radial-gradient(circle, var(--color-hw1) 0%, transparent 70%);
+            animation-duration: 22s;
+            animation-delay: -10s;
+        }
+
+        @keyframes float {
+            0% {
+                transform: translate(0, 0) scale(1) rotate(0deg);
+            }
+            50% {
+                transform: translate(5%, 8%) scale(1.1) rotate(180deg);
+            }
+            100% {
+                transform: translate(-5%, -5%) scale(0.9) rotate(360deg);
+            }
+        }
+
+        /* Container & Header */
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 4rem 2rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 5rem;
+            animation: fadeInDown 1s ease-out;
+        }
+
+        .profile-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 6px 16px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 1.5rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .profile-badge i {
+            color: var(--color-english);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            line-height: 1.15;
+            background: linear-gradient(135deg, #ffffff 30%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.2rem;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 300;
+            line-height: 1.6;
+        }
+
+        /* Apps Grid Layout */
+        .apps-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 2.5rem;
+            width: 100%;
+            animation: fadeInUp 1.2s ease-out;
+        }
+
+        /* App Card Styling */
+        .app-card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(255,255,255,0.06), transparent 40%);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+
+        .app-card:hover::before {
+            opacity: 1;
+        }
+
+        /* App Card Hover & Active effects */
+        .app-card.app-english:hover {
+            border-color: rgba(99, 102, 241, 0.4);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -15px var(--color-english-glow), 0 0 0 1px rgba(99, 102, 241, 0.2);
+        }
+
+        .app-card.app-calendar:hover {
+            border-color: rgba(16, 185, 129, 0.4);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -15px var(--color-calendar-glow), 0 0 0 1px rgba(16, 185, 129, 0.2);
+        }
+
+        .app-card.app-hw1:hover {
+            border-color: rgba(244, 63, 94, 0.4);
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px -15px var(--color-hw1-glow), 0 0 0 1px rgba(244, 63, 94, 0.2);
+        }
+
+        /* Inner Content */
+        .app-icon-wrapper {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2rem;
+            position: relative;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.4s ease;
+        }
+
+        .app-card:hover .app-icon-wrapper {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .app-english .app-icon-wrapper i { color: var(--color-english); }
+        .app-calendar .app-icon-wrapper i { color: var(--color-calendar); }
+        .app-hw1 .app-icon-wrapper i { color: var(--color-hw1); }
+
+        .app-english .app-icon-wrapper { background: rgba(99, 102, 241, 0.1); border-color: rgba(99, 102, 241, 0.2); }
+        .app-calendar .app-icon-wrapper { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.2); }
+        .app-hw1 .app-icon-wrapper { background: rgba(244, 63, 94, 0.1); border-color: rgba(244, 63, 94, 0.2); }
+
+        .app-badge {
+            align-self: flex-start;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 4px 12px;
+            border-radius: 30px;
+            margin-bottom: 1rem;
+        }
+
+        .app-english .app-badge { background: rgba(99, 102, 241, 0.15); color: #a5b4fc; }
+        .app-calendar .app-badge { background: rgba(16, 185, 129, 0.15); color: #6ee7b7; }
+        .app-hw1 .app-badge { background: rgba(244, 63, 94, 0.15); color: #fda4af; }
+
+        h2 {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            letter-spacing: -0.5px;
+            transition: color 0.3s ease;
+        }
+
+        .app-card:hover h2 {
+            color: #ffffff;
+        }
+
+        .app-desc {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 2rem;
+            font-weight: 300;
+            flex-grow: 1;
+        }
+
+        /* Tech Stack Tags */
+        .tech-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 1.2rem;
+        }
+
+        .tech-tag {
+            font-size: 0.75rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        /* Launch Button Inside Card */
+        .launch-btn {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 12px 20px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: all 0.3s ease;
+        }
+
+        .app-card:hover .launch-btn {
+            background: #ffffff;
+            color: #000000;
+            border-color: #ffffff;
+            box-shadow: 0 4px 12px rgba(255, 255, 255, 0.25);
+        }
+
+        .launch-btn i {
+            transform: translateX(0);
+            transition: transform 0.3s ease;
+        }
+
+        .app-card:hover .launch-btn i {
+            transform: translateX(4px);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 0;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.3);
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            margin-top: auto;
+            backdrop-filter: blur(8px);
+        }
+
+        /* Animations */
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .container {
+                padding: 3rem 1.5rem;
+            }
+            h1 {
+                font-size: 2.5rem;
+            }
+            .apps-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            .app-card {
+                padding: 1.8rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Glow Background -->
+    <div class="ambient-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <header>
+            <div class="profile-badge">
+                <i data-lucide="sparkles"></i>
+                <span>Do Van Thien's App Space</span>
+            </div>
+            <h1>Ứng Dụng Độc Bản</h1>
+            <p class="subtitle">Khám phá các dự án web cá nhân được tối ưu hóa giao diện và trải nghiệm người dùng tích hợp công nghệ hiện đại.</p>
+        </header>
+
+        <div class="apps-grid">
+            <!-- App 1: AI English Mentor Pro -->
+            <a href="AI_English_App/AI_English_Mentor_Pro_2.0.html" class="app-card app-english" id="card-english">
+                <div class="app-icon-wrapper">
+                    <i data-lucide="languages" size="28"></i>
+                </div>
+                <span class="app-badge">AI & Education</span>
+                <h2>AI English Mentor</h2>
+                <p class="app-desc">Ứng dụng đồng hành học tiếng Anh thông minh. Tích hợp AI hỗ trợ chữa bài, giải thích ngữ pháp và ôn tập từ vựng cá nhân hóa.</p>
+                <div class="tech-tags">
+                    <span class="tech-tag">Gemini AI</span>
+                    <span class="tech-tag">HTML5/CSS3</span>
+                    <span class="tech-tag">Vanilla JS</span>
+                    <span class="tech-tag">Text-To-Speech</span>
+                </div>
+                <div class="launch-btn">
+                    <span>Mở Ứng Dụng</span>
+                    <i data-lucide="arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- App 2: Poop Tracker -->
+            <a href="DI_IA_CALENDER/index.html" class="app-card app-calendar" id="card-calendar">
+                <div class="app-icon-wrapper">
+                    <i data-lucide="calendar" size="28"></i>
+                </div>
+                <span class="app-badge">Health & PWA</span>
+                <h2>Poop Tracker</h2>
+                <p class="app-desc">Nhật ký theo dõi sức khỏe tiêu hóa cá nhân. Tích hợp phân tích dữ liệu trực quan bằng biểu đồ, quản lý nhiều hồ sơ và hỗ trợ PWA offline.</p>
+                <div class="tech-tags">
+                    <span class="tech-tag">PWA Support</span>
+                    <span class="tech-tag">Firebase Config</span>
+                    <span class="tech-tag">Chart.js</span>
+                    <span class="tech-tag">Outfit Font</span>
+                </div>
+                <div class="launch-btn">
+                    <span>Mở Ứng Dụng</span>
+                    <i data-lucide="arrow-right"></i>
+                </div>
+            </a>
+
+            <!-- App 3: Demon Slayer Gallery -->
+            <a href="hw1/index.html" class="app-card app-hw1" id="card-hw1">
+                <div class="app-icon-wrapper">
+                    <i data-lucide="images" size="28"></i>
+                </div>
+                <span class="app-badge">Creative Gallery</span>
+                <h2>Demon Slayer Hub</h2>
+                <p class="app-desc">Bộ sưu tập hình ảnh chất lượng cao về bộ truyện Anime nổi tiếng Kimetsu no Yaiba. Thiết kế layout trực quan và chuyển động mượt mà.</p>
+                <div class="tech-tags">
+                    <span class="tech-tag">HTML5/CSS3</span>
+                    <span class="tech-tag">Flexbox Layout</span>
+                    <span class="tech-tag">Responsive</span>
+                    <span class="tech-tag">Anime Style</span>
+                </div>
+                <div class="launch-btn">
+                    <span>Mở Ứng Dụng</span>
+                    <i data-lucide="arrow-right"></i>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <footer>
+        <p>&copy; 2026 Do Van Thien. Built for premium web experience.</p>
+    </footer>
+
+    <script>
+        // Initialize Lucide Icons
+        lucide.createIcons();
+
+        // 3D Card Hover Effect using mouse movement tracker
+        const cards = document.querySelectorAll('.app-card');
+        cards.forEach(card => {
+            card.addEventListener('mousemove', e => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                card.style.setProperty('--x', `${x}px`);
+                card.style.setProperty('--y', `${y}px`);
+            });
+        });
+    </script>
+</body>
+</html>

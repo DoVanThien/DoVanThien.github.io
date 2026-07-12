@@ -1,0 +1,2528 @@
+<!DOCTYPE html>
+<html lang="vi"><head><script data-bard-injected="true">(function(firebaseConfig, initialAuthToken, appId) {
+        window.__firebase_config = firebaseConfig;
+        window.__initial_auth_token = initialAuthToken;
+        window.__app_id = appId;
+            })("\n{\n  \"apiKey\": \"AIzaSyCqyCcs2R2e7AegGjvFAwG98wlamtbHvZY\",\n  \"authDomain\": \"bard-frontend.firebaseapp.com\",\n  \"projectId\": \"bard-frontend\",\n  \"storageBucket\": \"bard-frontend.firebasestorage.app\",\n  \"messagingSenderId\": \"175205271074\",\n  \"appId\": \"1:175205271074:web:2b7bd4d34d33bf38e6ec7b\"\n}\n","eyJhbGciOiJSUzI1NiIsImtpZCI6IjBmNDhjMDQxMTUxMmM3NTM4NjJkMmFkZWVmYjg0NTczZTAyZmFlMjMiLCJ0eXAiOiJKV1QifQ.eyJzdWIiOiJmaXJlYmFzZS1hZG1pbnNkay1mYnN2Y0BiYXJkLWZyb250ZW5kLmlhbS5nc2VydmljZWFjY291bnQuY29tIiwiYXVkIjoiaHR0cHM6Ly9pZGVudGl0eXRvb2xraXQuZ29vZ2xlYXBpcy5jb20vZ29vZ2xlLmlkZW50aXR5LmlkZW50aXR5dG9vbGtpdC52MS5JZGVudGl0eVRvb2xraXQiLCJ1aWQiOiIxMTM3MTIyNjcxODIxNTA2NTM0MSIsImlzcyI6ImZpcmViYXNlLWFkbWluc2RrLWZic3ZjQGJhcmQtZnJvbnRlbmQuaWFtLmdzZXJ2aWNlYWNjb3VudC5jb20iLCJjbGFpbXMiOnsiYXBwSWQiOiJjXzAxNmRhOTkwNGMzNzIxMGFfZW5nbGlzaF9sZWFybmluZ19hcHAuaHRtbC0zOTcifSwiZXhwIjoxNzgzMDA5NTYxLCJpYXQiOjE3ODMwMDU5NjEsImFsZyI6IlJTMjU2In0.KGc26PiwSLuSqDUAGtDj6_NfxHCNvilYISAoAcbztU0XwQVNtSPxdmH6jArarUm3Z14Y92eAGNrT0QY6Z25HUYFsyMxl0tE_jSTJK5SBPvWX6CgWgBa2sWG_BYxl4F4yzKTvTQ1DqcL3NMDa_qF6VwUxx2_57GKyMtFXyruX3PBcamh1BQPiqfBTUy0CEUsMZ7pSMqcxkCffahvZxZTKTgGIy9cdEzkHQhiVHOb0BV35OqhimwpN8jqF3GsZakH0Jj7rFJl6LvJh-FsZb7Td-6LcpVF2WTCWCCOymsBRO3abxrhjQ7UNLJ6jDfqf81c9JH00A6ReSMy0ghKvpHwSBg","c_016da9904c37210a_english_learning_app.html-397")</script><script data-bard-injected="true">(function() {
+  document.addEventListener('mouseup', function(e) {
+    const selection = window.getSelection();
+    const selectedText = selection ? selection.toString().trim() : '';
+    if (selectedText.length > 0) {
+      const range = selection.getRangeAt(0);
+      // Clone the original user selection range before DOM manipulation. In browser DOM mechanics,
+      // removing temporary nodes from within an active selection invalidates and collapses the selection pointers.
+      const originalRange = range.cloneRange();
+      const rect = range.getBoundingClientRect();
+
+      const startTag = document.createTextNode('<selection-tag>');
+      const endTag = document.createTextNode('</selection-tag>');
+
+      const rangeStart = range.cloneRange();
+      rangeStart.collapse(true);
+
+      const rangeEnd = range.cloneRange();
+      rangeEnd.collapse(false);
+
+      // Insert end tag first to avoid shifting start boundary if they are in the same node.
+      rangeEnd.insertNode(endTag);
+      rangeStart.insertNode(startTag);
+
+      const fullTextWithTags = document.body.innerText;
+
+      if (startTag.parentNode) {
+        startTag.parentNode.removeChild(startTag);
+      }
+      if (endTag.parentNode) {
+        endTag.parentNode.removeChild(endTag);
+      }
+
+      // Explicitly restore the user's original selection range. Without this restoration, the selection collapses
+      // instantly, causing subsequent mouse movements or clicks to evaluate window.getSelection() as empty,
+      // which triggers a premature textSelectionCleared post-message that wipes out artifactTextWithTags in the store.
+      selection.removeAllRanges();
+      selection.addRange(originalRange);
+
+      window.parent.postMessage({
+        type: 'textSelection',
+        text: selectedText,
+        fullTextWithTags: fullTextWithTags,
+        rect: {
+          top: rect.top,
+          left: rect.left,
+          bottom: rect.bottom,
+          right: rect.right,
+          width: rect.width,
+          height: rect.height,
+        },
+      }, '*');
+    } else {
+      window.parent.postMessage({
+        type: 'textSelectionCleared',
+      }, '*');
+    }
+  }, true);
+})();</script><script data-bard-injected="true">(function(){'use strict';window.addEventListener("message",a=>{a.data&&a.data.type==="SUPPLEMENTAL_DATA_UPDATE"&&window.dispatchEvent(new CustomEvent("supplementaldataupdate",{detail:a.data.data}))});}).call(this);
+</script><script data-bard-injected="true">(function(){'use strict';var h=typeof Object.defineProperties=="function"?Object.defineProperty:function(a,b,d){if(a==Array.prototype||a==Object.prototype)return a;a[b]=d.value;return a};function l(a){a=["object"==typeof globalThis&&globalThis,a,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var b=0;b<a.length;++b){var d=a[b];if(d&&d.Math==Math)return d}throw Error("Cannot find global object");}var n=l(this);
+function p(a,b){if(b)a:{var d=n;a=a.split(".");for(var c=0;c<a.length-1;c++){var e=a[c];if(!(e in d))break a;d=d[e]}a=a[a.length-1];c=d[a];b=b(c);b!=c&&b!=null&&h(d,a,{configurable:!0,writable:!0,value:b})}}function r(a){function b(c){return a.next(c)}function d(c){return a.throw(c)}return new Promise(function(c,e){function f(g){g.done?c(g.value):Promise.resolve(g.value).then(b,d).then(f,e)}f(a.next())})}function t(a){return r(a())}
+p("Object.values",function(a){return a?a:function(b){var d=[],c;for(c in b)Object.prototype.hasOwnProperty.call(b,c)&&d.push(b[c]);return d}});p("Array.prototype.includes",function(a){return a?a:function(b,d){var c=this;c instanceof String&&(c=String(c));var e=c.length;d=d||0;for(d<0&&(d=Math.max(d+e,0));d<e;d++){var f=c[d];if(f===b||Object.is(f,b))return!0}return!1}});/*
+
+ MIT License
+
+ Copyright (c) 2017-2023 W.Y.
+
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+
+*/
+function u(a,b){var d=a.style;b.backgroundColor&&(d.backgroundColor=b.backgroundColor);b.width&&(d.width=`${b.width}px`);b.height&&(d.height=`${b.height}px`);var c=b.style;c!=null&&Object.keys(c).forEach(e=>{d[e]=c[e]})};var v=(()=>{var a=0;return()=>{a+=1;return`u${`0000${(Math.random()*1679616<<0).toString(36)}`.slice(-4)}${a}`}})();function w(a){var b=[];for(let d=0,c=a.length;d<c;d++)b.push(a[d]);return b}let x=null;function y(a={}){return x?x:a.l?x=a.l:x=w(window.getComputedStyle(document.documentElement))}function z(a,b){return(a=(a.ownerDocument.defaultView||window).getComputedStyle(a).getPropertyValue(b))?parseFloat(a.replace("px","")):0}
+function A(a,b={}){var d;if(!(d=b.width)){d=z(a,"border-left-width");var c=z(a,"border-right-width");d=a.clientWidth+d+c}(b=b.height)||(b=z(a,"border-top-width"),c=z(a,"border-bottom-width"),b=a.clientHeight+b+c);return{width:d,height:b}}function B(a){return new Promise((b,d)=>{var c=new Image;c.onload=()=>{c.decode().then(()=>{requestAnimationFrame(()=>b(c))})};c.onerror=d;c.crossOrigin="anonymous";c.decoding="async";c.src=a})}
+function C(a){return t(function*(){return Promise.resolve().then(()=>(new XMLSerializer).serializeToString(a)).then(encodeURIComponent).then(b=>`data:image/svg+xml;charset=utf-8,${b}`)})}
+function D(a,b,d){return t(function*(){var c=document.createElementNS("http://www.w3.org/2000/svg","svg"),e=document.createElementNS("http://www.w3.org/2000/svg","foreignObject");c.setAttribute("width",`${b}`);c.setAttribute("height",`${d}`);c.setAttribute("viewBox",`0 0 ${b} ${d}`);e.setAttribute("width","100%");e.setAttribute("height","100%");e.setAttribute("x","0");e.setAttribute("y","0");e.setAttribute("externalResourcesRequired","true");c.appendChild(e);e.appendChild(a);return C(c)})}
+var E=(a,b)=>{if(a instanceof b)return!0;a=Object.getPrototypeOf(a);return a===null?!1:a.constructor.name===b.name||E(a,b)};function F(a,b){return y(b).map(d=>{var c=a.getPropertyValue(d),e=a.getPropertyPriority(d);return`${d}: ${c}${e?" !important":""};`}).join(" ")}
+function G(a,b,d,c){a=window.getComputedStyle(a,d);var e=a.getPropertyValue("content");if(e!==""&&e!=="none"){var f=v();try{b.className=`${b.className} ${f}`}catch(k){return}e=document.createElement("style");var g=e.appendChild;d=`.${f}:${d}`;a.cssText?(c=a.getPropertyValue("content"),c=`${a.cssText} content: '${c.replace(/'|"/g,"")}';`):c=F(a,c);g.call(e,document.createTextNode(`${d}{${c}}`));b.appendChild(e)}};function H(a){return a.search(/^(data:)/)!==-1}function I(a,b,d){return t(function*(){var c=yield fetch(a,b);if(c.status===404)throw Error(`Resource "${c.url}" not found`);var e=yield c.blob();return new Promise((f,g)=>{var k=new FileReader;k.onerror=g;k.onloadend=()=>{try{f(d({o:c,result:k.result}))}catch(m){g(m)}};k.readAsDataURL(e)})})}const J={};function K(a,b,d){var c=a.replace(/\?.*/,"");d&&(c=a);/ttf|otf|eot|woff2?/i.test(c)&&(c=c.replace(/.*\//,""));return b?`[${b}]${c}`:c}
+function L(a,b,d){return t(function*(){var c=K(a,b,d.C);if(J[c]!=null)return J[c];d.u&&(a+=(/\?/.test(a)?"&":"?")+(new Date).getTime());try{let f=yield I(a,d.i,({o:g,result:k})=>{b||(b=g.headers.get("Content-Type")||"");return k.split(/,/)[1]});var e=`data:${b};base64,${f}`}catch(f){e=d.B||""}return J[c]=e})};const M={P:"application/font-woff",R:"application/font-woff",N:"application/font-truetype",v:"application/vnd.ms-fontobject",H:"image/png",F:"image/jpeg",D:"image/jpeg",A:"image/gif",M:"image/tiff",L:"image/svg+xml",O:"image/webp"};function N(a){return(a=/\.([^./]*?)$/g.exec(a))?a[1]:""};function O(a){return t(function*(){var b=a.toDataURL();return b==="data:,"?a.cloneNode(!1):B(b)})}function aa(a,b){return t(function*(){if(a.currentSrc){var d=document.createElement("canvas");let c=d.getContext("2d");d.width=a.clientWidth;d.height=a.clientHeight;c==null||c.drawImage(a,0,0,d.width,d.height);d=d.toDataURL();return B(d)}d=a.poster;d=yield L(d,M[N(d).toLowerCase()]||"",b);return B(d)})}
+function ba(a,b){return t(function*(){try{let d;if(a==null?0:(d=a.contentDocument)==null?0:d.body)return yield P(a.contentDocument.body,b,!0)}catch(d){}return a.cloneNode(!1)})}function ca(a,b){return t(function*(){return E(a,HTMLCanvasElement)?O(a):E(a,HTMLVideoElement)?aa(a,b):E(a,HTMLIFrameElement)?ba(a,b):a.cloneNode(a.tagName!=null&&a.tagName.toUpperCase()==="SVG")})}
+function da(a,b,d){return t(function*(){if(b.tagName!=null&&b.tagName.toUpperCase()==="SVG")return b;var c=[];if(a.tagName!=null&&a.tagName.toUpperCase()==="SLOT"&&a.assignedNodes)c=w(a.assignedNodes());else{let e;if(E(a,HTMLIFrameElement)&&((e=a.contentDocument)==null?0:e.body))c=w(a.contentDocument.body.childNodes);else{let f;c=w(((f=a.shadowRoot)!=null?f:a).childNodes)}}if(c.length===0||E(a,HTMLVideoElement))return b;yield c.reduce((e,f)=>e.then(()=>P(f,d)).then(g=>{g&&b.appendChild(g)}),Promise.resolve());
+return b})}function ea(a,b,d){var c=b.style;if(c){var e=window.getComputedStyle(a);e.cssText?(c.cssText=e.cssText,c.transformOrigin=e.transformOrigin):y(d).forEach(f=>{var g=e.getPropertyValue(f);f==="font-size"&&g.endsWith("px")&&(g=`${Math.floor(parseFloat(g.substring(0,g.length-2)))-.1}px`);E(a,HTMLIFrameElement)&&f==="display"&&g==="inline"&&(g="block");f==="d"&&b.getAttribute("d")&&(g=`path(${b.getAttribute("d")})`);c.setProperty(f,g,e.getPropertyPriority(f))})}}
+function fa(a,b){E(a,HTMLSelectElement)&&(b=Array.from(b.children).find(d=>a.value===d.getAttribute("value")))&&b.setAttribute("selected","")}
+function ha(a,b){return t(function*(){var d=a.querySelectorAll?a.querySelectorAll("use"):[];if(d.length===0)return a;var c={};for(var e=0;e<d.length;e++){var f=d[e].getAttribute("xlink:href");if(f){let g=document.querySelector(f);a.querySelector(f)||!g||c[f]||(c[f]=yield P(g,b,!0))}}d=Object.values(c);if(d.length){c=document.createElementNS("http://www.w3.org/1999/xhtml","svg");c.setAttribute("xmlns","http://www.w3.org/1999/xhtml");c.style.position="absolute";c.style.width="0";c.style.height="0";
+c.style.overflow="hidden";c.style.display="none";e=document.createElementNS("http://www.w3.org/1999/xhtml","defs");c.appendChild(e);for(f=0;f<d.length;f++)e.appendChild(d[f]);a.appendChild(c)}return a})}
+function P(a,b,d){return t(function*(){return d||!b.filter||b.filter(a)?Promise.resolve(a).then(c=>ca(c,b)).then(c=>da(a,c,b)).then(c=>{E(c,Element)&&(ea(a,c,b),G(a,c,":before",b),G(a,c,":after",b),E(a,HTMLTextAreaElement)&&(c.textContent=a.value),E(a,HTMLInputElement)&&c.setAttribute("value",a.value),fa(a,c));return c}).then(c=>ha(c,b)):null})};const Q=/url\((['"]?)([^'"]+?)\1\)/g,ia=/url\([^)]+\)\s*format\((["']?)([^"']+)\1\)/g,ja=/src:\s*(?:url\([^)]+\)\s*format\([^)]+\)[,;]\s*)+/g;function ka(a){var b=[];a.replace(Q,(d,c,e)=>{b.push(e);return d});return b.filter(d=>!H(d))}
+function la(a,b,d,c){return t(function*(){try{let e=d?(new URL(b,d||void 0)).toString():b,f;f=yield L(e,M[N(b).toLowerCase()]||"",c);return a.replace(new RegExp(`(url\\(['"]?)(${b.replace(/([.*+?^${}()|\[\]\/\\])/g,"\\$1")})(['"]?\\))`,"g"),`$1${f}$3`)}catch(e){}return a})}function ma(a,{I:b}){return b?a.replace(ja,d=>{for(;;){let [c,,e]=ia.exec(d)||[];if(!e)return"";if(e===b)return`src: ${c};`}}):a}
+function R(a,b,d){return t(function*(){if(a.search(Q)===-1)return a;var c=ma(a,d);return ka(c).reduce((e,f)=>e.then(g=>la(g,f,b,d)),Promise.resolve(c))})};function S(a,b,d){return t(function*(){var c,e=(c=b.style)==null?void 0:c.getPropertyValue(a);return e?(c=yield R(e,null,d),b.style.setProperty(a,c,b.style.getPropertyPriority(a)),!0):!1})}function na(a,b){return t(function*(){(yield S("background",a,b))||(yield S("background-image",a,b));(yield S("mask",a,b))||(yield S("-webkit-mask",a,b))||(yield S("mask-image",a,b))||(yield S("-webkit-mask-image",a,b))})}
+function oa(a,b){return t(function*(){var d=E(a,HTMLImageElement);if(d&&!H(a.src)||E(a,SVGImageElement)&&!H(a.href.baseVal)){var c=d?a.src:a.href.baseVal,e=yield L(c,M[N(c).toLowerCase()]||"",b);yield new Promise((f,g)=>{a.onload=f;a.onerror=b.m?(...k)=>{try{f(b.m(...k))}catch(m){g(m)}}:g;a.decode&&(a.decode=f);a.loading==="lazy"&&(a.loading="eager");d?(a.srcset="",a.src=e):a.href.baseVal=e})}})}
+function pa(a,b){return t(function*(){var d=w(a.childNodes).map(c=>T(c,b));yield Promise.all(d).then(()=>a)})}function T(a,b){return t(function*(){E(a,Element)&&(yield na(a,b),yield oa(a,b),yield pa(a,b))})};const U={};function V(a){return t(function*(){var b=U[a];if(b!=null)return b;b=yield(yield fetch(a)).text();b={url:a,cssText:b};return U[a]=b})}function W(a,b){return t(function*(){var d=a.cssText,c=/url\(["']?([^"')]+)["']?\)/g,e=(d.match(/url\([^)]+\)/g)||[]).map(f=>t(function*(){var g=f.replace(c,"$1");g.startsWith("https://")||(g=(new URL(g,a.url)).href);return I(g,b.i,({result:k})=>{d=d.replace(f,`url(${k})`);return[f,k]})}));return Promise.all(e).then(()=>d)})}
+function X(a){if(a==null)return[];var b=[];a=a.replace(/(\/\*[\s\S]*?\*\/)/gi,"");for(var d=RegExp("((@.*?keyframes [\\s\\S]*?){([\\s\\S]*?}\\s*?)})","gi");;){var c=d.exec(a);if(c===null)break;b.push(c[0])}a=a.replace(d,"");d=/@import[\s\S]*?url\([^)]*\)[\s\S]*?;/gi;for(c=RegExp("((\\s*?(?:\\/\\*[\\s\\S]*?\\*\\/)?\\s*?@media[\\s\\S]*?){([\\s\\S]*?)}\\s*?})|(([\\s\\S]*?){([\\s\\S]*?)})","gi");;){let e=d.exec(a);if(e===null)if(e=c.exec(a),e===null)break;else d.lastIndex=c.lastIndex;else c.lastIndex=
+d.lastIndex;b.push(e[0])}return b}
+function qa(a,b){return t(function*(){var d=[],c=[];a.forEach(e=>{if("cssRules"in e)try{w(e.cssRules||[]).forEach((f,g)=>{if(f.type===CSSRule.IMPORT_RULE){let k=g+1;f=V(f.href).then(m=>W(m,b)).then(m=>X(m).forEach(q=>{try{e.insertRule(q,q.startsWith("@import")?k+=1:e.cssRules.length)}catch(Da){}})).catch(()=>{});c.push(f)}})}catch(f){let g=a.find(k=>k.href==null)||document.styleSheets[0];e.href!=null&&c.push(V(e.href).then(k=>W(k,b)).then(k=>X(k).forEach(m=>{g.insertRule(m,g.cssRules.length)})).catch(()=>
+{}))}});return Promise.all(c).then(()=>{a.forEach(e=>{if("cssRules"in e)try{w(e.cssRules||[]).forEach(f=>{d.push(f)})}catch(f){}});return d})})}function ra(a){return a.filter(b=>b.type===CSSRule.FONT_FACE_RULE).filter(b=>b.style.getPropertyValue("src").search(Q)!==-1)}function sa(a,b){return t(function*(){if(a.ownerDocument==null)throw Error("Provided element is not within a Document");var d=w(a.ownerDocument.styleSheets);d=yield qa(d,b);return ra(d)})}
+function ta(a){function b(c){(c.style.fontFamily||getComputedStyle(c).fontFamily).split(",").forEach(e=>{d.add(e.trim().replace(/["']/g,""))});Array.from(c.children).forEach(e=>{e instanceof HTMLElement&&b(e)})}var d=new Set;b(a);return d}function ua(a,b){return t(function*(){var d=yield sa(a,b),c=ta(a);return(yield Promise.all(d.filter(e=>c.has(e.style.fontFamily.trim().replace(/["']/g,""))).map(e=>R(e.cssText,e.parentStyleSheet?e.parentStyleSheet.href:null,b)))).join("\n")})}
+function va(a,b){return t(function*(){var d=b.j!=null?b.j:b.K?null:yield ua(a,b);if(d){let c=document.createElement("style");c.appendChild(document.createTextNode(d));a.firstChild?a.insertBefore(c,a.firstChild):a.appendChild(c)}})};function wa(a,b={}){return t(function*(){var {width:d,height:c}=A(a,b),e=yield P(a,b,!0);yield va(e,b);yield T(e,b);u(e,b);return yield D(e,d,c)})}
+function xa(a,b={}){return t(function*(){var {width:d,height:c}=A(a,b),e=yield wa(a,b);e=yield B(e);var f=document.createElement("canvas"),g=f.getContext("2d"),k=b.G||window.devicePixelRatio||1,m=b.h||d,q=b.g||c;f.width=m*k;f.height=q*k;!b.J&&(f.width>16384||f.height>16384)&&(f.width>16384&&f.height>16384?f.width>f.height?(f.height*=16384/f.width,f.width=16384):(f.width*=16384/f.height,f.height=16384):f.width>16384?(f.height*=16384/f.width,f.width=16384):(f.width*=16384/f.height,f.height=16384));
+f.style.width=`${m}`;f.style.height=`${q}`;b.backgroundColor&&(g.fillStyle=b.backgroundColor,g.fillRect(0,0,f.width,f.height));g.drawImage(e,0,0,f.width,f.height);return f})}function ya(a,b={}){return t(function*(){return(yield xa(a,b)).toDataURL()})};const za=["gemini.google.com","corp.google.com","proxy.googlers.com"];function Y(){return document.body.querySelectorAll('[class*="animate"]').length>0}function Z(a){return t(function*(){try{return yield ya(a,{h:a.offsetWidth,g:a.offsetHeight})}catch(d){var b=a.offsetHeight;let c=document.createElement("canvas");c.width=a.offsetWidth;c.height=b;return c.toDataURL("image/png")}})}
+function Aa(){return t(function*(){var a=document.body.offsetWidth,b=document.body.offsetHeight,d=document.body.cloneNode(!0);d.querySelectorAll('[class*="animate"]').forEach(c=>{c.classList.remove(...Array.from(c.classList).filter(e=>e.startsWith("animate")))});d.style.width=`${a}px`;d.style.height=`${b}px`;return d})}
+function Ba(a){return t(function*(){var b=document.body;if(Y()){var d=yield Aa();b=d;document.body.appendChild(d)}d=yield Z(b);Y()&&document.body.removeChild(b);window.parent.postMessage({type:"SEND_SCREENSHOT",image:d,topOffset:document.documentElement.scrollTop},a.origin)})}function Ca(a){return t(function*(){var b={type:"SEND_SCREENSHOT_FOR_DATA_VISUALIZATION",image:yield Z(document.body),topOffset:0};window.parent.postMessage(b,a.origin)})}
+window.addEventListener("message",a=>t(function*(){if(za.some(d=>a.origin.includes(d))){var b=a.data;b&&(b.type==="MAKE_SCREENSHOT"&&(yield Ba(a)),b.type==="MAKE_SCREENSHOT_FOR_DATA_VISUALIZATION"&&(yield Ca(a)))}}));
+})();</script><script data-bard-injected="true">(function() {
+  // Ensure this script is executed only once
+  if (window.firebaseAuthBridgeScriptLoaded) {
+    return;
+  }
+  window.firebaseAuthBridgeScriptLoaded = true;
+
+  let nextTokenPromiseId = 0;
+
+  // Stores { resolve, reject } for ongoing token requests
+  const pendingTokenPromises = {};
+
+  // Listen for messages from the Host Application
+  window.addEventListener('message', function(event) {
+
+    const messageData = event.data;
+
+  if (messageData && messageData.type === 'RESOLVE_NEW_FIREBASE_TOKEN') {
+      const { success, token, error, promiseId } = messageData ?? {};
+      if (pendingTokenPromises[promiseId]) {
+        if (success) {
+          pendingTokenPromises[promiseId].resolve(token);
+        } else {
+          pendingTokenPromises[promiseId].reject(new Error(error || 'Token refresh failed from host.'));
+        }
+        delete pendingTokenPromises[promiseId];
+      }
+    }
+  });
+
+  // Expose a function for the Generated App to request a new Firebase token
+  window.requestNewFirebaseToken = function() {
+    const currentPromiseId = nextTokenPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingTokenPromises[currentPromiseId] = { resolve, reject };
+    });
+    if (window.parent && window.parent !== window) {
+      window.parent.postMessage({
+        type: 'REQUEST_NEW_FIREBASE_TOKEN',
+        promiseId: currentPromiseId
+      }, '*');
+    } else {
+      pendingTokenPromises[currentPromiseId].reject(new Error('No parent window to request token from.'));
+      delete pendingTokenPromises[currentPromiseId];
+    }
+    return promise;
+  };
+})();</script><script data-bard-injected="true">
+let realOriginalGetUserMedia = null;
+if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+  realOriginalGetUserMedia = navigator.mediaDevices.getUserMedia.bind(navigator.mediaDevices);
+}
+
+(function() {
+  if (navigator.mediaDevices && navigator.mediaDevices.__proto__) {
+    try {
+      Object.defineProperty(navigator.mediaDevices.__proto__, 'getUserMedia', {
+        get: function() {
+          return undefined; // Or throw an error
+        },
+        configurable: false
+      });
+    } catch (error) {
+      console.error("Error defining prototype getter:", error);
+    }
+  }
+})();
+
+(function() {
+  const pendingMediaResolvers = {};
+  let nextMediaPromiseId = 0;
+
+  function requestMediaPermissions(constraints) {
+    const mediaPromiseId = nextMediaPromiseId++;
+    const promise = new Promise((resolve, reject) => {
+      pendingMediaResolvers[mediaPromiseId] = (granted) => {
+        delete pendingMediaResolvers[mediaPromiseId];
+        resolve(granted);
+      };
+    });
+
+    window.parent.postMessage({
+      type: 'requestMediaPermission',
+      constraints: constraints,
+      promiseId: mediaPromiseId,
+    }, '*');
+
+    return promise;
+  }
+
+  let originalGetUserMedia = realOriginalGetUserMedia;
+
+  function interceptGetUserMedia() {
+    if (navigator.mediaDevices) {
+      Object.defineProperty(navigator.mediaDevices, 'getUserMedia', {
+        value: function(constraints) {
+          return requestMediaPermissions(constraints).then((granted) => {
+            if (granted) {
+              if (originalGetUserMedia) {
+                return originalGetUserMedia(constraints);
+              } else {
+                throw new Error("Original getUserMedia not available.");
+              }
+            } else {
+              throw new DOMException('Permission denied', 'NotAllowedError');
+            }
+          });
+        },
+        writable: false,
+        configurable: false
+      });
+    }
+  }
+
+  interceptGetUserMedia();
+
+  const observer = new MutationObserver(function(mutationsList, observer) {
+    for (const mutation of mutationsList) {
+      if (mutation.type === 'reconfigured' && mutation.name === 'getUserMedia' && mutation.object === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'attributes' && mutation.attributeName === 'getUserMedia' && mutation.target === navigator.mediaDevices) {
+        interceptGetUserMedia();
+      } else if (mutation.type === 'childList' && mutation.addedNodes) {
+        mutation.addedNodes.forEach(node => {
+          if (node === navigator.mediaDevices) {
+            interceptGetUserMedia();
+          }
+        });
+      }
+    }
+  });
+
+  function interceptSpeechRecognition() {
+    if (!window.SpeechRecognition && !window.webkitSpeechRecognition) {
+      return;
+    }
+
+    const OriginalSpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    const SpeechRecognitionWrapper = function(...args) {
+      const recognizer = new OriginalSpeechRecognition(...args);
+      const originalStart = recognizer.start.bind(recognizer);
+
+      recognizer.start = function() {
+        requestMediaPermissions({ audio: true }).then(granted => {
+          if (granted) {
+            originalStart();
+          } else {
+            const errorEvent = new SpeechRecognitionErrorEvent('error');
+            errorEvent.error = 'not-allowed'; // This is the standard error for permission denial.
+            recognizer.dispatchEvent(errorEvent);
+          }
+        });
+      };
+
+      return recognizer;
+    };
+
+    SpeechRecognitionWrapper.prototype = OriginalSpeechRecognition.prototype;
+    SpeechRecognitionWrapper.prototype.constructor = SpeechRecognitionWrapper;
+
+    if (window.SpeechRecognition) {
+      window.SpeechRecognition = SpeechRecognitionWrapper;
+    }
+    if (window.webkitSpeechRecognition) {
+      window.webkitSpeechRecognition = SpeechRecognitionWrapper;
+    }
+  }
+
+  interceptSpeechRecognition();
+
+  window.addEventListener('message', function(event) {
+    if (event.data) {
+      if (event.data.type === 'resolveMediaPermission') {
+        const { promiseId, granted } = event.data;
+        if (pendingMediaResolvers[promiseId]) {
+          pendingMediaResolvers[promiseId](granted);
+        }
+      }
+    }
+  });
+
+})();</script><script ws-interception-config="{&quot;parentOrigin&quot;:&quot;https://gemini.google.com&quot;,&quot;proxiedDomains&quot;:[]}" data-bard-injected="true">(function(){'use strict';var u=typeof Object.defineProperties=="function"?Object.defineProperty:function(b,d,e){if(b==Array.prototype||b==Object.prototype)return b;b[d]=e.value;return b};function v(b){b=["object"==typeof globalThis&&globalThis,b,"object"==typeof window&&window,"object"==typeof self&&self,"object"==typeof global&&global];for(var d=0;d<b.length;++d){var e=b[d];if(e&&e.Math==Math)return e}throw Error("Cannot find global object");}var w=v(this);
+function y(b,d){if(d)a:{var e=w;b=b.split(".");for(var h=0;h<b.length-1;h++){var k=b[h];if(!(k in e))break a;e=e[k]}b=b[b.length-1];h=e[b];d=d(h);d!=h&&d!=null&&u(e,b,{configurable:!0,writable:!0,value:d})}}function z(b){function d(h){return b.next(h)}function e(h){return b.throw(h)}return new Promise(function(h,k){function m(n){n.done?h(n.value):Promise.resolve(n.value).then(d,e).then(m,k)}m(b.next())})}y("globalThis",function(b){return b||w});/*
+
+ Copyright The Closure Library Authors.
+ SPDX-License-Identifier: Apache-2.0
+*/
+function A(b,d){function e(){}e.prototype=d.prototype;b.i=d.prototype;b.prototype=new e;b.prototype.constructor=b;b.g=function(h,k,m){for(var n=Array(arguments.length-2),p=2;p<arguments.length;p++)n[p-2]=arguments[p];return d.prototype[k].apply(h,n)}};function B(b,d,e="*"){function h(a){if(typeof a==="string")return F.encode(a).buffer;if(a instanceof ArrayBuffer)return a.slice(0);if(ArrayBuffer.isView(a))return a.buffer.slice(a.byteOffset,a.byteOffset+a.byteLength);throw Error("Invalid data type");}function k(a){a=h(a);var f={type:"send",data:new Uint8Array(a)},g;(g=r)==null||g.postMessage(f,[a])}function m(){if(!r)throw Error("Data port not captured yet.");r.onmessage=a=>{if(a.data.type==="message"){a=new MessageEvent("message",{data:G.decode(a.data.data)});
+let f;(f=c.onmessage)==null||f.call(c,a);c.dispatchEvent(a)}}}function n(){if(!t)throw Error("Control port not captured yet.");t.onmessage=a=>{switch(a.data.type){case "open":l=1;var f=new Event("open"),g;(g=c.onopen)==null||g.call(c,f);c.dispatchEvent(f);q.forEach(H=>{k(H)});q=[];break;case "close":g=a.data;l=3;g=new CloseEvent("close",{code:g.code,reason:g.reason,wasClean:g.wasClean});(f=c.onclose)==null||f.call(c,g);c.dispatchEvent(g);break;case "error":l=3;f=new Event("error");let x;(x=c.onerror)==
+null||x.call(c,f);c.dispatchEvent(f)}}}function p(a){return z(function*(){var f=new MessageChannel;t=f.port1;var g=new MessageChannel;r=g.port1;n();m();window.parent.postMessage({type:"websocket_open",portOrdering:["control","data"],url:b,protocols:a||[],connectionId:I},e,[f.port2,g.port2])}())}var c=Reflect.construct(EventTarget,[],new.target);c.CONNECTING=0;c.OPEN=1;c.CLOSING=2;c.CLOSED=3;c.url=b;c.binaryType="arraybuffer";c.protocol="";c.h="";var l=0,t=null,r=null,q=[],F=new TextEncoder,G=new TextDecoder;
+c.onopen=null;c.onmessage=null;c.onclose=null;c.onerror=null;Object.defineProperty(c,"readyState",{get:()=>l,enumerable:!0,configurable:!0});Object.defineProperty(c,"bufferedAmount",{get:()=>{var a=0;q.forEach(f=>{a+=typeof f==="string"?f.length:f.byteLength});return a},enumerable:!0,configurable:!0});var I=function(){var a;return((a=globalThis.crypto)==null?0:a.randomUUID)?globalThis.crypto.randomUUID():"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,f=>{var g=Math.random()*16|0;return(f===
+"x"?g:g&3|8).toString(16)})}();c.send=a=>{if(l===1)a instanceof Blob?a.arrayBuffer().then(f=>{k(f)}):k(a);else if(l===0)if(typeof a==="string")q.push(a);else if(a instanceof ArrayBuffer||ArrayBuffer.isView(a))q.push(h(a));else throw Error("Sending Blob is not supported before the connection is open.");else console.debug("WebSocket send called in CLOSING or CLOSED state; ignored.")};c.close=(a=1E3,f="")=>{if(l!==2&&l!==3){l=2;a={type:"close",code:a,reason:f,wasClean:a===1E3};var g;(g=t)==null||g.postMessage(a)}};
+Promise.resolve().then(()=>p(d));return c}A(B,EventTarget);var C=document.currentScript,D=C==null?void 0:C.getAttribute("ws-interception-config");if(!D)throw Error("WebSocket Interceptor: Missing ws-interception-config attribute in the script tag.");var E=JSON.parse(D);if(!E.parentOrigin||typeof E.parentOrigin!=="string")throw Error("WebSocket Interceptor: Invalid parentOrigin in ws-interception-config");
+(function(b){var d=Object.getOwnPropertyDescriptor(window,"WebSocket");if(!d||d.writable||d.configurable)d=Object.assign(function(e,h){try{let k=(new URL(e)).hostname;if(b.proxiedDomains.some(m=>k===m||k.endsWith(`.${m}`)))return new B(e,h,b.parentOrigin)}catch(k){throw window.parent.postMessage({type:"websocket_blocked",url:e,reason:"blocked_invalid_url"},b.parentOrigin),new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");}window.parent.postMessage({type:"websocket_blocked",
+url:e,reason:"blocked_domain_not_allowlisted"},b.parentOrigin);throw new DOMException(`WebSocket connection to '${e}' is not allowed in Canvas.`,"SecurityError");},{CONNECTING:0,OPEN:1,CLOSING:2,CLOSED:3}),Object.defineProperty(window,"WebSocket",{value:d,writable:!1,configurable:!1})})({proxiedDomains:E.proxiedDomains||[],parentOrigin:E.parentOrigin});}).call(this);
+</script><script data-bard-injected="true">((function(modelInformation) {
+  const originalFetch = window.fetch;
+  // TODO: b/421908508 - Move these out of the script and match all generative AI model calls.
+  let googleLlmBaseApiUrls = [
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':streamGenerateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.textModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageEditModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.imageTransformModelName + ':generateContent',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predict',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.videoModelName + ':predictLongRunning',
+    'https://generativelanguage.googleapis.com/v1beta/models/' + modelInformation.ttsModelName + ':generateContent',
+  ];
+  modelInformation.deprecatedTextModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+    );
+  });
+  modelInformation.deprecatedImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predict',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':predictLongRunning',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedGenerateImageModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+  modelInformation.deprecatedImageTransformModelNames.forEach((modelName) => {
+    googleLlmBaseApiUrls.push(
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':generateContent',
+      'https://generativelanguage.googleapis.com/v1beta/models/' + modelName + ':streamGenerateContent',
+    );
+  });
+
+  const pendingFetchResolvers = {};
+  let nextPromiseId = 0;
+
+  function handleStringInput(input, optionsArgument) {
+    const actualUrl = input;
+    const fetchCallArgs = [actualUrl, optionsArgument];
+    const effectiveOptions = optionsArgument || {};
+    const bodyForApiKeyCheck = effectiveOptions.body;
+    const bodyForPostMessage = effectiveOptions.body;
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  function handleRequestInput(input, optionsArgument) {
+    const actualUrl = input.url;
+    const fetchCallArgs = [input, optionsArgument];
+    const effectiveOptions = { method: input.method, headers: new Headers(input.headers) };
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (optionsArgument) {
+      if (optionsArgument.method) effectiveOptions.method = optionsArgument.method;
+      if (optionsArgument.headers) effectiveOptions.headers = new Headers(optionsArgument.headers);
+      if ('body' in optionsArgument) {
+        bodyForApiKeyCheck = optionsArgument.body;
+        bodyForPostMessage = optionsArgument.body;
+      } else {
+        bodyForApiKeyCheck = undefined;
+        bodyForPostMessage = input.body;
+      }
+    } else {
+      bodyForApiKeyCheck = undefined;
+      bodyForPostMessage = input.body;
+    }
+    return { actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage };
+  }
+
+  window.fetch = function(input, optionsArgument) {
+    let actualUrl;
+    let fetchCallArgs;
+    let effectiveOptions = {};
+    let bodyForApiKeyCheck;
+    let bodyForPostMessage;
+
+    if (typeof input === 'string') {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleStringInput(input, optionsArgument));
+    } else if (input instanceof Request) {
+      ({actualUrl, fetchCallArgs, effectiveOptions, bodyForApiKeyCheck, bodyForPostMessage} = handleRequestInput(input, optionsArgument));
+    } else {
+      return originalFetch.apply(window, [input, optionsArgument]);
+    }
+
+    effectiveOptions.method = effectiveOptions.method || 'GET';
+    if (!effectiveOptions.headers) {
+      effectiveOptions.headers = new Headers();
+    }
+
+
+    if (typeof actualUrl === 'string' && googleLlmBaseApiUrls.some((url) => actualUrl.startsWith(url))) {
+      let apiKeyIsNull = true;
+
+      const regex = new RegExp("models/([^:]+)");
+      const modelNameMatch = actualUrl.match(regex);
+      const modelName = modelNameMatch ? modelNameMatch[1] : 'unspecified';
+
+
+      try {
+        const urlObject = new URL(actualUrl);  // Use URL object for robust parsing
+        const apiKeyParam = urlObject.searchParams.get('key');
+        if (apiKeyParam) {
+          apiKeyIsNull = false;
+        }
+      } catch (e) {
+        // Continue checks even if URL parsing fails
+      }
+
+      if (apiKeyIsNull && effectiveOptions.headers) {
+        const h = new Headers(effectiveOptions.headers);
+        const apiKeyHeaderValue = h.get('X-API-Key') || h.get('x-api-key');
+        if (apiKeyHeaderValue) {
+          apiKeyIsNull = false;
+          return originalFetch.apply(window, fetchCallArgs);
+        }
+      }
+
+      if (apiKeyIsNull && effectiveOptions.method && ['POST', 'PUT', 'PATCH'].includes(effectiveOptions.method.toUpperCase()) && typeof bodyForApiKeyCheck === 'string') {
+        try {
+          const bodyData = JSON.parse(bodyForApiKeyCheck);
+          if (bodyData && bodyData.apiKey) {
+            apiKeyIsNull = false;
+            return originalFetch.apply(window, fetchCallArgs);
+          }
+        } catch (e) {
+          // Ignore JSON parsing errors
+        }
+      }
+
+      if(apiKeyIsNull) {
+        const promiseId = nextPromiseId++;
+        const promise = new Promise((resolve) => {
+          pendingFetchResolvers[promiseId] = (resolvedResponse) => {
+            delete pendingFetchResolvers[promiseId];
+            resolve(resolvedResponse);
+          };
+        });
+
+        let serializedBodyForPostMessage;
+        if (typeof bodyForPostMessage === 'string' || bodyForPostMessage == null) {
+            serializedBodyForPostMessage = bodyForPostMessage;
+        } else if (bodyForPostMessage instanceof ReadableStream) {
+            serializedBodyForPostMessage = null;
+        } else {
+            try {
+                serializedBodyForPostMessage = JSON.stringify(bodyForPostMessage);
+            } catch (e) {
+                serializedBodyForPostMessage = null;
+            }
+        }
+
+        const messageOptions = {
+            method: effectiveOptions.method,
+            headers: Object.fromEntries(new Headers(effectiveOptions.headers).entries()),
+            body: serializedBodyForPostMessage
+        };
+
+        window.parent.postMessage({
+          type: 'requestFetch',
+          url: actualUrl,
+          modelName: modelName,
+          options: messageOptions,
+          promiseId: promiseId,
+        }, '*');
+
+        return promise;
+      }
+      return originalFetch.apply(window, fetchCallArgs);
+    }
+    return originalFetch.apply(window, fetchCallArgs);
+  };
+
+  window.addEventListener('message', function(event) {
+    if (event.data && event.data.type === 'resolveFetch') {
+      const { promiseId, response } = event.data;
+      if (pendingFetchResolvers[promiseId]) {
+        try {
+          const reconstructedResponse = new Response(response.body, {
+            status: response.status,
+            statusText: response.statusText,
+            headers: new Headers(response.headers),
+          });
+          pendingFetchResolvers[promiseId](reconstructedResponse);
+        } catch (error) {
+          pendingFetchResolvers[promiseId](new Response(null, { status: 500, statusText: "Interceptor Response Reconstruction Error" }));
+        }
+      }
+    }
+  });
+
+}))({"textModelName":"gemini-3-flash-preview","imageModelName":"imagen-4.0-generate-001","imageEditModelName":"gemini-3.1-flash-image","imageTransformModelName":"gemini-3-pro-image","videoModelName":"veo-2.0-generate-001","ttsModelName":"gemini-2.5-flash-preview-tts","deprecatedTextModelNames":["gemini-2.0-flash","gemini-2.5-flash","gemini-2.5-flash-preview-04-17","gemini-2.5-flash-preview-05-20","gemini-2.5-flash-preview-09-2025"],"deprecatedImageModelNames":["imagen-3.0-generate-001","imagen-3.0-generate-002"],"deprecatedGenerateImageModelNames":["gemini-2.5-flash-image-preview","gemini-2.5-flash-image","gemini-3.1-flash-image-preview"],"deprecatedImageTransformModelNames":["gemini-3-pro-image-preview-11-2025"]})</script><script data-bard-injected="true">(function(){'use strict';function a(){window.parent.postMessage({type:"interaction"},"*")}window.addEventListener("click",a,{capture:!0,passive:!0});window.addEventListener("touchstart",a,{capture:!0,passive:!0});window.addEventListener("keydown",a,{capture:!0,passive:!0});}).call(this);
+</script><script data-bard-injected="true">(function() {
+  const originalConsoleLog = console.log;
+  const originalConsoleError = console.error;
+
+    /**
+   * Normalizes an error event or a promise rejection reason into a structured error object.
+   * @param {*} errorEventOrReason The error object or reason.
+   * @return {object} Structured error data { message, name, stack }.
+   */
+  function getErrorObject(errorEventOrReason) {
+    if (errorEventOrReason instanceof Error) {
+      return {
+        message: errorEventOrReason.message,
+        name: errorEventOrReason.name,
+        stack: errorEventOrReason.stack,
+      };
+    }
+    // Fallback for non-Error objects.
+    try {
+      return {
+        message: JSON.stringify(errorEventOrReason),
+        name: 'UnknownErrorType',
+        stack: null,
+      };
+    } catch (e) {
+      return {
+        message: String(errorEventOrReason),
+        name: 'UnknownErrorTypeNonStringifiable',
+        stack: null,
+      };
+    }
+  }
+
+  /**
+   * Converts an array of arguments (from log/error) into a single string.
+   * Handles Error objects specially to include their message and stack.
+   * @param {Array<*>} args - Arguments passed to console methods.
+   * @return {string} A string representation of the arguments.
+   */
+  function stringifyArgs(args) {
+    return args
+      .map((arg) => {
+        if (arg instanceof Error) {
+          const {message, stack} = arg;
+          return `Error: ${message}${stack ? ('\nStack: ' + stack) : ''}`;
+        }
+        if (typeof arg === 'object' && arg !== null) {
+          try {
+            return JSON.stringify(arg);
+          } catch (error) {
+            return '[Circular Object]';
+          }
+        } else {
+          return String(arg);
+        }
+      })
+      .join(' ');
+  }
+
+  console.log = function(...args) {
+    const logString = stringifyArgs(args);
+    window.parent.postMessage({ type: 'log', message: logString }, '*');
+    originalConsoleLog.apply(console, args);
+  };
+
+  console.error = function(...args) {
+    let errorData;
+    if (args.length > 0 && args[0] instanceof Error) {
+      const err = args[0];
+      // If the first arg is an Error, capture its details.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        ...getErrorObject(err),
+        rawArgsString: stringifyArgs(args.slice(1)),
+        timestamp: new Date().toISOString(),
+      };
+    } else {
+      // If not an Error object, treat all args as a general error message.
+      errorData = {
+        type: 'error',
+        source: 'CONSOLE_ERROR',
+        message: stringifyArgs(args),
+        name: 'ConsoleLoggedError',
+        stack: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    window.parent.postMessage(errorData, '*');
+    originalConsoleError.apply(console, args);
+  };
+
+  // Listen for global unhandled synchronous errors.
+  window.addEventListener('error', function(event) {
+    const errorDetails = event.error ? getErrorObject(event.error) : {
+      message: event.message,
+      name: 'GlobalError',
+      stack: null,
+      filename: event.filename,
+      lineno: event.lineno,
+      colno: event.colno,
+    };
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'global',
+      ...errorDetails,
+      message: errorDetails.message || event.message,
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+  // Listen for unhandled promise rejections (asynchronous errors).
+  window.addEventListener('unhandledrejection', function(event) {
+    const errorDetails = getErrorObject(event.reason);
+
+    window.parent.postMessage({
+      type: 'error',
+      source: 'unhandledrejection',
+      ...errorDetails,
+      message: errorDetails.message || 'Unhandled Promise Rejection',
+      timestamp: new Date().toISOString(),
+    }, '*');
+  });
+
+})();</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI English Mentor Pro - Học &amp; Ôn Luyện Giao Tiếp Đời Thực</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f1f5f9;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 1);
+        }
+        .gradient-text {
+            background: linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #4f46e5 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .loading-dots:after {
+            content: '.';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80%, 100% { content: ''; }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .toast-notification {
+            animation: slideInUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes slideInUp {
+            from { transform: translateY(100px) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+    </style>
+<style>*, ::before, ::after{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }::backdrop{--tw-border-spacing-x:0;--tw-border-spacing-y:0;--tw-translate-x:0;--tw-translate-y:0;--tw-rotate:0;--tw-skew-x:0;--tw-skew-y:0;--tw-scale-x:1;--tw-scale-y:1;--tw-pan-x: ;--tw-pan-y: ;--tw-pinch-zoom: ;--tw-scroll-snap-strictness:proximity;--tw-gradient-from-position: ;--tw-gradient-via-position: ;--tw-gradient-to-position: ;--tw-ordinal: ;--tw-slashed-zero: ;--tw-numeric-figure: ;--tw-numeric-spacing: ;--tw-numeric-fraction: ;--tw-ring-inset: ;--tw-ring-offset-width:0px;--tw-ring-offset-color:#fff;--tw-ring-color:rgb(59 130 246 / 0.5);--tw-ring-offset-shadow:0 0 #0000;--tw-ring-shadow:0 0 #0000;--tw-shadow:0 0 #0000;--tw-shadow-colored:0 0 #0000;--tw-blur: ;--tw-brightness: ;--tw-contrast: ;--tw-grayscale: ;--tw-hue-rotate: ;--tw-invert: ;--tw-saturate: ;--tw-sepia: ;--tw-drop-shadow: ;--tw-backdrop-blur: ;--tw-backdrop-brightness: ;--tw-backdrop-contrast: ;--tw-backdrop-grayscale: ;--tw-backdrop-hue-rotate: ;--tw-backdrop-invert: ;--tw-backdrop-opacity: ;--tw-backdrop-saturate: ;--tw-backdrop-sepia: ;--tw-contain-size: ;--tw-contain-layout: ;--tw-contain-paint: ;--tw-contain-style: }/* ! tailwindcss v3.4.17 | MIT License | https://tailwindcss.com */*,::after,::before{box-sizing:border-box;border-width:0;border-style:solid;border-color:#e5e7eb}::after,::before{--tw-content:''}:host,html{line-height:1.5;-webkit-text-size-adjust:100%;-moz-tab-size:4;tab-size:4;font-family:ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";font-feature-settings:normal;font-variation-settings:normal;-webkit-tap-highlight-color:transparent}body{margin:0;line-height:inherit}hr{height:0;color:inherit;border-top-width:1px}abbr:where([title]){-webkit-text-decoration:underline dotted;text-decoration:underline dotted}h1,h2,h3,h4,h5,h6{font-size:inherit;font-weight:inherit}a{color:inherit;text-decoration:inherit}b,strong{font-weight:bolder}code,kbd,pre,samp{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;font-feature-settings:normal;font-variation-settings:normal;font-size:1em}small{font-size:80%}sub,sup{font-size:75%;line-height:0;position:relative;vertical-align:baseline}sub{bottom:-.25em}sup{top:-.5em}table{text-indent:0;border-color:inherit;border-collapse:collapse}button,input,optgroup,select,textarea{font-family:inherit;font-feature-settings:inherit;font-variation-settings:inherit;font-size:100%;font-weight:inherit;line-height:inherit;letter-spacing:inherit;color:inherit;margin:0;padding:0}button,select{text-transform:none}button,input:where([type=button]),input:where([type=reset]),input:where([type=submit]){-webkit-appearance:button;background-color:transparent;background-image:none}:-moz-focusring{outline:auto}:-moz-ui-invalid{box-shadow:none}progress{vertical-align:baseline}::-webkit-inner-spin-button,::-webkit-outer-spin-button{height:auto}[type=search]{-webkit-appearance:textfield;outline-offset:-2px}::-webkit-search-decoration{-webkit-appearance:none}::-webkit-file-upload-button{-webkit-appearance:button;font:inherit}summary{display:list-item}blockquote,dd,dl,figure,h1,h2,h3,h4,h5,h6,hr,p,pre{margin:0}fieldset{margin:0;padding:0}legend{padding:0}menu,ol,ul{list-style:none;margin:0;padding:0}dialog{padding:0}textarea{resize:vertical}input::placeholder,textarea::placeholder{opacity:1;color:#9ca3af}[role=button],button{cursor:pointer}:disabled{cursor:default}audio,canvas,embed,iframe,img,object,svg,video{display:block;vertical-align:middle}img,video{max-width:100%;height:auto}[hidden]:where(:not([hidden=until-found])){display:none}.pointer-events-none{pointer-events:none}.fixed{position:fixed}.absolute{position:absolute}.relative{position:relative}.inset-0{inset:0px}.-bottom-2{bottom:-0.5rem}.-bottom-6{bottom:-1.5rem}.-right-6{right:-1.5rem}.bottom-5{bottom:1.25rem}.bottom-6{bottom:1.5rem}.left-0{left:0px}.left-1\/2{left:50%}.right-4{right:1rem}.right-5{right:1.25rem}.top-0{top:0px}.top-4{top:1rem}.z-10{z-index:10}.z-50{z-index:50}.z-\[100\]{z-index:100}.mb-1{margin-bottom:0.25rem}.mb-1\.5{margin-bottom:0.375rem}.mb-2{margin-bottom:0.5rem}.mb-3{margin-bottom:0.75rem}.mb-4{margin-bottom:1rem}.mb-6{margin-bottom:1.5rem}.ml-1{margin-left:0.25rem}.mr-1{margin-right:0.25rem}.mt-0\.5{margin-top:0.125rem}.mt-1{margin-top:0.25rem}.mt-3{margin-top:0.75rem}.mt-4{margin-top:1rem}.block{display:block}.flex{display:flex}.grid{display:grid}.hidden{display:none}.h-16{height:4rem}.h-3{height:0.75rem}.h-4{height:1rem}.h-5{height:1.25rem}.h-6{height:1.5rem}.h-7{height:1.75rem}.h-8{height:2rem}.h-full{height:100%}.h-px{height:1px}.max-h-96{max-height:24rem}.min-h-screen{min-height:100vh}.w-1\.5{width:0.375rem}.w-16{width:4rem}.w-2\.5{width:0.625rem}.w-4{width:1rem}.w-7{width:1.75rem}.w-8{width:2rem}.w-fit{width:-moz-fit-content;width:fit-content}.w-full{width:100%}.max-w-7xl{max-width:80rem}.max-w-\[150px\]{max-width:150px}.max-w-\[280px\]{max-width:280px}.max-w-md{max-width:28rem}.max-w-sm{max-width:24rem}.flex-grow{flex-grow:1}.-translate-x-1\/2{--tw-translate-x:-50%;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.rotate-45{--tw-rotate:45deg;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.scale-90{--tw-scale-x:.9;--tw-scale-y:.9;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.scale-95{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.scale-100{--tw-scale-x:1;--tw-scale-y:1;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.transform{transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@keyframes bounce{0%, 100%{transform:translateY(-25%);animation-timing-function:cubic-bezier(0.8,0,1,1)}50%{transform:none;animation-timing-function:cubic-bezier(0,0,0.2,1)}}.animate-bounce{animation:bounce 1s infinite}@keyframes pulse{50%{opacity:.5}}.animate-pulse{animation:pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite}@keyframes spin{to{transform:rotate(360deg)}}.animate-spin{animation:spin 1s linear infinite}.cursor-pointer{cursor:pointer}.resize-none{resize:none}.list-inside{list-style-position:inside}.list-decimal{list-style-type:decimal}.grid-cols-1{grid-template-columns:repeat(1, minmax(0, 1fr))}.grid-cols-2{grid-template-columns:repeat(2, minmax(0, 1fr))}.flex-col{flex-direction:column}.flex-wrap{flex-wrap:wrap}.items-start{align-items:flex-start}.items-end{align-items:flex-end}.items-center{align-items:center}.justify-end{justify-content:flex-end}.justify-center{justify-content:center}.justify-between{justify-content:space-between}.gap-1{gap:0.25rem}.gap-1\.5{gap:0.375rem}.gap-2{gap:0.5rem}.gap-3{gap:0.75rem}.gap-4{gap:1rem}.gap-6{gap:1.5rem}.space-y-1 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.25rem * var(--tw-space-y-reverse))}.space-y-1\.5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.375rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.375rem * var(--tw-space-y-reverse))}.space-y-2 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.5rem * var(--tw-space-y-reverse))}.space-y-3 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(0.75rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(0.75rem * var(--tw-space-y-reverse))}.space-y-4 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1rem * var(--tw-space-y-reverse))}.space-y-5 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.25rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.25rem * var(--tw-space-y-reverse))}.space-y-6 > :not([hidden]) ~ :not([hidden]){--tw-space-y-reverse:0;margin-top:calc(1.5rem * calc(1 - var(--tw-space-y-reverse)));margin-bottom:calc(1.5rem * var(--tw-space-y-reverse))}.overflow-hidden{overflow:hidden}.overflow-y-auto{overflow-y:auto}.truncate{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.whitespace-pre-line{white-space:pre-line}.rounded{border-radius:0.25rem}.rounded-2xl{border-radius:1rem}.rounded-3xl{border-radius:1.5rem}.rounded-full{border-radius:9999px}.rounded-lg{border-radius:0.5rem}.rounded-md{border-radius:0.375rem}.rounded-xl{border-radius:0.75rem}.border{border-width:1px}.border-4{border-width:4px}.border-b{border-bottom-width:1px}.border-l-8{border-left-width:8px}.border-l-\[10px\]{border-left-width:10px}.border-r{border-right-width:1px}.border-t{border-top-width:1px}.border-l-4{border-left-width:4px}.border-amber-100{--tw-border-opacity:1;border-color:rgb(254 243 199 / var(--tw-border-opacity, 1))}.border-amber-200{--tw-border-opacity:1;border-color:rgb(253 230 138 / var(--tw-border-opacity, 1))}.border-blue-600{--tw-border-opacity:1;border-color:rgb(37 99 235 / var(--tw-border-opacity, 1))}.border-gray-100{--tw-border-opacity:1;border-color:rgb(243 244 246 / var(--tw-border-opacity, 1))}.border-gray-200{--tw-border-opacity:1;border-color:rgb(229 231 235 / var(--tw-border-opacity, 1))}.border-green-100{--tw-border-opacity:1;border-color:rgb(220 252 231 / var(--tw-border-opacity, 1))}.border-red-100{--tw-border-opacity:1;border-color:rgb(254 226 226 / var(--tw-border-opacity, 1))}.border-slate-100{--tw-border-opacity:1;border-color:rgb(241 245 249 / var(--tw-border-opacity, 1))}.border-slate-200{--tw-border-opacity:1;border-color:rgb(226 232 240 / var(--tw-border-opacity, 1))}.border-slate-800{--tw-border-opacity:1;border-color:rgb(30 41 59 / var(--tw-border-opacity, 1))}.border-white\/10{border-color:rgb(255 255 255 / 0.1)}.border-yellow-100{--tw-border-opacity:1;border-color:rgb(254 249 195 / var(--tw-border-opacity, 1))}.border-t-transparent{border-top-color:transparent}.border-l-emerald-500{--tw-border-opacity:1;border-left-color:rgb(16 185 129 / var(--tw-border-opacity, 1))}.bg-amber-100{--tw-bg-opacity:1;background-color:rgb(254 243 199 / var(--tw-bg-opacity, 1))}.bg-amber-50\/30{background-color:rgb(255 251 235 / 0.3)}.bg-amber-500{--tw-bg-opacity:1;background-color:rgb(245 158 11 / var(--tw-bg-opacity, 1))}.bg-black\/50{background-color:rgb(0 0 0 / 0.5)}.bg-blue-300{--tw-bg-opacity:1;background-color:rgb(147 197 253 / var(--tw-bg-opacity, 1))}.bg-blue-400{--tw-bg-opacity:1;background-color:rgb(96 165 250 / var(--tw-bg-opacity, 1))}.bg-blue-50{--tw-bg-opacity:1;background-color:rgb(239 246 255 / var(--tw-bg-opacity, 1))}.bg-blue-500{--tw-bg-opacity:1;background-color:rgb(59 130 246 / var(--tw-bg-opacity, 1))}.bg-blue-600{--tw-bg-opacity:1;background-color:rgb(37 99 235 / var(--tw-bg-opacity, 1))}.bg-emerald-600{--tw-bg-opacity:1;background-color:rgb(5 150 105 / var(--tw-bg-opacity, 1))}.bg-gray-100{--tw-bg-opacity:1;background-color:rgb(243 244 246 / var(--tw-bg-opacity, 1))}.bg-gray-200{--tw-bg-opacity:1;background-color:rgb(229 231 235 / var(--tw-bg-opacity, 1))}.bg-green-100{--tw-bg-opacity:1;background-color:rgb(220 252 231 / var(--tw-bg-opacity, 1))}.bg-green-50{--tw-bg-opacity:1;background-color:rgb(240 253 244 / var(--tw-bg-opacity, 1))}.bg-indigo-50{--tw-bg-opacity:1;background-color:rgb(238 242 255 / var(--tw-bg-opacity, 1))}.bg-indigo-600{--tw-bg-opacity:1;background-color:rgb(79 70 229 / var(--tw-bg-opacity, 1))}.bg-purple-50{--tw-bg-opacity:1;background-color:rgb(250 245 255 / var(--tw-bg-opacity, 1))}.bg-red-50{--tw-bg-opacity:1;background-color:rgb(254 242 242 / var(--tw-bg-opacity, 1))}.bg-red-600{--tw-bg-opacity:1;background-color:rgb(220 38 38 / var(--tw-bg-opacity, 1))}.bg-slate-100{--tw-bg-opacity:1;background-color:rgb(241 245 249 / var(--tw-bg-opacity, 1))}.bg-slate-200{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.bg-slate-50{--tw-bg-opacity:1;background-color:rgb(248 250 252 / var(--tw-bg-opacity, 1))}.bg-slate-800{--tw-bg-opacity:1;background-color:rgb(30 41 59 / var(--tw-bg-opacity, 1))}.bg-slate-900\/95{background-color:rgb(15 23 42 / 0.95)}.bg-white{--tw-bg-opacity:1;background-color:rgb(255 255 255 / var(--tw-bg-opacity, 1))}.bg-white\/5{background-color:rgb(255 255 255 / 0.05)}.bg-white\/80{background-color:rgb(255 255 255 / 0.8)}.bg-yellow-50{--tw-bg-opacity:1;background-color:rgb(254 252 232 / var(--tw-bg-opacity, 1))}.bg-gradient-to-br{background-image:linear-gradient(to bottom right, var(--tw-gradient-stops))}.from-blue-900{--tw-gradient-from:#1e3a8a var(--tw-gradient-from-position);--tw-gradient-to:rgb(30 58 138 / 0) var(--tw-gradient-to-position);--tw-gradient-stops:var(--tw-gradient-from), var(--tw-gradient-to)}.to-indigo-950{--tw-gradient-to:#1e1b4b var(--tw-gradient-to-position)}.p-1\.5{padding:0.375rem}.p-2{padding:0.5rem}.p-2\.5{padding:0.625rem}.p-3{padding:0.75rem}.p-3\.5{padding:0.875rem}.p-4{padding:1rem}.p-5{padding:1.25rem}.p-6{padding:1.5rem}.px-2{padding-left:0.5rem;padding-right:0.5rem}.px-2\.5{padding-left:0.625rem;padding-right:0.625rem}.px-3{padding-left:0.75rem;padding-right:0.75rem}.px-3\.5{padding-left:0.875rem;padding-right:0.875rem}.px-4{padding-left:1rem;padding-right:1rem}.px-6{padding-left:1.5rem;padding-right:1.5rem}.py-0\.5{padding-top:0.125rem;padding-bottom:0.125rem}.py-1{padding-top:0.25rem;padding-bottom:0.25rem}.py-1\.5{padding-top:0.375rem;padding-bottom:0.375rem}.py-2{padding-top:0.5rem;padding-bottom:0.5rem}.py-2\.5{padding-top:0.625rem;padding-bottom:0.625rem}.py-3{padding-top:0.75rem;padding-bottom:0.75rem}.py-3\.5{padding-top:0.875rem;padding-bottom:0.875rem}.py-4{padding-top:1rem;padding-bottom:1rem}.py-8{padding-top:2rem;padding-bottom:2rem}.pb-12{padding-bottom:3rem}.pb-3{padding-bottom:0.75rem}.pb-4{padding-bottom:1rem}.pl-2{padding-left:0.5rem}.pr-1{padding-right:0.25rem}.pr-2{padding-right:0.5rem}.pt-1{padding-top:0.25rem}.pt-1\.5{padding-top:0.375rem}.pt-2{padding-top:0.5rem}.pt-4{padding-top:1rem}.text-center{text-align:center}.font-mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace}.text-2xl{font-size:1.5rem;line-height:2rem}.text-9xl{font-size:8rem;line-height:1}.text-\[10px\]{font-size:10px}.text-\[11px\]{font-size:11px}.text-base{font-size:1rem;line-height:1.5rem}.text-lg{font-size:1.125rem;line-height:1.75rem}.text-sm{font-size:0.875rem;line-height:1.25rem}.text-xl{font-size:1.25rem;line-height:1.75rem}.text-xs{font-size:0.75rem;line-height:1rem}.font-black{font-weight:900}.font-bold{font-weight:700}.font-extrabold{font-weight:800}.font-medium{font-weight:500}.font-semibold{font-weight:600}.uppercase{text-transform:uppercase}.italic{font-style:italic}.leading-relaxed{line-height:1.625}.tracking-tight{letter-spacing:-0.025em}.tracking-wide{letter-spacing:0.025em}.tracking-wider{letter-spacing:0.05em}.tracking-widest{letter-spacing:0.1em}.text-amber-400{--tw-text-opacity:1;color:rgb(251 191 36 / var(--tw-text-opacity, 1))}.text-amber-500{--tw-text-opacity:1;color:rgb(245 158 11 / var(--tw-text-opacity, 1))}.text-amber-600{--tw-text-opacity:1;color:rgb(217 119 6 / var(--tw-text-opacity, 1))}.text-amber-700{--tw-text-opacity:1;color:rgb(180 83 9 / var(--tw-text-opacity, 1))}.text-amber-800{--tw-text-opacity:1;color:rgb(146 64 14 / var(--tw-text-opacity, 1))}.text-amber-900{--tw-text-opacity:1;color:rgb(120 53 15 / var(--tw-text-opacity, 1))}.text-blue-300{--tw-text-opacity:1;color:rgb(147 197 253 / var(--tw-text-opacity, 1))}.text-blue-400{--tw-text-opacity:1;color:rgb(96 165 250 / var(--tw-text-opacity, 1))}.text-blue-500{--tw-text-opacity:1;color:rgb(59 130 246 / var(--tw-text-opacity, 1))}.text-blue-600{--tw-text-opacity:1;color:rgb(37 99 235 / var(--tw-text-opacity, 1))}.text-blue-700{--tw-text-opacity:1;color:rgb(29 78 216 / var(--tw-text-opacity, 1))}.text-emerald-600{--tw-text-opacity:1;color:rgb(5 150 105 / var(--tw-text-opacity, 1))}.text-gray-400{--tw-text-opacity:1;color:rgb(156 163 175 / var(--tw-text-opacity, 1))}.text-gray-500{--tw-text-opacity:1;color:rgb(107 114 128 / var(--tw-text-opacity, 1))}.text-gray-600{--tw-text-opacity:1;color:rgb(75 85 99 / var(--tw-text-opacity, 1))}.text-gray-700{--tw-text-opacity:1;color:rgb(55 65 81 / var(--tw-text-opacity, 1))}.text-gray-800{--tw-text-opacity:1;color:rgb(31 41 55 / var(--tw-text-opacity, 1))}.text-green-700{--tw-text-opacity:1;color:rgb(21 128 61 / var(--tw-text-opacity, 1))}.text-green-800{--tw-text-opacity:1;color:rgb(22 101 52 / var(--tw-text-opacity, 1))}.text-indigo-700{--tw-text-opacity:1;color:rgb(67 56 202 / var(--tw-text-opacity, 1))}.text-purple-700{--tw-text-opacity:1;color:rgb(126 34 206 / var(--tw-text-opacity, 1))}.text-red-500{--tw-text-opacity:1;color:rgb(239 68 68 / var(--tw-text-opacity, 1))}.text-red-700{--tw-text-opacity:1;color:rgb(185 28 28 / var(--tw-text-opacity, 1))}.text-red-800{--tw-text-opacity:1;color:rgb(153 27 27 / var(--tw-text-opacity, 1))}.text-slate-300{--tw-text-opacity:1;color:rgb(203 213 225 / var(--tw-text-opacity, 1))}.text-slate-400{--tw-text-opacity:1;color:rgb(148 163 184 / var(--tw-text-opacity, 1))}.text-slate-700{--tw-text-opacity:1;color:rgb(51 65 85 / var(--tw-text-opacity, 1))}.text-white{--tw-text-opacity:1;color:rgb(255 255 255 / var(--tw-text-opacity, 1))}.text-white\/5{color:rgb(255 255 255 / 0.05)}.text-white\/50{color:rgb(255 255 255 / 0.5)}.text-white\/60{color:rgb(255 255 255 / 0.6)}.text-emerald-500{--tw-text-opacity:1;color:rgb(16 185 129 / var(--tw-text-opacity, 1))}.text-emerald-800{--tw-text-opacity:1;color:rgb(6 95 70 / var(--tw-text-opacity, 1))}.opacity-0{opacity:0}.shadow-2xl{--tw-shadow:0 25px 50px -12px rgb(0 0 0 / 0.25);--tw-shadow-colored:0 25px 50px -12px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-inner{--tw-shadow:inset 0 2px 4px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:inset 0 2px 4px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-lg{--tw-shadow:0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 10px 15px -3px var(--tw-shadow-color), 0 4px 6px -4px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-md{--tw-shadow:0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);--tw-shadow-colored:0 4px 6px -1px var(--tw-shadow-color), 0 2px 4px -2px var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-sm{--tw-shadow:0 1px 2px 0 rgb(0 0 0 / 0.05);--tw-shadow-colored:0 1px 2px 0 var(--tw-shadow-color);box-shadow:var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow)}.shadow-amber-100{--tw-shadow-color:#fef3c7;--tw-shadow:var(--tw-shadow-colored)}.shadow-blue-100{--tw-shadow-color:#dbeafe;--tw-shadow:var(--tw-shadow-colored)}.shadow-indigo-100{--tw-shadow-color:#e0e7ff;--tw-shadow:var(--tw-shadow-colored)}.shadow-red-900\/25{--tw-shadow-color:rgb(127 29 29 / 0.25);--tw-shadow:var(--tw-shadow-colored)}.outline-none{outline:2px solid transparent;outline-offset:2px}.backdrop-blur-md{--tw-backdrop-blur:blur(12px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.backdrop-blur-sm{--tw-backdrop-blur:blur(4px);-webkit-backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);backdrop-filter:var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia)}.transition{transition-property:color, background-color, border-color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;transition-property:color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter, -webkit-text-decoration-color, -webkit-backdrop-filter;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.transition-all{transition-property:all;transition-timing-function:cubic-bezier(0.4, 0, 0.2, 1);transition-duration:150ms}.duration-200{transition-duration:200ms}.duration-300{transition-duration:300ms}.duration-500{transition-duration:500ms}.hover\:scale-105:hover{--tw-scale-x:1.05;--tw-scale-y:1.05;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.hover\:bg-amber-200:hover{--tw-bg-opacity:1;background-color:rgb(253 230 138 / var(--tw-bg-opacity, 1))}.hover\:bg-amber-600:hover{--tw-bg-opacity:1;background-color:rgb(217 119 6 / var(--tw-bg-opacity, 1))}.hover\:bg-blue-100:hover{--tw-bg-opacity:1;background-color:rgb(219 234 254 / var(--tw-bg-opacity, 1))}.hover\:bg-blue-700:hover{--tw-bg-opacity:1;background-color:rgb(29 78 216 / var(--tw-bg-opacity, 1))}.hover\:bg-emerald-700:hover{--tw-bg-opacity:1;background-color:rgb(4 120 87 / var(--tw-bg-opacity, 1))}.hover\:bg-gray-200:hover{--tw-bg-opacity:1;background-color:rgb(229 231 235 / var(--tw-bg-opacity, 1))}.hover\:bg-green-200:hover{--tw-bg-opacity:1;background-color:rgb(187 247 208 / var(--tw-bg-opacity, 1))}.hover\:bg-indigo-700:hover{--tw-bg-opacity:1;background-color:rgb(67 56 202 / var(--tw-bg-opacity, 1))}.hover\:bg-red-700:hover{--tw-bg-opacity:1;background-color:rgb(185 28 28 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-200:hover{--tw-bg-opacity:1;background-color:rgb(226 232 240 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-300:hover{--tw-bg-opacity:1;background-color:rgb(203 213 225 / var(--tw-bg-opacity, 1))}.hover\:bg-slate-900:hover{--tw-bg-opacity:1;background-color:rgb(15 23 42 / var(--tw-bg-opacity, 1))}.hover\:text-blue-800:hover{--tw-text-opacity:1;color:rgb(30 64 175 / var(--tw-text-opacity, 1))}.hover\:text-gray-800:hover{--tw-text-opacity:1;color:rgb(31 41 55 / var(--tw-text-opacity, 1))}.hover\:text-slate-600:hover{--tw-text-opacity:1;color:rgb(71 85 105 / var(--tw-text-opacity, 1))}.hover\:underline:hover{-webkit-text-decoration-line:underline;text-decoration-line:underline}.focus\:border-amber-400:focus{--tw-border-opacity:1;border-color:rgb(251 191 36 / var(--tw-border-opacity, 1))}.focus\:border-blue-400:focus{--tw-border-opacity:1;border-color:rgb(96 165 250 / var(--tw-border-opacity, 1))}.focus\:ring-2:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(2px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-4:focus{--tw-ring-offset-shadow:var(--tw-ring-inset) 0 0 0 var(--tw-ring-offset-width) var(--tw-ring-offset-color);--tw-ring-shadow:var(--tw-ring-inset) 0 0 0 calc(4px + var(--tw-ring-offset-width)) var(--tw-ring-color);box-shadow:var(--tw-ring-offset-shadow), var(--tw-ring-shadow), var(--tw-shadow, 0 0 #0000)}.focus\:ring-amber-100:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(254 243 199 / var(--tw-ring-opacity, 1))}.focus\:ring-blue-100:focus{--tw-ring-opacity:1;--tw-ring-color:rgb(219 234 254 / var(--tw-ring-opacity, 1))}.active\:scale-95:active{--tw-scale-x:.95;--tw-scale-y:.95;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}.active\:scale-\[0\.98\]:active{--tw-scale-x:0.98;--tw-scale-y:0.98;transform:translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y))}@media (min-width: 640px){.sm\:flex-row{flex-direction:row}.sm\:items-center{align-items:center}}@media (min-width: 768px){.md\:w-auto{width:auto}.md\:flex-row{flex-direction:row}.md\:items-center{align-items:center}.md\:p-6{padding:1.5rem}}@media (min-width: 1024px){.lg\:col-span-5{grid-column:span 5 / span 5}.lg\:col-span-7{grid-column:span 7 / span 7}.lg\:grid-cols-12{grid-template-columns:repeat(12, minmax(0, 1fr))}.lg\:p-8{padding:2rem}}</style></head>
+<body class="min-h-screen flex flex-col items-center p-4 md:p-6 lg:p-8 pb-12">
+
+    <!-- Header -->
+    <header class="w-full max-w-7xl mb-3 sm:mb-6 flex justify-between items-center bg-white p-3 sm:p-4 rounded-2xl border border-gray-100 shadow-sm">
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div class="bg-blue-600 text-white p-2 sm:p-3 rounded-xl sm:rounded-2xl shadow-md shadow-blue-100">
+                <i class="fas fa-graduation-cap text-lg sm:text-2xl"></i>
+            </div>
+            <div>
+                <h1 class="text-base sm:text-2xl font-extrabold tracking-tight gradient-text">AI English Mentor Pro</h1>
+                <p class="text-gray-500 text-sm hidden md:block">Giao tiếp thực tế đời thường &amp; Ôn tập trí tuệ nhân tạo</p>
+            </div>
+        </div>
+        <div class="flex items-center gap-2 relative">
+            <!-- Back to Home Portal Button (Desktop Only) -->
+            <a href="../index.html" class="hidden sm:flex bg-blue-50 text-blue-600 hover:bg-blue-100 px-3.5 py-2.5 rounded-xl text-xs font-bold transition items-center gap-1.5" title="Quay lại trang Portal">
+                <i class="fas fa-home"></i> Trang chủ
+            </a>
+            <!-- API Key Config Button -->
+            <button onclick="openApiKeyModal()" class="bg-amber-100 text-amber-800 hover:bg-amber-200 px-3 py-2.5 sm:px-3.5 sm:py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2" title="Cấu hình API Key cá nhân của bạn">
+                <i class="fas fa-key"></i> <span class="hidden sm:inline">API Key</span>
+            </button>
+            <!-- Backup & Export Tools (Desktop only) -->
+            <button onclick="downloadSelf()" class="hidden sm:flex bg-emerald-600 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-700 transition items-center gap-1.5" title="Tải ứng dụng này về dùng offline vĩnh viễn">
+                <i class="fas fa-download"></i> Tải Offline
+            </button>
+            <button onclick="exportHistory()" class="hidden sm:flex bg-slate-800 text-white px-3.5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-900 transition items-center gap-1.5" title="Xuất dữ liệu học tập ra file JSON">
+                <i class="fas fa-file-export"></i> Xuất
+            </button>
+            <button onclick="triggerImport()" class="hidden sm:flex bg-slate-200 text-slate-700 px-3.5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-300 transition items-center gap-1.5" title="Nhập dữ liệu học tập cũ">
+                <i class="fas fa-file-import"></i> Nhập
+            </button>
+            
+            <!-- Mobile Menu Cog Button -->
+            <button id="headerMenuBtn" onclick="toggleHeaderMenu(event)" class="sm:hidden bg-slate-100 hover:bg-slate-200 text-slate-700 w-9 h-9 rounded-xl text-xs font-bold transition flex items-center justify-center" title="Tính năng mở rộng">
+                <i class="fas fa-cog text-base"></i>
+            </button>
+ 
+            <!-- Dropdown Menu nổi trên Mobile -->
+            <div id="headerDropdownMenu" class="hidden absolute right-0 top-11 w-48 bg-white border border-gray-100 rounded-xl shadow-xl z-50 py-1.5 font-medium text-xs">
+                <a href="../index.html" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-slate-700 flex items-center gap-2 border-b border-slate-100">
+                    <i class="fas fa-home text-blue-600 text-[10px]"></i> Trang chủ Portal
+                </a>
+                <button onclick="downloadSelf(); toggleHeaderMenu(event)" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-slate-700 flex items-center gap-2">
+                    <i class="fas fa-download text-emerald-600 text-[10px]"></i> Tải Offline
+                </button>
+                <button onclick="exportHistory(); toggleHeaderMenu(event)" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-slate-700 flex items-center gap-2">
+                    <i class="fas fa-file-export text-blue-600 text-[10px]"></i> Xuất Lịch Sử
+                </button>
+                <button onclick="triggerImport(); toggleHeaderMenu(event)" class="w-full text-left px-4 py-2.5 hover:bg-slate-50 text-slate-700 flex items-center gap-2">
+                    <i class="fas fa-file-import text-slate-600 text-[10px]"></i> Nhập Lịch Sử
+                </button>
+            </div>
+            
+            <input type="file" id="importFileInput" accept=".json" class="hidden" onchange="importHistory(event)">
+        </div>
+    </header>
+
+    <main class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        
+        <!-- CỘT TRÁI: KHÔNG GIAN HỌC TẬP VÀ ÔN LUYỆN CHÍNH (Chiếm 7/12 phần) -->
+        <section class="lg:col-span-7 space-y-6">
+            
+            <!-- Học phần dịch giao tiếp (Learn Mode Section) -->
+            <div id="learnModeSection" class="space-y-6">
+                <!-- Topic & Context Indicators -->
+                <div class="flex flex-col sm:flex-row gap-3 justify-between sm:items-center bg-white p-3.5 rounded-2xl border border-gray-100 shadow-sm">
+                    <div class="flex flex-wrap gap-2 items-center">
+                        <span id="topicBadge" class="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-bold rounded-lg uppercase tracking-wider flex items-center gap-1">
+                            <i class="fas fa-tag"></i> <span id="currentTopic">Tán gẫu xã giao (Small Talk)</span>
+                        </span>
+                        <span id="contextBadge" class="px-3 py-1 bg-purple-50 text-purple-700 text-xs font-bold rounded-lg uppercase tracking-wider flex items-center gap-1">
+                            <i class="fas fa-theater-masks"></i> <span id="currentContext">Chia sẻ hào hứng, vui vẻ</span>
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <select id="topicSelector" class="bg-slate-50 border border-gray-200 text-gray-700 px-3 py-2 rounded-xl text-xs font-semibold focus:ring-2 focus:ring-blue-100 outline-none cursor-pointer transition">
+                            <option value="random">🎲 Đổi chủ đề ngẫu nhiên</option>
+                        <option value="Công sở &amp; Đồng nghiệp">Công sở &amp; Đồng nghiệp</option><option value="Du lịch &amp; Khám phá">Du lịch &amp; Khám phá</option><option value="Sức khỏe &amp; Phòng khám">Sức khỏe &amp; Phòng khám</option><option value="Mua sắm &amp; Trả giá">Mua sắm &amp; Trả giá</option><option value="Sở thích &amp; Giải trí">Sở thích &amp; Giải trí</option><option value="Giao thông &amp; Đường sá">Giao thông &amp; Đường sá</option><option value="Công nghệ &amp; Điện thoại">Công nghệ &amp; Điện thoại</option><option value="Gia đình &amp; Họ hàng">Gia đình &amp; Họ hàng</option><option value="Thời tiết &amp; Thiên tai">Thời tiết &amp; Thiên tai</option><option value="Học tập &amp; Trường học">Học tập &amp; Trường học</option><option value="Hẹn hò &amp; Tình cảm">Hẹn hò &amp; Tình cảm</option><option value="Phàn nàn &amp; Khiếu nại dịch vụ">Phàn nàn &amp; Khiếu nại dịch vụ</option><option value="Thủ tục hành chính &amp; Giấy tờ">Thủ tục hành chính &amp; Giấy tờ</option><option value="Đồ gia dụng &amp; Sửa chữa nhà cửa">Đồ gia dụng &amp; Sửa chữa nhà cửa</option><option value="Thể thao &amp; Gym">Thể thao &amp; Gym</option><option value="Tài chính, Vay mượn &amp; Tiền bạc">Tài chính, Vay mượn &amp; Tiền bạc</option><option value="Hàng xóm &amp; Khu phố">Hàng xóm &amp; Khu phố</option><option value="Thú cưng &amp; Động vật">Thú cưng &amp; Động vật</option><option value="Đi phỏng vấn xin việc">Đi phỏng vấn xin việc</option><option value="Tán gẫu xã giao (Small Talk)">Tán gẫu xã giao (Small Talk)</option><option value="Chữa cháy &amp; Sự cố bất ngờ">Chữa cháy &amp; Sự cố bất ngờ</option><option value="Kế hoạch cuối tuần &amp; Party">Kế hoạch cuối tuần &amp; Party</option></select>
+                        <button id="newQuestBtn" class="bg-blue-50 text-blue-600 p-2 rounded-xl text-xs font-bold hover:bg-blue-100 transition shadow-sm" title="Tải câu tình huống mới">
+                            <i class="fas fa-sync-alt"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Card Câu Hỏi Giao Tiếp Thực Tế -->
+                <div class="glass-card rounded-2xl p-4 sm:p-6 shadow-sm border relative overflow-hidden">
+                    <div class="absolute top-0 left-0 w-2.5 h-full bg-blue-600"></div>
+                    <div class="flex items-center gap-2 mb-3 text-blue-600 font-bold pl-2">
+                        <i class="fas fa-comment-dots text-xl"></i>
+                        <span>Tình huống thực tế cần dịch:</span>
+                    </div>
+                    <div id="viContext" class="text-lg sm:text-xl text-gray-800 leading-relaxed font-semibold mb-3 pl-2">Ê, tối qua mới cày xong bộ phim Hàn Quốc mới á, cuốn dã man luôn! Tính ra coi từ 8 giờ tối tới 3 giờ sáng luôn không biết mệt!</div>
+                    <div class="text-sm text-gray-400 italic pl-2 flex items-center gap-1.5">
+                        <i class="fas fa-info-circle text-xs"></i>
+                        <span>Dịch câu nói trên theo văn phong tự nhiên đời sống hằng ngày của người bản xứ. Bạn có thể bôi đen bất kỳ chữ tiếng Anh nào để tra nghĩa nhanh!</span>
+                    </div>
+                </div>
+
+                <!-- Input Box -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center ml-1">
+                        <label class="block text-sm font-bold text-gray-700">Bản dịch tiếng Anh của bạn:</label>
+                        <span class="text-xs text-gray-400" id="charCount">0 ký tự</span>
+                    </div>
+                    <textarea id="enInput" rows="3" class="w-full p-4 rounded-2xl border border-gray-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition text-base sm:text-lg resize-none shadow-inner bg-white font-medium" placeholder="Nhập câu dịch tiếng Anh của bạn tại đây..."></textarea>
+                    
+                    <button id="submitBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-2xl font-bold text-lg transform active:scale-[0.98] transition shadow-lg shadow-blue-100 flex items-center justify-center gap-2">
+                        <i class="fas fa-paper-plane"></i> Gửi Chấm Điểm AI
+                    </button>
+                </div>
+
+                <!-- Result Card -->
+                <div id="resultArea" class="hidden space-y-4">
+                    <div class="flex items-center gap-2 mt-4">
+                        <div class="h-px bg-gray-200 flex-grow"></div>
+                        <span class="text-gray-400 text-xs font-bold uppercase tracking-widest">Phân tích chuyên sâu từ AI Mentor</span>
+                        <div class="h-px bg-gray-200 flex-grow"></div>
+                    </div>
+
+                    <div id="feedbackCard" class="glass-card rounded-2xl p-4 sm:p-6 border-l-[10px]">
+                        <div class="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
+                            <div id="resultTitle" class="text-lg font-extrabold text-gray-800"></div>
+                            <div id="scoreBadge" class="px-4 py-1.5 rounded-full text-sm font-bold shadow-sm"></div>
+                        </div>
+                        
+                        <div class="space-y-5">
+                            <div>
+                                <div class="flex justify-between items-center mb-1.5">
+                                    <p class="text-xs text-gray-400 font-extrabold uppercase tracking-wider">Cách dịch tự nhiên nhất đề xuất:</p>
+                                    <button id="ttsButtonSuggest" onclick="speakSuggested()" class="text-xs bg-green-100 text-green-700 hover:bg-green-200 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 transition">
+                                        <i class="fas fa-volume-up"></i> Nghe đọc mẫu
+                                    </button>
+                                </div>
+                                <p id="suggestedTranslation" class="text-green-800 font-bold text-lg bg-green-50 p-4 rounded-xl border border-green-100 shadow-sm leading-relaxed"></p>
+                            </div>
+                            
+                            <div>
+                                <p class="text-xs text-gray-400 mb-1.5 font-extrabold uppercase tracking-wider">Nhận xét chi tiết &amp; sửa đổi ngữ pháp:</p>
+                                <div id="aiExplanation" class="text-gray-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm whitespace-pre-line"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Review Mode Workspace -->
+            <div id="reviewModeSection" class="hidden space-y-6 bg-amber-50/30 p-4 sm:p-5 rounded-3xl border border-amber-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-extrabold text-amber-700 flex items-center gap-2">
+                        <i class="fas fa-brain animate-pulse"></i> Phòng Ôn Luyện Trí Tuệ Nhân Tạo
+                    </h2>
+                    <button onclick="closeReviewMode()" class="text-xs text-gray-500 hover:text-gray-800 font-bold bg-white border border-gray-200 px-3 py-2 rounded-xl shadow-sm transition">
+                        <i class="fas fa-times mr-1"></i> Thoát ôn tập
+                    </button>
+                </div>
+
+                <div class="glass-card rounded-2xl p-4 sm:p-6 border border-amber-200 relative shadow-sm">
+                    <div class="absolute top-4 right-4 bg-amber-100 text-amber-900 text-xs font-extrabold px-2.5 py-1.5 rounded-lg" id="reviewCounterBadge">
+                        Câu 1/5
+                    </div>
+                    <div class="text-xs text-amber-600 font-extrabold uppercase tracking-wider mb-2">Thử thách dịch lại câu này:</div>
+                    <div id="reviewViText" class="text-xl font-bold text-gray-800 mb-4 leading-relaxed bg-white p-4 rounded-xl border border-slate-100 shadow-inner">...</div>
+                    
+                    <textarea id="reviewEnInput" rows="3" class="w-full p-4 rounded-xl border border-amber-200 focus:ring-4 focus:ring-amber-100 focus:border-amber-400 outline-none transition text-lg resize-none shadow-sm bg-white font-medium" placeholder="Hãy viết lại bản dịch tiếng Anh của bạn dựa trên những gợi ý đã học..."></textarea>
+                    
+                    <div class="flex justify-between items-center mt-4">
+                        <button id="showHintBtn" onclick="showReviewHint()" class="text-xs text-amber-800 hover:underline font-bold flex items-center gap-1">
+                            <i class="fas fa-lightbulb"></i> Xem gợi ý kí tự đầu
+                        </button>
+                        <button onclick="checkReviewAnswerAI()" id="reviewSubmitBtn" class="bg-amber-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-600 transition shadow-md shadow-amber-100 flex items-center gap-2">
+                            <i class="fas fa-magic"></i> Nộp Bài Chấm Điểm AI
+                        </button>
+                    </div>
+
+                    <div id="reviewHintArea" class="hidden mt-3 text-sm text-gray-600 bg-yellow-50 p-3 rounded-xl border border-yellow-100 italic"></div>
+                </div>
+
+                <!-- Review Feedback with AI Check -->
+                <div id="reviewResultArea" class="hidden glass-card rounded-2xl p-4 sm:p-6 border-l-8 shadow-sm">
+                    <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-100">
+                        <h3 class="font-extrabold text-lg" id="reviewResultTitle">Đánh giá từ AI Mentor</h3>
+                        <div id="reviewScoreBadge" class="px-3 py-1.5 rounded-full text-xs font-bold"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div>
+                            <div class="text-xs text-gray-400 font-extrabold uppercase tracking-wider mb-1">Bản dịch của bạn:</div>
+                            <div id="reviewUserText" class="text-gray-800 bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm"></div>
+                        </div>
+                        <div>
+                            <div class="flex justify-between items-center mb-1">
+                                <div class="text-xs text-gray-400 font-extrabold uppercase tracking-wider">Bản dịch đề xuất tối ưu:</div>
+                                <button onclick="speakReviewSuggested()" class="text-xs bg-green-100 text-green-700 hover:bg-green-200 px-2 py-0.5 rounded font-bold flex items-center gap-1 transition">
+                                    <i class="fas fa-volume-up"></i> Nghe đọc mẫu
+                                </button>
+                            </div>
+                            <div id="reviewTargetText" class="text-green-800 font-bold bg-green-50 p-3 rounded-lg border border-green-100 text-sm"></div>
+                        </div>
+                        <div>
+                            <div class="text-xs text-gray-400 font-extrabold uppercase tracking-wider mb-1">Giải thích chi tiết của AI:</div>
+                            <div id="reviewExplanationText" class="text-gray-700 leading-relaxed text-sm bg-slate-50 p-3 rounded-lg border border-slate-100"></div>
+                        </div>
+                        <div class="pt-2">
+                            <button id="nextReviewBtn" onclick="nextReviewQuest()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                                <span>Tiếp tục thử thách tiếp theo</span> <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Vocab Review Mode Workspace -->
+            <div id="vocabReviewSection" class="hidden space-y-6 bg-emerald-50/30 p-4 sm:p-5 rounded-3xl border border-emerald-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-extrabold text-emerald-700 flex items-center gap-2">
+                        <i class="fas fa-brain animate-pulse"></i> Phòng Ôn Luyện Từ Vựng AI
+                    </h2>
+                    <button onclick="closeVocabReviewMode()" class="text-xs text-gray-500 hover:text-gray-800 font-bold bg-white border border-gray-200 px-3 py-2 rounded-xl shadow-sm transition">
+                        <i class="fas fa-times mr-1"></i> Thoát ôn tập
+                    </button>
+                </div>
+
+                <div class="glass-card rounded-2xl p-4 sm:p-6 border border-emerald-200 relative shadow-sm">
+                    <div class="absolute top-4 right-4 bg-emerald-100 text-emerald-900 text-xs font-extrabold px-2.5 py-1.5 rounded-lg" id="vocabReviewCounterBadge">
+                        Từ 1/5
+                    </div>
+                    <div class="text-xs text-emerald-600 font-extrabold uppercase tracking-wider mb-2">Hãy viết từ tiếng Anh tương ứng với nghĩa sau:</div>
+                    
+                    <!-- Nghĩa Tiếng Việt & Phiên âm IPA -->
+                    <div class="mb-4 bg-white p-4 rounded-xl border border-slate-100 shadow-inner space-y-2 text-center">
+                        <div id="vocabReviewViText" class="text-2xl font-bold text-gray-800">nghĩa tiếng Việt</div>
+                        <div id="vocabReviewPhonetic" class="text-sm bg-indigo-50 text-indigo-700 px-3 py-1 rounded font-mono font-bold w-fit mx-auto">/ipa/</div>
+                    </div>
+                    
+                    <input type="text" id="vocabReviewEnInput" class="w-full p-4 rounded-xl border border-emerald-200 focus:ring-4 focus:ring-emerald-100 focus:border-emerald-400 outline-none text-xl shadow-sm bg-white font-medium text-center" placeholder="Nhập từ hoặc cụm từ tiếng Anh...">
+                    
+                    <div class="flex justify-between items-center mt-4">
+                        <button id="showVocabHintBtn" onclick="showVocabHint()" class="text-xs text-emerald-800 hover:underline font-bold flex items-center gap-1">
+                            <i class="fas fa-lightbulb"></i> Xem gợi ý kí tự đầu
+                        </button>
+                        <button onclick="checkVocabAnswerAI()" id="vocabReviewSubmitBtn" class="bg-emerald-500 text-white px-6 py-3 rounded-xl font-bold hover:bg-emerald-600 transition shadow-md shadow-emerald-100 flex items-center gap-2">
+                            <i class="fas fa-magic"></i> Nộp Bài Chấm Điểm
+                        </button>
+                    </div>
+
+                    <div id="vocabReviewHintArea" class="hidden mt-3 text-sm text-gray-600 bg-yellow-50 p-3 rounded-xl border border-yellow-100 italic text-center"></div>
+                </div>
+
+                <!-- Vocab Review Feedback -->
+                <div id="vocabReviewResultArea" class="hidden glass-card rounded-2xl p-4 sm:p-6 border-l-8 shadow-sm">
+                    <div class="flex justify-between items-center mb-3 pb-3 border-b border-gray-100">
+                        <h3 class="font-extrabold text-lg" id="vocabReviewResultTitle">Đánh giá kết quả</h3>
+                        <div id="vocabReviewScoreBadge" class="px-3 py-1.5 rounded-full text-xs font-bold"></div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                                <div class="text-xs text-gray-400 font-extrabold uppercase tracking-wider mb-1">Từ của bạn:</div>
+                                <div id="vocabReviewUserText" class="text-gray-800 bg-slate-50 p-3 rounded-lg border border-slate-100 text-sm font-bold text-center"></div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <div class="text-xs text-gray-400 font-extrabold uppercase tracking-wider">Đáp án chuẩn:</div>
+                                    <button onclick="speakVocabReviewSuggested()" class="text-xs bg-green-100 text-green-700 hover:bg-green-200 px-2 py-0.5 rounded font-bold flex items-center gap-1 transition">
+                                        <i class="fas fa-volume-up"></i> Nghe đọc mẫu
+                                    </button>
+                                </div>
+                                <div id="vocabReviewTargetText" class="text-green-800 font-bold bg-green-50 p-3 rounded-lg border border-green-100 text-sm text-center"></div>
+                            </div>
+                        </div>
+                        <div id="vocabReviewExplanationBlock">
+                            <div class="text-xs text-gray-400 font-extrabold uppercase tracking-wider mb-1">Giải thích/Gợi ý của AI:</div>
+                            <div id="vocabReviewExplanationText" class="text-gray-700 leading-relaxed text-sm bg-slate-50 p-3 rounded-lg border border-slate-100"></div>
+                        </div>
+                        <div class="pt-2">
+                            <button id="nextVocabReviewBtn" onclick="nextVocabReviewQuest()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3.5 rounded-xl transition shadow-md flex items-center justify-center gap-2">
+                                <span>Tiếp tục từ vựng tiếp theo</span> <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- CỘT PHẢI: TIẾN TRÌNH, THỐNG KÊ & BỘ SƯU TẬP (Chiếm 5/12 phần) -->
+        <aside class="lg:col-span-5 space-y-6">
+            
+            <!-- Học phần hiển thị Tiến trình & Mở khóa ôn luyện -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 flex flex-col gap-4">
+                <div class="flex items-center gap-3">
+                    <div class="bg-amber-100 p-2.5 rounded-xl text-amber-600">
+                        <i class="fas fa-fire text-lg"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs text-gray-400 font-bold uppercase tracking-wide">Tiến độ ngày học</div>
+                        <div class="text-sm font-bold text-gray-700" id="progressStatusText">Cần học thêm 5 bài để ôn luyện (0/5)</div>
+                    </div>
+                </div>
+                <!-- Progress Bar -->
+                <div class="w-full bg-slate-100 h-3 rounded-full overflow-hidden relative">
+                    <div id="progressBarFill" class="bg-amber-500 h-full transition-all duration-500" style="width: 0%"></div>
+                </div>
+                <!-- Mode Button Review -->
+                <button id="openReviewModeBtn" class="w-full bg-amber-500 hover:bg-amber-600 text-white py-3 rounded-xl text-xs font-black uppercase tracking-wider transition hidden animate-pulse shadow-md shadow-amber-100 flex items-center justify-center gap-1.5">
+                    <i class="fas fa-graduation-cap text-sm"></i> Vào Ôn Tập Luyện Câu Ngay
+                </button>
+                <!-- Freestyle practice launcher (Available anytime!) -->
+                <button id="openFreeReviewBtn" onclick="startFreeReviewMode()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-3 rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-indigo-100 flex items-center justify-center gap-1.5">
+                    <i class="fas fa-shuffle text-sm"></i> Luyện Tập Tự Do (Bất Kỳ Lúc Nào)
+                </button>
+                <!-- Mode Button Review Vocab -->
+                <button id="openVocabReviewBtn" onclick="startVocabReviewMode()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-xl text-xs font-black uppercase tracking-wider transition shadow-md shadow-emerald-100 flex items-center justify-center gap-1.5">
+                    <i class="fas fa-book-reader text-sm"></i> Ôn Luyện Từ Vựng
+                </button>
+            </div>
+
+            <!-- Bảng Thống Kê Nhanh (Gợi ý cải tiến phát triển App) -->
+            <div class="bg-gradient-to-br from-blue-900 to-indigo-950 text-white rounded-2xl p-5 shadow-lg relative overflow-hidden">
+                <div class="absolute -right-6 -bottom-6 text-white/5 text-9xl">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3 class="font-extrabold text-sm uppercase tracking-wider mb-4 text-blue-300">Bảng vàng tích lũy</h3>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                        <div class="text-xs text-white/60">Câu đã tích lũy</div>
+                        <div class="text-2xl font-black text-amber-400 mt-1" id="statTotalPhrases">0</div>
+                    </div>
+                    <div class="bg-white/5 p-3 rounded-xl border border-white/10">
+                        <div class="text-xs text-white/60">Khóa học hiện tại</div>
+                        <div class="text-2xl font-black text-blue-300 mt-1" id="statStreakDay">0/5</div>
+                    </div>
+                </div>
+                <div class="mt-4 pt-4 border-t border-white/10 flex justify-between items-center">
+                    <span class="text-xs text-white/50">Trình độ của bạn:</span>
+                    <span class="text-xs bg-blue-500 text-white px-2.5 py-1 rounded-full font-bold uppercase tracking-wide" id="userTier">Sơ Cấp</span>
+                </div>
+            </div>
+
+            <!-- Tabs & Collection Area -->
+            <div class="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-4">
+                <!-- Tabs Selector -->
+                <div class="flex border-b border-gray-200">
+                    <button id="tabSentencesBtn" onclick="switchRightTab('sentences')" class="flex-1 py-2 text-center text-sm font-bold border-b-2 border-blue-600 text-blue-600 transition outline-none">
+                        <i class="fas fa-comment-dots mr-1"></i> Câu thoại (<span id="historyCount">0</span>)
+                    </button>
+                    <button id="tabVocabBtn" onclick="switchRightTab('vocab')" class="flex-1 py-2 text-center text-sm font-bold border-b-2 border-transparent text-gray-400 hover:text-gray-600 transition outline-none">
+                        <i class="fas fa-book-open mr-1"></i> Sổ tay từ (<span id="vocabCount">0</span>)
+                    </button>
+                </div>
+
+                <!-- Tab 1: Sentences list (Câu thoại) -->
+                <div id="tabSentencesContent" class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-gray-400 italic">Mặc định ẩn câu tiếng Anh để tự ôn luyện nhẩm</p>
+                        <div class="flex gap-2">
+                            <button onclick="showClearConfirmModal()" class="text-[11px] text-red-500 hover:underline font-bold">Xóa lịch sử</button>
+                            <button onclick="toggleAllTranslations()" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold px-2 py-0.5 rounded transition" id="toggleAllBtn">
+                                Hiện tất cả
+                            </button>
+                        </div>
+                    </div>
+                    <div id="historyList" class="space-y-3 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                        <p id="noHistoryMsg" class="text-center py-8 text-gray-400 italic text-sm">Chưa có câu nào được lưu.</p>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Vocabulary list (Sổ tay từ) -->
+                <div id="tabVocabContent" class="space-y-4 hidden">
+                    <div class="flex items-center justify-between">
+                        <p class="text-[11px] text-gray-400 italic">Mặc định ẩn nghĩa để tự ôn luyện nhẩm</p>
+                        <div class="flex gap-2">
+                            <button onclick="clearVocabConfirm()" class="text-[11px] text-red-500 hover:underline font-bold">Xóa sổ tay</button>
+                            <button onclick="toggleAllVocabTranslation()" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold px-2 py-0.5 rounded transition" id="toggleAllVocabBtn">
+                                Hiện tất cả
+                            </button>
+                        </div>
+                    </div>
+                    <div id="vocabListContainer" class="space-y-3 max-h-96 overflow-y-auto pr-1 custom-scrollbar">
+                        <p id="noVocabMsg" class="text-center py-8 text-gray-400 italic text-sm">Chưa có từ vựng nào được lưu.</p>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+    </main>
+
+    <!-- Floating Stop Speech Audio Wave Bar -->
+    <div id="audioWaveBar" class="fixed bottom-6 left-1/2 transform -translate-x-1/2 bg-slate-900/95 backdrop-blur-md text-white px-6 py-3.5 rounded-full shadow-2xl border border-slate-800 z-50 flex items-center justify-between sm:justify-start gap-4 transition-all duration-300 opacity-0 pointer-events-none scale-90 w-[calc(100%-32px)] sm:w-auto">
+        <div class="flex items-center gap-1">
+            <span class="w-1.5 h-4 bg-blue-500 rounded-full animate-pulse"></span>
+            <span class="w-1.5 h-6 bg-blue-400 rounded-full animate-pulse" style="animation-delay: 0.15s"></span>
+            <span class="w-1.5 h-3 bg-blue-600 rounded-full animate-pulse" style="animation-delay: 0.3s"></span>
+            <span class="w-1.5 h-5 bg-blue-300 rounded-full animate-pulse" style="animation-delay: 0.45s"></span>
+        </div>
+        <div class="text-xs font-semibold tracking-wider text-slate-300 flex flex-col">
+            <span class="text-[10px] uppercase text-blue-400 font-bold">Đang phát âm mẫu</span>
+            <span id="playingAudioTitle" class="max-w-[150px] truncate">Giọng nói người bản xứ...</span>
+        </div>
+        <button onclick="stopSpeaking()" class="bg-red-600 hover:bg-red-700 text-white p-2 rounded-full text-xs font-bold transition flex items-center justify-center w-8 h-8 hover:scale-105 active:scale-95 shadow-lg shadow-red-900/25" title="Dừng đọc phát âm ngay">
+            <i class="fas fa-stop"></i>
+        </button>
+    </div>
+
+    <!-- Floating Word Selection Lookup Popover -->
+    <div id="selectionPopup" class="fixed z-[100] bg-white border border-slate-200 shadow-2xl rounded-2xl p-4 max-w-[280px] w-full hidden transform scale-95 transition-all duration-200">
+        <div class="absolute -bottom-2 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-white border-r border-b border-slate-200 rotate-45"></div>
+        <div class="relative z-10 space-y-3">
+            <div class="flex items-start justify-between gap-1.5">
+                <span id="popupWord" class="font-extrabold text-blue-700 text-base truncate pr-2">Word</span>
+                <button id="popupTtsBtn" onclick="speakPopupWord()" class="text-blue-600 hover:text-blue-800 bg-blue-50 hover:bg-blue-100 p-1.5 rounded-lg text-xs transition flex items-center justify-center w-7 h-7">
+                    <i class="fas fa-volume-up"></i>
+                </button>
+            </div>
+            <div id="popupLoading" class="flex items-center gap-2 text-xs text-slate-400 font-medium py-1">
+                <i class="fas fa-circle-notch animate-spin text-blue-500"></i> AI đang phân tích nghĩa nhanh...
+            </div>
+            <div id="popupResult" class="hidden space-y-2">
+                <div class="text-xs bg-indigo-50 text-indigo-700 px-2 py-1 rounded font-mono font-bold w-fit" id="popupPhonetic">/ipa/</div>
+                <div class="text-xs text-slate-700 leading-relaxed font-semibold border-t border-slate-100 pt-1.5" id="popupTranslation">Dịch nghĩa chuẩn</div>
+            </div>
+            <div class="flex justify-between items-center pt-1.5 border-t border-slate-100">
+                <button id="popupSaveBtn" onclick="saveSelectedWord()" class="text-[10px] text-emerald-600 hover:text-emerald-800 font-bold flex items-center gap-1">
+                    <i class="fas fa-star"></i> Lưu sổ tay
+                </button>
+                <button onclick="closeSelectionPopup()" class="text-[10px] text-slate-400 hover:text-slate-600 font-bold">Đóng</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification Container -->
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4"></div>
+
+    <!-- API Key Config Modal -->
+    <div id="apiKeyModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-100 transform transition-all duration-300 scale-95">
+            <h3 class="text-lg font-bold text-gray-800 mb-2 flex items-center gap-2">
+                <i class="fas fa-key text-amber-500"></i> Cấu hình Gemini API Key
+            </h3>
+            
+            <!-- Quick Instructions -->
+            <div class="bg-slate-50 p-3 rounded-xl border border-slate-100 text-xs text-gray-600 mb-4 space-y-1.5">
+                <p class="font-bold text-gray-700"><i class="fas fa-info-circle text-blue-500"></i> Cách lấy API Key chính xác:</p>
+                <ol class="list-decimal list-inside space-y-1">
+                    <li>Vào <a href="https://aistudio.google.com/" target="_blank" class="text-blue-600 hover:underline font-bold">Google AI Studio</a></li>
+                    <li>Nhấn <span class="font-bold">"Get API key"</span></li>
+                    <li>Tạo và copy đoạn mã bắt đầu bằng <span class="text-emerald-600 font-bold">"AIzaSy..."</span></li>
+                </ol>
+            </div>
+
+            <div class="space-y-3 mb-4">
+                <label class="block text-xs font-bold text-gray-700 uppercase">Dán mã API Key của bạn:</label>
+                <!-- Đổi thành text thông thường thay vì password để dễ dàng rà soát và tránh dán sai -->
+                <input type="text" id="apiKeyInput" oninput="validateKeyFormat()" placeholder="Mã dán của bạn bắt đầu bằng AIzaSy..." class="w-full p-3 rounded-xl border border-gray-200 focus:ring-2 focus:ring-blue-100 outline-none text-sm font-mono">
+                
+                <!-- Format Warning -->
+                <div id="keyFormatWarning" class="hidden p-2.5 bg-red-50 text-red-700 border border-red-100 rounded-lg text-xs flex items-start gap-2">
+                    <i class="fas fa-exclamation-triangle mt-0.5 animate-bounce"></i>
+                    <span>Cảnh báo: API Key chuẩn bắt buộc phải có chữ <strong class="font-extrabold text-red-800">AIzaSy</strong> ở đầu. Mã bạn đang nhập chưa khớp định dạng!</span>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3">
+                <button onclick="closeApiKeyModal()" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-xs font-semibold hover:bg-gray-200 transition">Hủy bỏ</button>
+                <button onclick="saveApiKey()" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-semibold hover:bg-blue-700 transition">Lưu cấu hình</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Confirmation Modal -->
+    <div id="confirmModal" class="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full shadow-2xl border border-gray-100 transform scale-95 transition-all duration-300">
+            <h3 class="text-lg font-bold text-gray-800 mb-2" id="confirmTitle">Xác nhận</h3>
+            <p class="text-gray-600 text-sm mb-6" id="confirmMessage">Bạn chắc chắn chứ?</p>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeConfirmModal(false)" class="px-4 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-semibold hover:bg-gray-200 transition">Hủy bỏ</button>
+                <button onclick="closeConfirmModal(true)" id="confirmYesBtn" class="px-4 py-2 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition">Đồng ý</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex-col items-center justify-center z-50 hidden">
+        <div class="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p id="statusMsg" class="text-blue-600 font-medium text-lg">AI đang thiết lập tình huống giao tiếp đời thực...</p>
+    </div>
+
+    <script>
+        const MODEL_NAME = "gemini-2.5-flash";
+        let activeRuntimeKey = "";
+        let allVisible = false; // Trạng thái ẩn/hiện chung của cột lịch sử
+
+        // Cơ chế bọc bảo mật cho Storage chống sập trên file://
+        const safeStorage = {
+            fallback: {},
+            getItem: function(key) {
+                try { return localStorage.getItem(key); } catch (e) { return this.fallback[key] || null; }
+            },
+            setItem: function(key, value) {
+                try { localStorage.setItem(key, value); } catch (e) { this.fallback[key] = value; }
+            },
+            removeItem: function(key) {
+                try { localStorage.removeItem(key); } catch (e) { delete this.fallback[key]; }
+            }
+        };
+
+        const viContextDisplay = document.getElementById('viContext');
+        const enInput = document.getElementById('enInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const newQuestBtn = document.getElementById('newQuestBtn');
+        const resultArea = document.getElementById('resultArea');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        const statusMsg = document.getElementById('statusMsg');
+        const feedbackCard = document.getElementById('feedbackCard');
+        const scoreBadge = document.getElementById('scoreBadge');
+        const resultTitle = document.getElementById('resultTitle');
+        const suggestedTranslation = document.getElementById('suggestedTranslation');
+        const aiExplanation = document.getElementById('aiExplanation');
+        const topicBadge = document.getElementById('topicBadge');
+        const currentTopicSpan = document.getElementById('currentTopic');
+        const contextBadge = document.getElementById('contextBadge');
+        const currentContextSpan = document.getElementById('currentContext');
+        const historyList = document.getElementById('historyList');
+        const noHistoryMsg = document.getElementById('noHistoryMsg');
+        const topicSelector = document.getElementById('topicSelector');
+        const historyCountSpan = document.getElementById('historyCount');
+        const charCount = document.getElementById('charCount');
+
+        // Review Mode Workspace Elements
+        const learnModeSection = document.getElementById('learnModeSection');
+        const reviewModeSection = document.getElementById('reviewModeSection');
+        const openReviewModeBtn = document.getElementById('openReviewModeBtn');
+        const progressBarFill = document.getElementById('progressBarFill');
+        const progressStatusText = document.getElementById('progressStatusText');
+        const reviewViText = document.getElementById('reviewViText');
+        const reviewEnInput = document.getElementById('reviewEnInput');
+        const reviewResultArea = document.getElementById('reviewResultArea');
+        const reviewResultTitle = document.getElementById('reviewResultTitle');
+        const reviewScoreBadge = document.getElementById('reviewScoreBadge');
+        const reviewUserText = document.getElementById('reviewUserText');
+        const reviewTargetText = document.getElementById('reviewTargetText');
+        const reviewExplanationText = document.getElementById('reviewExplanationText');
+        const reviewCounterBadge = document.getElementById('reviewCounterBadge');
+        const reviewHintArea = document.getElementById('reviewHintArea');
+
+        // Đếm ký tự khi người dùng viết câu trả lời
+        enInput.addEventListener('input', () => {
+            charCount.innerText = `${enInput.value.length} ký tự`;
+        });
+
+        // Danh sách các chủ đề đời sống thiết thực
+        const topics = [
+            "Công sở & Đồng nghiệp",
+            "Du lịch & Khám phá",
+            "Sức khỏe & Phòng khám",
+            "Mua sắm & Trả giá",
+            "Sở thích & Giải trí",
+            "Giao thông & Đường sá",
+            "Công nghệ & Điện thoại",
+            "Gia đình & Họ hàng",
+            "Thời tiết & Thiên tai",
+            "Học tập & Trường học",
+            "Hẹn hò & Tình cảm",
+            "Phàn nàn & Khiếu nại dịch vụ",
+            "Thủ tục hành chính & Giấy tờ",
+            "Đồ gia dụng & Sửa chữa nhà cửa",
+            "Thể thao & Gym",
+            "Tài chính, Vay mượn & Tiền bạc",
+            "Hàng xóm & Khu phố",
+            "Thú cưng & Động vật",
+            "Đi phỏng vấn xin việc",
+            "Tán gẫu xã giao (Small Talk)",
+            "Chữa cháy & Sự cố bất ngờ",
+            "Kế hoạch cuối tuần & Party"
+        ];
+
+        // Các sắc thái giao tiếp phong phú
+        const subScenarios = [
+            "Đang rất vội vã",
+            "Lịch sự và vô cùng trang trọng",
+            "Thân mật, nói đùa, dùng từ lóng",
+            "Đang tức giận hoặc phàn nàn",
+            "Ngập ngừng, bối rối khi nói chuyện",
+            "Gặp sự cố bất ngờ",
+            "Chia sẻ hào hứng, vui vẻ",
+            "Nói chuyện điện thoại",
+            "Trao đổi nhanh qua tin nhắn",
+            "Bày tỏ sự tiếc nuối, xin lỗi"
+        ];
+
+        let currentQuestion = "";
+        let studyHistory = [];
+        let vocabList = [];
+        let currentLookupVocab = null;
+        let currentLessonStreak = 0;
+
+        try {
+            studyHistory = JSON.parse(safeStorage.getItem('ai_english_history') || '[]');
+            vocabList = JSON.parse(safeStorage.getItem('ai_english_vocab') || '[]');
+            currentLessonStreak = parseInt(safeStorage.getItem('ai_english_streak') || '0');
+            activeRuntimeKey = (safeStorage.getItem('user_gemini_api_key') || "").trim();
+        } catch (e) {
+            console.error("Lỗi khởi tạo dữ liệu:", e);
+        }
+        
+        // Trạng thái ôn tập
+        let activeReviewQuests = [];
+        let currentReviewIndex = 0;
+        let isFreestyleReview = false; // Phân biệt chế độ ôn tập tự do và ôn tập 5 bài
+        
+        // Trạng thái ôn tập từ vựng
+        let activeVocabReviews = [];
+        let currentVocabReviewIndex = 0;
+        let allVocabVisible = false;
+        
+        let confirmPromiseResolve = null;
+
+        // Toast alert system
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = `toast-notification glass-card p-4 rounded-xl shadow-lg border-l-4 flex items-center justify-between gap-3 text-sm font-semibold mb-2`;
+            
+            if (type === 'success') {
+                toast.classList.add('border-l-emerald-500', 'text-emerald-800');
+                toast.innerHTML = `<div class="flex items-center gap-2"><i class="fas fa-check-circle text-emerald-500 text-base"></i><span>${message}</span></div>`;
+            } else if (type === 'warning') {
+                toast.classList.add('border-l-amber-500', 'text-amber-800');
+                toast.innerHTML = `<div class="flex items-center gap-2"><i class="fas fa-exclamation-triangle text-amber-500 text-base"></i><span>${message}</span></div>`;
+            } else {
+                toast.classList.add('border-l-red-500', 'text-red-800');
+                toast.innerHTML = `<div class="flex items-center gap-2"><i class="fas fa-exclamation-circle text-red-500 text-base"></i><span>${message}</span></div>`;
+            }
+
+            container.appendChild(toast);
+            setTimeout(() => {
+                toast.style.animation = 'none';
+                toast.style.transition = 'all 0.4s ease-out';
+                toast.style.transform = 'translateY(-20px)';
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 400);
+            }, 3500);
+        }
+
+        // TTS Pronunciation API with Stop capability
+        let currentSpeechInstance = null;
+
+        function speakText(text) {
+            if ('speechSynthesis' in window) {
+                // Tắt tất cả các luồng âm thanh cũ trước khi phát mới
+                window.speechSynthesis.cancel(); 
+                
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'en-US';
+                
+                // Tinh chỉnh tốc độ đọc của người bản xứ cho tự nhiên, vừa nghe
+                utterance.rate = 0.95; 
+                utterance.pitch = 1.0;
+
+                // Tìm giọng đọc chuẩn Mỹ (US) hoặc Anh (GB) trong hệ thống
+                const voices = window.speechSynthesis.getVoices();
+                const premiumVoice = voices.find(v => v.lang.startsWith('en-US') && v.name.includes('Google')) ||
+                                     voices.find(v => v.lang.startsWith('en-') && v.localService === true) || 
+                                     voices.find(v => v.lang.startsWith('en-'));
+                if (premiumVoice) {
+                    utterance.voice = premiumVoice;
+                }
+
+                // Lắng nghe các sự kiện âm thanh để kích hoạt nút Dừng tiện lợi
+                utterance.onstart = () => {
+                    const waveBar = document.getElementById('audioWaveBar');
+                    document.getElementById('playingAudioTitle').innerText = text;
+                    waveBar.classList.remove('opacity-0', 'pointer-events-none', 'scale-90');
+                    waveBar.classList.add('opacity-100', 'scale-100');
+                };
+
+                utterance.onend = () => {
+                    hideAudioWaveBar();
+                };
+
+                utterance.onerror = () => {
+                    hideAudioWaveBar();
+                };
+
+                currentSpeechInstance = utterance;
+                window.speechSynthesis.speak(utterance);
+            } else {
+                showToast("Trình duyệt hiện tại của bạn không hỗ trợ tính năng giọng nói đọc mẫu!", "warning");
+            }
+        }
+
+        function stopSpeaking() {
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                hideAudioWaveBar();
+                showToast("Đã dừng phát âm mẫu", "success");
+            }
+        }
+
+        function hideAudioWaveBar() {
+            const waveBar = document.getElementById('audioWaveBar');
+            waveBar.classList.add('opacity-0', 'pointer-events-none', 'scale-90');
+            waveBar.classList.remove('opacity-100', 'scale-100');
+        }
+
+        function speakSuggested() {
+            const text = suggestedTranslation.innerText;
+            if (text) speakText(text);
+        }
+
+        function speakReviewSuggested() {
+            const text = reviewTargetText.innerText;
+            if (text) speakText(text);
+        }
+
+        function speakHistoryItem(text) {
+            if (text) speakText(text);
+        }
+
+        // Text Selection Popup logic
+        document.addEventListener('mouseup', handleTextSelection);
+        document.addEventListener('touchend', handleTextSelection);
+
+        function handleTextSelection(e) {
+            // Ngăn chặn đóng popup ngay lập tức khi nhấn vào chính popup
+            const popup = document.getElementById('selectionPopup');
+            if (popup.contains(e.target)) return;
+
+            const selection = window.getSelection();
+            const selectedText = selection.toString().trim();
+
+            // Chỉ xử lý nếu bôi đen từ 1 đến 5 từ (tránh bôi đen cả đoạn dài)
+            if (selectedText.length > 0 && selectedText.split(/\s+/).length <= 5 && /^[a-zA-Z\s,.'"-]+$/.test(selectedText)) {
+                const range = selection.getRangeAt(0);
+                const rect = range.getBoundingClientRect();
+
+                const isMobile = window.innerWidth < 640;
+                
+                if (isMobile) {
+                    // Mobile: Định vị dạng Bottom Sheet cố định ở đáy
+                    popup.style.position = 'fixed';
+                    popup.style.bottom = '16px';
+                    popup.style.left = '16px';
+                    popup.style.right = '16px';
+                    popup.style.top = 'auto'; // Reset top
+                    popup.style.width = 'calc(100% - 32px)';
+                    popup.style.maxWidth = 'none';
+                    // Ẩn mũi tên trỏ
+                    const arrow = popup.querySelector('.absolute.-bottom-2');
+                    if (arrow) arrow.classList.add('hidden');
+                } else {
+                    // Desktop: Định vị popover ngay trên đầu cụm bôi đen
+                    popup.style.position = 'fixed';
+                    popup.style.top = `${rect.top + window.scrollY - popup.offsetHeight - 12}px`;
+                    popup.style.left = `${rect.left + window.scrollX + (rect.width / 2) - (popup.offsetWidth / 2)}px`;
+                    popup.style.bottom = 'auto';
+                    popup.style.right = 'auto';
+                    popup.style.width = ''; // Reset width
+                    popup.style.maxWidth = '280px';
+                    // Hiện mũi tên trỏ
+                    const arrow = popup.querySelector('.absolute.-bottom-2');
+                    if (arrow) arrow.classList.remove('hidden');
+                }
+                
+                document.getElementById('popupWord').innerText = selectedText;
+                document.getElementById('popupLoading').classList.remove('hidden');
+                document.getElementById('popupResult').classList.add('hidden');
+                popup.classList.remove('hidden');
+                setTimeout(() => popup.classList.replace('scale-95', 'scale-100'), 50);
+
+                // Gọi Gemini phân tích nhanh từ được bôi đen
+                fetchSelectionDetails(selectedText);
+            } else {
+                // Nhấn chuột ra chỗ khác thì ẩn popup
+                if (!popup.classList.contains('hidden') && e.target.id !== 'popupTtsBtn' && !e.target.closest('#popupTtsBtn') && e.target.id !== 'popupSaveBtn' && !e.target.closest('#popupSaveBtn')) {
+                    closeSelectionPopup();
+                }
+            }
+        }
+
+        function closeSelectionPopup() {
+            const popup = document.getElementById('selectionPopup');
+            popup.classList.replace('scale-100', 'scale-95');
+            setTimeout(() => popup.classList.add('hidden'), 150);
+        }
+
+        function toggleHeaderMenu(event) {
+            if (event) event.stopPropagation();
+            const menu = document.getElementById('headerDropdownMenu');
+            if (menu.classList.contains('hidden')) {
+                menu.classList.remove('hidden');
+            } else {
+                menu.classList.add('hidden');
+            }
+        }
+
+        // Lắng nghe sự kiện click ngoài để tự động đóng dropdown menu
+        document.addEventListener('click', function(e) {
+            const menu = document.getElementById('headerDropdownMenu');
+            const menuBtn = document.getElementById('headerMenuBtn');
+            if (menu && !menu.classList.contains('hidden') && e.target !== menu && !menu.contains(e.target) && e.target !== menuBtn && !menuBtn.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+
+        function speakPopupWord() {
+            const word = document.getElementById('popupWord').innerText;
+            if (word) speakText(word);
+        }
+
+        function saveSelectedWord() {
+            if (!currentLookupVocab) return;
+            
+            // Kiểm tra xem từ đã tồn tại chưa
+            const exists = vocabList.some(v => v.word.toLowerCase() === currentLookupVocab.word.toLowerCase());
+            if (exists) {
+                showToast(`Từ "${currentLookupVocab.word}" đã có trong sổ tay của bạn!`, "warning");
+                return;
+            }
+
+            vocabList.unshift({
+                ...currentLookupVocab,
+                date: new Date().toLocaleDateString('vi-VN')
+            });
+
+            if (vocabList.length > 300) vocabList.pop(); // giới hạn sổ tay tối đa 300 từ
+            safeStorage.setItem('ai_english_vocab', JSON.stringify(vocabList));
+            
+            renderVocabs();
+            showToast(`Đã lưu "${currentLookupVocab.word}" vào sổ tay từ vựng!`, "success");
+            closeSelectionPopup();
+        }
+
+        async function fetchSelectionDetails(word) {
+            const activeKey = activeRuntimeKey || (safeStorage.getItem('user_gemini_api_key') || "").trim();
+            if (!activeKey) {
+                document.getElementById('popupLoading').classList.add('hidden');
+                document.getElementById('popupTranslation').innerText = "Vui lòng cấu hình API Key để tra từ vựng.";
+                document.getElementById('popupResult').classList.remove('hidden');
+                return;
+            }
+
+            try {
+                // Tạo một prompt tối ưu gọn gàng để trả về thông tin tra cứu siêu tốc
+                const prompt = `Bạn là một từ điển Anh-Việt thông thái, nhanh nhẹn. Hãy tra cứu từ/cụm từ sau: "${word}".
+                Trả về kết quả dưới định dạng JSON có cấu trúc chính xác sau đây:
+                {
+                    "phonetic": "phiên âm IPA của từ, ví dụ /həˈloʊ/",
+                    "translation": "nghĩa tiếng Việt ngắn gọn, súc tích và dễ hiểu nhất"
+                }`;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${activeKey}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: prompt }] }],
+                        generationConfig: { 
+                            responseMimeType: "application/json",
+                            temperature: 0.3, // Nhiệt độ thấp giúp phản hồi có tính nhất quán và chính xác cao
+                            responseSchema: {
+                                type: "OBJECT",
+                                properties: {
+                                    phonetic: { type: "STRING" },
+                                    translation: { type: "STRING" }
+                                },
+                                required: ["phonetic", "translation"]
+                            }
+                        }
+                    })
+                });
+
+                if (!response.ok) throw new Error();
+                const data = await response.json();
+                const result = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+
+                const phonetic = result.phonetic || "/N/A/";
+                const translation = result.translation || "Không rõ nghĩa";
+
+                document.getElementById('popupPhonetic').innerText = phonetic;
+                document.getElementById('popupTranslation').innerText = translation;
+                
+                // Gán từ vựng đang tra cứu để sẵn sàng lưu sổ tay
+                currentLookupVocab = {
+                    word: word,
+                    phonetic: phonetic,
+                    translation: translation
+                };
+
+                document.getElementById('popupLoading').classList.add('hidden');
+                document.getElementById('popupResult').classList.remove('hidden');
+            } catch (err) {
+                currentLookupVocab = null;
+                document.getElementById('popupLoading').classList.add('hidden');
+                document.getElementById('popupTranslation').innerText = "Không thể kết nối từ điển AI.";
+                document.getElementById('popupPhonetic').innerText = "/error/";
+                document.getElementById('popupResult').classList.remove('hidden');
+            }
+        }
+
+        // Freestyle Review Mode (Luyện tập tự do)
+        function startFreeReviewMode() {
+            if (studyHistory.length === 0) {
+                showToast("Bộ sưu tập của bạn đang rỗng, hãy làm một vài câu ở màn hình chính trước khi ôn luyện tự do!", "warning");
+                return;
+            }
+            
+            // Xáo trộn ngẫu nhiên tất cả các câu đã lưu trong bộ sưu tập
+            const shuffled = [...studyHistory].sort(() => 0.5 - Math.random());
+            
+            // Luyện tập tối đa 5 câu hoặc toàn bộ nếu ít hơn 5 câu
+            activeReviewQuests = shuffled.slice(0, Math.min(5, shuffled.length));
+            currentReviewIndex = 0;
+            isFreestyleReview = true;
+
+            learnModeSection.classList.add('hidden');
+            reviewModeSection.classList.remove('hidden');
+            
+            setupReviewQuest();
+            showToast("Đã kích hoạt chế độ Ôn tập tự do!", "success");
+        }
+
+        // Custom Confirmation box
+        function showConfirm(title, message) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMessage').innerText = message;
+            const modal = document.getElementById('confirmModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            }, 50);
+
+            return new Promise((resolve) => {
+                confirmPromiseResolve = resolve;
+            });
+        }
+
+        function closeConfirmModal(result) {
+            const modal = document.getElementById('confirmModal');
+            modal.firstElementChild.classList.remove('scale-100');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                if (confirmPromiseResolve) confirmPromiseResolve(result);
+            }, 150);
+        }
+
+        function showClearConfirmModal() {
+            showConfirm("Xóa toàn bộ bộ sưu tập", "Bạn có chắc chắn muốn làm sạch toàn bộ dữ liệu học tập đã tích lũy không? Hành động này không thể hoàn tác.")
+                .then(confirmed => {
+                    if (confirmed) {
+                        studyHistory = [];
+                        currentLessonStreak = 0;
+                        safeStorage.removeItem('ai_english_history');
+                        safeStorage.setItem('ai_english_streak', '0');
+                        renderHistory();
+                        updateStreakDisplay();
+                        updateDashboardStats();
+                        showToast("Đã dọn dẹp bộ nhớ lịch sử thành công!", "success");
+                    }
+                });
+        }
+
+        // Kiểm tra định dạng API Key viết vào
+        function validateKeyFormat() {
+            const keyInput = document.getElementById('apiKeyInput').value.trim();
+            const warningEl = document.getElementById('keyFormatWarning');
+            if (keyInput.length > 0 && !keyInput.startsWith("AIzaSy")) {
+                warningEl.classList.remove('hidden');
+            } else {
+                warningEl.classList.add('hidden');
+            }
+        }
+
+        function openApiKeyModal() {
+            const savedKey = safeStorage.getItem('user_gemini_api_key') || "";
+            document.getElementById('apiKeyInput').value = savedKey.trim();
+            validateKeyFormat();
+            
+            const modal = document.getElementById('apiKeyModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.firstElementChild.classList.remove('scale-95');
+                modal.firstElementChild.classList.add('scale-100');
+            }, 50);
+        }
+
+        function closeApiKeyModal() {
+            const modal = document.getElementById('apiKeyModal');
+            modal.firstElementChild.classList.remove('scale-100');
+            modal.firstElementChild.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 150);
+        }
+
+        function saveApiKey() {
+            const inputVal = document.getElementById('apiKeyInput').value.trim();
+            if (inputVal && !inputVal.startsWith("AIzaSy")) {
+                showToast("API Key của Gemini chuẩn bắt buộc phải có tiền tố AIzaSy!", "error");
+                return;
+            }
+            
+            safeStorage.removeItem('user_gemini_api_key');
+            safeStorage.setItem('user_gemini_api_key', inputVal);
+            activeRuntimeKey = inputVal;
+            
+            showToast("Đã thiết lập API Key mới hoạt động!", "success");
+            closeApiKeyModal();
+            generateNewQuestion();
+        }
+
+        function initTopicSelector() {
+            topics.forEach(topic => {
+                const opt = document.createElement('option');
+                opt.value = topic;
+                opt.textContent = topic;
+                topicSelector.appendChild(opt);
+            });
+        }
+
+        function updateStreakDisplay() {
+            const maxStreakGoal = 5;
+            const percentage = Math.min((currentLessonStreak / maxStreakGoal) * 100, 100);
+            progressBarFill.style.width = `${percentage}%`;
+            
+            if (currentLessonStreak >= maxStreakGoal) {
+                progressStatusText.innerHTML = `<span class="text-emerald-600 font-extrabold"><i class="fas fa-fire animate-bounce"></i> Đủ 5 bài! Phòng ôn tập AI đã mở khóa.</span>`;
+                openReviewModeBtn.classList.remove('hidden');
+            } else {
+                progressStatusText.innerText = `Cần học thêm ${maxStreakGoal - currentLessonStreak} bài để ôn luyện (${currentLessonStreak}/${maxStreakGoal})`;
+                openReviewModeBtn.classList.add('hidden');
+            }
+        }
+
+        function updateDashboardStats() {
+            const totalCount = studyHistory.length;
+            document.getElementById('statTotalPhrases').innerText = totalCount;
+            document.getElementById('statStreakDay').innerText = `${currentLessonStreak}/5`;
+            
+            const tierEl = document.getElementById('userTier');
+            if (totalCount >= 50) {
+                tierEl.innerText = "Cao Thủ";
+                tierEl.className = "text-xs bg-red-600 text-white px-2.5 py-1 rounded-full font-bold uppercase tracking-wide";
+            } else if (totalCount >= 20) {
+                tierEl.innerText = "Trung Cấp";
+                tierEl.className = "text-xs bg-indigo-50 text-white px-2.5 py-1 rounded-full font-bold uppercase tracking-wide";
+            } else {
+                tierEl.innerText = "Sơ Cấp";
+                tierEl.className = "text-xs bg-blue-500 text-white px-2.5 py-1 rounded-full font-bold uppercase tracking-wide";
+            }
+        }
+
+        function saveToHistory(vi, enModel) {
+            if (!studyHistory.find(item => item.vi === vi)) {
+                studyHistory.unshift({ vi, en: enModel, date: new Date().toLocaleDateString('vi-VN') });
+                if (studyHistory.length > 100) studyHistory.pop();
+                safeStorage.setItem('ai_english_history', JSON.stringify(studyHistory));
+                
+                currentLessonStreak++;
+                safeStorage.setItem('ai_english_streak', currentLessonStreak.toString());
+                
+                renderHistory();
+                updateStreakDisplay();
+                updateDashboardStats();
+                
+                if (currentLessonStreak === 5) {
+                    showToast("🎉 Phòng ôn luyện đã được kích hoạt!", "success");
+                }
+            }
+        }
+
+        // Ẩn/hiện độc lập từng bản dịch trong danh sách
+        function toggleSingleTranslation(index) {
+            const target = document.getElementById(`history-en-${index}`);
+            const icon = document.getElementById(`history-eye-icon-${index}`);
+            if (target.classList.contains('hidden')) {
+                target.classList.remove('hidden');
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                target.classList.add('hidden');
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Bật/tắt ẩn hiện toàn bộ bản dịch cùng một lúc
+        function toggleAllTranslations() {
+            allVisible = !allVisible;
+            const btn = document.getElementById('toggleAllBtn');
+            const translationDivs = document.querySelectorAll('[id^="history-en-"]');
+            const icons = document.querySelectorAll('[id^="history-eye-icon-"]');
+            
+            if (allVisible) {
+                translationDivs.forEach(div => div.classList.remove('hidden'));
+                icons.forEach(icon => icon.classList.replace('fa-eye', 'fa-eye-slash'));
+                btn.innerText = "Ẩn tất cả";
+            } else {
+                translationDivs.forEach(div => div.classList.add('hidden'));
+                icons.forEach(icon => icon.classList.replace('fa-eye-slash', 'fa-eye'));
+                btn.innerText = "Hiện tất cả";
+            }
+        }
+
+        function renderHistory() {
+            historyCountSpan.innerText = studyHistory.length;
+            if (studyHistory.length === 0) {
+                noHistoryMsg.classList.remove('hidden');
+                historyList.innerHTML = '';
+                historyList.appendChild(noHistoryMsg);
+                return;
+            }
+
+            noHistoryMsg.classList.add('hidden');
+            historyList.innerHTML = studyHistory.map((item, index) => `
+                <div class="history-item glass-card p-4 rounded-xl border border-gray-100 shadow-sm relative group transition hover:border-blue-200">
+                    <div class="flex justify-between items-start gap-2">
+                        <div class="flex-grow pr-2">
+                            <div class="text-[10px] font-black text-blue-500 mb-1 uppercase tracking-tighter">${item.date}</div>
+                            <div class="text-gray-800 font-bold mb-1.5 text-xs sm:text-sm">
+                                <span class="text-blue-500 mr-1 font-bold">VN:</span> ${item.vi}
+                            </div>
+                            <!-- Tiếng Anh mặc định ẩn đi -->
+                            <div id="history-en-${index}" class="hidden text-emerald-600 font-extrabold text-xs sm:text-sm bg-emerald-50/50 p-2.5 rounded-lg border border-emerald-100/50 mt-1 flex items-center justify-between gap-1.5">
+                                <span><span class="text-emerald-400 mr-1 font-bold">EN:</span> ${item.en}</span>
+                                <button onclick="speakHistoryItem('${item.en.replace(/'/g, "\\'")}')" class="text-emerald-600 hover:text-emerald-800 p-1" title="Nghe câu này">
+                                    <i class="fas fa-volume-up"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex flex-col gap-2">
+                            <button onclick="toggleSingleTranslation(${index})" class="text-gray-400 hover:text-blue-600 p-1.5 rounded-lg bg-slate-50 border border-slate-100 transition shadow-sm" title="Ẩn/Hiện dịch Anh">
+                                <i id="history-eye-icon-${index}" class="fas fa-eye text-xs"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            allVisible = false;
+            document.getElementById('toggleAllBtn').innerText = "Hiện tất cả";
+        }
+
+        function downloadSelf() {
+            const htmlContent = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+            const blob = new Blob([htmlContent], { type: 'text/html' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'AI_English_Mentor_Pro.html';
+            a.click();
+            showToast("Đã lưu tệp ứng dụng Pro về máy của bạn!", "success");
+        }
+
+        function exportHistory() {
+            if (studyHistory.length === 0) {
+                showToast("Dữ liệu của bạn đang rỗng, không thể xuất!", "warning");
+                return;
+            }
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(studyHistory));
+            const downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "ai_english_history.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+            showToast("Đã tải tệp sao lưu dữ liệu (.json)!", "success");
+        }
+
+        function triggerImport() {
+            document.getElementById('importFileInput').click();
+        }
+
+        function importHistory(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const importedData = JSON.parse(e.target.result);
+                    if (Array.isArray(importedData)) {
+                        const merged = [...importedData, ...studyHistory];
+                        const uniqueMap = new Map();
+                        merged.forEach(item => {
+                            if (item.vi && item.en) uniqueMap.set(item.vi, item);
+                        });
+                        studyHistory = Array.from(uniqueMap.values());
+                        safeStorage.setItem('ai_english_history', JSON.stringify(studyHistory));
+                        renderHistory();
+                        updateDashboardStats();
+                        showToast(`Nhập dữ liệu thành công! Khôi phục ${uniqueMap.size} câu học tập.`, "success");
+                    } else {
+                        showToast("File nhập vào không tương thích hoặc sai cấu trúc!", "error");
+                    }
+                } catch (err) {
+                    showToast("Lỗi giải mã file sao lưu!", "error");
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        async function callGemini(prompt, systemPrompt = "") {
+            let retries = 0;
+            const maxRetries = 5;
+            const activeKey = activeRuntimeKey || (safeStorage.getItem('user_gemini_api_key') || "").trim();
+            
+            if (!activeKey) {
+                loadingOverlay.classList.add('hidden');
+                openApiKeyModal();
+                throw new Error('Chưa cấu hình API Key.');
+            }
+
+            while (retries < maxRetries) {
+                try {
+                    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${activeKey}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            systemInstruction: { parts: [{ text: systemPrompt }] },
+                            generationConfig: { 
+                                responseMimeType: "application/json",
+                                temperature: 0.9,
+                                topP: 0.95,
+                                responseSchema: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        score: { type: "NUMBER" },
+                                        title: { type: "STRING" },
+                                        suggestion: { type: "STRING" },
+                                        explanation: { type: "STRING" },
+                                        vietnamese_content: { type: "STRING" }
+                                    },
+                                    required: ["score", "title", "suggestion", "explanation"]
+                                }
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json().catch(() => ({}));
+                        throw new Error(errData.error?.message || `HTTP ${response.status}`);
+                    }
+                    
+                    const data = await response.json();
+                    const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                    if (!rawText) throw new Error('No content from model');
+                    return JSON.parse(rawText);
+                } catch (error) {
+                    console.error(`Thử lại kết nối lần ${retries + 1} vì lỗi:`, error);
+                    const delay = Math.pow(2, retries) * 1000;
+                    await new Promise(resolve => setTimeout(resolve, delay));
+                    retries++;
+                }
+            }
+            throw new Error('Không thể kết nối với trí tuệ nhân tạo Gemini sau nhiều lần thử!');
+        }
+
+        async function generateNewQuestion() {
+            const selectedVal = topicSelector.value;
+            const chosenTopic = selectedVal === "random" 
+                ? topics[Math.floor(Math.random() * topics.length)] 
+                : selectedVal;
+                
+            const chosenSub = subScenarios[Math.floor(Math.random() * subScenarios.length)];
+
+            currentTopicSpan.innerText = chosenTopic;
+            currentContextSpan.innerText = chosenSub;
+            topicBadge.classList.remove('hidden');
+            contextBadge.classList.remove('hidden');
+
+            // Hiển thị hiệu ứng loading nội bộ bên trong ô tình huống
+            viContextDisplay.innerHTML = `
+                <div class="flex items-center gap-2 text-gray-400 font-medium py-1 animate-pulse">
+                    <i class="fas fa-circle-notch animate-spin text-blue-500 text-lg"></i>
+                    <span class="text-sm sm:text-base">AI đang thiết lập tình huống giao tiếp đời thực...</span>
+                </div>`;
+            
+            try {
+                // Sửa đổi hệ thống đề bài để tạo ra những câu thoại tiếng Việt giao tiếp ngắn gọn, sinh động, chuẩn văn phong đời thường
+                const systemPrompt = `Bạn là một giáo viên dạy tiếng Anh giao tiếp cực kỳ thực tế, trẻ trung, dùng ngôn ngữ đời thường năng động.
+                Nhiệm vụ của bạn là tạo ra một câu thoại tiếng Việt giao tiếp đời thực, cực kỳ tự nhiên, sinh động và thực tế.
+                
+                YÊU CẦU ĐẶC BIỆT VỀ CHẤT LIỆU TIẾNG VIỆT:
+                - Chủ đề chính: "${chosenTopic}".
+                - Sắc thái/Cảm xúc/Bối cảnh giao tiếp: "${chosenSub}".
+                - Câu thoại phải NGẮN GỌN, SÚC TÍCH (tối đa 15-20 từ tiếng Việt), là một câu nói trực tiếp mà một người thực sự sẽ thốt ra trong đời sống hàng ngày ngày nay.
+                - Tuyệt đối TRÁNH các câu sách giáo khoa sáo rỗng, khô cứng vô hồn (như "Bạn có khỏe không?", "Tôi đi đến rạp chiếu phim để xem phim").
+                - Tuyệt đối TRÁNH các câu mang tính kể lể hoàn cảnh, dẫn dắt rườm rà. Chỉ trả về chính xác CÂU THOẠI cần dịch.
+                - Sử dụng linh hoạt các thán từ, trợ từ tự nhiên của tiếng Việt đời thường (ví dụ: ê, nha, á, trời ơi, ghê, luôn, hả, đi, cơ...).
+                - Ví dụ:
+                  + "Trời ơi kẹt xe cứng ngắc rồi, trễ giờ làm chắc luôn!"
+                  + "Ủa bớt bớt cho em tí đi chị ơi, giá này chát quá mua hổng nổi."
+                  + "Ê, cái áo tao mua online nhìn như cái giẻ lau vậy á, bực ghê!"
+                  + "Tí đi ăn trưa hú tao với nha, đang cày nốt đống báo cáo."
+                  + "Alo anh giao tới nhanh giùm em nha, em đang vội đi họp gấp rồi."
+                - Phải trả về dữ liệu đúng định dạng JSON có chứa trường "vietnamese_content" mô tả câu thoại tiếng Việt sinh động đó.`;
+
+                const result = await callGemini("Hãy tạo một câu tiếng Việt độc đáo dựa trên yêu cầu hệ thống.", systemPrompt);
+                
+                currentQuestion = result.vietnamese_content || "Trời ơi, kẹt xe cứng ngắc rồi, kiểu này trễ giờ làm chắc luôn!";
+                viContextDisplay.innerText = currentQuestion;
+                enInput.value = "";
+                charCount.innerText = "0 ký tự";
+                resultArea.classList.add('hidden');
+            } catch (error) {
+                viContextDisplay.innerText = "Không thể tải tình huống. Vui lòng bấm vào 'API Key' kiểm tra lại cấu hình API key cá nhân của bạn.";
+                showToast("Lỗi kết nối AI: " + error.message, "error");
+            }
+        }
+
+        // Chấm điểm dịch câu ở màn hình chính
+        async function checkAnswer() {
+            const userAnswer = enInput.value.trim();
+            if (!userAnswer) {
+                showToast("Vui lòng viết bản dịch của bạn trước khi nộp!", "warning");
+                return;
+            }
+
+            statusMsg.innerText = "AI đang phân tích và chấm điểm bản dịch...";
+            loadingOverlay.classList.remove('hidden');
+            
+            try {
+                const systemPrompt = `Bạn là chuyên gia chấm điểm tiếng Anh giao tiếp bản ngữ cực kỳ chuyên nghiệp và thực tế.
+                Hãy nhận xét và chấm điểm bài dịch từ tiếng Việt sang tiếng Anh của học viên.
+                Câu gốc tiếng Việt: "${currentQuestion}"
+                
+                TIÊU CHÍ CHẤM ĐIỂM:
+                1. Điểm số (0-100): Dựa trên ngữ pháp, và đặc biệt là độ tự nhiên, cách dùng từ có giống người bản xứ giao tiếp thực tế hay không.
+                2. Tiêu đề ngắn phản ánh chất lượng (ví dụ: "Tuyệt vời", "Cần cải thiện độ tự nhiên").
+                3. Trả về đề xuất dịch mẫu đỉnh nhất, áp dụng các cụm từ (collocations, idioms) hiện đại đời thường của người Mỹ/Anh.
+                4. Nhận xét chi tiết bằng tiếng Việt: Nêu rõ lỗi sai từ vựng/ngữ pháp và hướng dẫn thay thế các từ vựng trang trọng khô cứng bằng văn phong giao tiếp tự nhiên.
+                
+                Trả về dữ liệu dưới dạng JSON như cấu trúc yêu cầu.`;
+
+                const result = await callGemini(`Học viên dịch là: "${userAnswer}"`, systemPrompt);
+
+                const score = result.score || 0;
+                const title = result.title || "Kết quả";
+                const suggestion = result.suggestion || "N/A";
+                const explanation = (result.explanation || "Không có nhận xét").replace(/\n/g, '<br>');
+
+                scoreBadge.innerText = `Điểm: ${score}/100`;
+                resultTitle.innerText = title;
+                suggestedTranslation.innerText = suggestion;
+                aiExplanation.innerHTML = explanation;
+
+                if (score >= 50) {
+                    saveToHistory(currentQuestion, suggestion);
+                } else {
+                    showToast("Bản dịch chưa đạt mốc 50 điểm để được lưu trữ, hãy sửa chữa thêm nhé!", "warning");
+                }
+
+                feedbackCard.classList.remove('border-l-green-500', 'border-l-yellow-500', 'border-l-red-500');
+                if (score >= 80) {
+                    feedbackCard.classList.add('border-l-green-500');
+                    scoreBadge.className = 'px-4 py-1.5 rounded-full text-sm font-bold bg-green-100 text-green-700';
+                } else if (score >= 50) {
+                    feedbackCard.classList.add('border-l-yellow-500');
+                    scoreBadge.className = 'px-4 py-1.5 rounded-full text-sm font-bold bg-yellow-100 text-yellow-700';
+                } else {
+                    feedbackCard.classList.add('border-l-red-500');
+                    scoreBadge.className = 'px-4 py-1.5 rounded-full text-sm font-bold bg-red-100 text-red-700';
+                }
+
+                resultArea.classList.remove('hidden');
+                resultArea.scrollIntoView({ behavior: 'smooth' });
+
+            } catch (error) {
+                console.error(error);
+                showToast("Lỗi phân tích bài: " + error.message, "error");
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        // Khởi động phòng Ôn Luyện AI của ngày học (5 bài)
+        document.getElementById('openReviewModeBtn').addEventListener('click', () => {
+            isFreestyleReview = false;
+            startAIOnhuyen();
+        });
+
+        function startAIOnhuyen() {
+            if (studyHistory.length === 0) {
+                showToast("Bộ sưu tập của bạn đang rỗng, hãy học và vượt qua một vài câu dịch ở bảng chính trước nhé!", "warning");
+                return;
+            }
+            
+            const shuffled = [...studyHistory].sort(() => 0.5 - Math.random());
+            activeReviewQuests = shuffled.slice(0, 5);
+            currentReviewIndex = 0;
+
+            learnModeSection.classList.add('hidden');
+            reviewModeSection.classList.remove('hidden');
+            
+            setupReviewQuest();
+        }
+
+        function closeReviewMode() {
+            reviewModeSection.classList.add('hidden');
+            learnModeSection.classList.remove('hidden');
+        }
+
+        function setupReviewQuest() {
+            reviewResultArea.classList.add('hidden');
+            reviewHintArea.classList.add('hidden');
+            reviewEnInput.value = "";
+            
+            const currentQuest = activeReviewQuests[currentReviewIndex];
+            reviewViText.innerText = `"${currentQuest.vi}"`;
+            reviewCounterBadge.innerText = `Câu ${currentReviewIndex + 1}/${activeReviewQuests.length}`;
+        }
+
+        function showReviewHint() {
+            const currentQuest = activeReviewQuests[currentReviewIndex];
+            const words = currentQuest.en.split(' ');
+            const hints = words.map(word => {
+                if (word.length <= 2) return word;
+                return word[0] + "_".repeat(word.length - 1);
+            }).join(' ');
+            
+            reviewHintArea.innerText = "Ký tự gợi ý: " + hints;
+            reviewHintArea.classList.remove('hidden');
+        }
+
+        // Nâng cấp chấm điểm ôn luyện bằng AI cực kỳ linh hoạt (đáp ứng đúng yêu cầu 4 của bạn)
+        async function checkReviewAnswerAI() {
+            const userAnswer = reviewEnInput.value.trim();
+            if (!userAnswer) {
+                showToast("Vui lòng viết bản dịch ôn luyện của bạn!", "warning");
+                return;
+            }
+
+            statusMsg.innerText = "AI đang kiểm tra và chấm bài ôn luyện...";
+            loadingOverlay.classList.remove('hidden');
+
+            const currentQuest = activeReviewQuests[currentReviewIndex];
+
+            try {
+                // Nhận xét ôn tập bằng AI thay vì so sánh Levenshtein cứng nhắc
+                const systemPrompt = `Bạn là một giáo viên chấm bài ôn tập tiếng Anh giao tiếp năng động. 
+                Học viên đang làm bài ôn luyện lại câu đã học từ lịch sử trước đây.
+                Câu gốc tiếng Việt: "${currentQuest.vi}"
+                Bản dịch gốc đã đề xuất trước đó: "${currentQuest.en}"
+                
+                Yêu Cầu Chấm Điểm:
+                1. Hãy chấm điểm (0-100) dựa trên độ chính xác và tự nhiên của bản dịch hiện tại của học viên so với câu gốc. Hãy thật linh hoạt, chấp nhận các cách diễn đạt tương đương khác chứ không chỉ so sánh cứng nhắc từng từ.
+                2. Đưa ra nhận xét ngắn và giải thích chi tiết vì sao học viên được điểm đó và có chỗ nào cần tinh chỉnh lại từ vựng cho giống người bản xứ hơn không.
+                3. Phản hồi đúng cấu trúc JSON quy định.`;
+
+                const result = await callGemini(`Bản dịch hiện tại của học viên: "${userAnswer}"`, systemPrompt);
+
+                const score = result.score || 0;
+                const title = result.title || "Kết quả ôn luyện";
+                const suggestion = result.suggestion || currentQuest.en;
+                const explanation = result.explanation || "Tuyệt vời, câu nói rất tự nhiên!";
+
+                reviewUserText.innerText = userAnswer;
+                reviewTargetText.innerText = suggestion;
+                reviewExplanationText.innerText = explanation;
+                reviewResultArea.classList.remove('hidden');
+
+                reviewScoreBadge.className = 'px-3 py-1.5 rounded-full text-xs font-bold shadow-sm';
+                if (score >= 80) {
+                    reviewResultTitle.innerText = `🎯 Xuất sắc: ${title}`;
+                    reviewScoreBadge.innerText = `Độ chính xác: ${score}%`;
+                    reviewScoreBadge.classList.add('bg-green-100', 'text-green-700');
+                } else if (score >= 50) {
+                    reviewResultTitle.innerText = `👍 Khá tốt: ${title}`;
+                    reviewScoreBadge.innerText = `Độ chính xác: ${score}%`;
+                    reviewScoreBadge.classList.add('bg-yellow-100', 'text-yellow-700');
+                } else {
+                    reviewResultTitle.innerText = `✍️ Cố gắng lên: ${title}`;
+                    reviewScoreBadge.innerText = `Độ chính xác: ${score}%`;
+                    reviewScoreBadge.classList.add('bg-red-100', 'text-red-700');
+                }
+
+                reviewResultArea.scrollIntoView({ behavior: 'smooth' });
+            } catch (error) {
+                showToast("Lỗi AI chấm bài ôn luyện: " + error.message, "error");
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function nextReviewQuest() {
+            if (currentReviewIndex + 1 < activeReviewQuests.length) {
+                currentReviewIndex++;
+                setupReviewQuest();
+            } else {
+                if (!isFreestyleReview) {
+                    currentLessonStreak = 0; // Đặt lại streak khi kết thúc khóa ôn luyện thành công của ngày học
+                    safeStorage.setItem('ai_english_streak', '0');
+                }
+                updateStreakDisplay();
+                updateDashboardStats();
+                
+                showToast("🎉 Tuyệt vời! Bạn đã hoàn thành đợt ôn tập!", "success");
+                closeReviewMode();
+            }
+        }
+
+        // ==================== HỆ THỐNG SỔ TAY TỪ VỰNG & ÔN TẬP TỪ VỰNG ====================
+        
+        function switchRightTab(tab) {
+            const tabSentencesBtn = document.getElementById('tabSentencesBtn');
+            const tabVocabBtn = document.getElementById('tabVocabBtn');
+            const tabSentencesContent = document.getElementById('tabSentencesContent');
+            const tabVocabContent = document.getElementById('tabVocabContent');
+
+            if (tab === 'sentences') {
+                tabSentencesBtn.classList.add('border-blue-600', 'text-blue-600');
+                tabSentencesBtn.classList.remove('border-transparent', 'text-gray-400');
+                tabVocabBtn.classList.add('border-transparent', 'text-gray-400');
+                tabVocabBtn.classList.remove('border-blue-600', 'text-blue-600');
+
+                tabSentencesContent.classList.remove('hidden');
+                tabVocabContent.classList.add('hidden');
+            } else {
+                tabVocabBtn.classList.add('border-blue-600', 'text-blue-600');
+                tabVocabBtn.classList.remove('border-transparent', 'text-gray-400');
+                tabSentencesBtn.classList.add('border-transparent', 'text-gray-400');
+                tabSentencesBtn.classList.remove('border-blue-600', 'text-blue-600');
+
+                tabVocabContent.classList.remove('hidden');
+                tabSentencesContent.classList.add('hidden');
+                renderVocabs();
+            }
+        }
+
+        function deleteVocab(word) {
+            vocabList = vocabList.filter(v => v.word.toLowerCase() !== word.toLowerCase());
+            safeStorage.setItem('ai_english_vocab', JSON.stringify(vocabList));
+            renderVocabs();
+            showToast("Đã xóa từ vựng khỏi sổ tay!", "success");
+        }
+
+        function clearVocabConfirm() {
+            showConfirm("Xóa sổ tay từ vựng", "Bạn có chắc chắn muốn xóa toàn bộ sổ tay từ vựng không? Hành động này không thể hoàn tác.")
+                .then(confirmed => {
+                    if (confirmed) {
+                        vocabList = [];
+                        safeStorage.removeItem('ai_english_vocab');
+                        renderVocabs();
+                        showToast("Đã dọn dẹp sổ tay từ vựng thành công!", "success");
+                    }
+                });
+        }
+
+        function toggleSingleVocabTranslation(index) {
+            const target = document.getElementById(`vocab-vi-${index}`);
+            const icon = document.getElementById(`vocab-eye-icon-${index}`);
+            if (target.classList.contains('hidden')) {
+                target.classList.remove('hidden');
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                target.classList.add('hidden');
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function toggleAllVocabTranslation() {
+            allVocabVisible = !allVocabVisible;
+            const btn = document.getElementById('toggleAllVocabBtn');
+            const translationDivs = document.querySelectorAll('[id^="vocab-vi-"]');
+            const icons = document.querySelectorAll('[id^="vocab-eye-icon-"]');
+            
+            if (allVocabVisible) {
+                translationDivs.forEach(div => div.classList.remove('hidden'));
+                icons.forEach(icon => icon.classList.replace('fa-eye', 'fa-eye-slash'));
+                btn.innerText = "Ẩn tất cả";
+            } else {
+                translationDivs.forEach(div => div.classList.add('hidden'));
+                icons.forEach(icon => icon.classList.replace('fa-eye-slash', 'fa-eye'));
+                btn.innerText = "Hiện tất cả";
+            }
+        }
+
+        function renderVocabs() {
+            const vocabCountSpan = document.getElementById('vocabCount');
+            if (vocabCountSpan) vocabCountSpan.innerText = vocabList.length;
+            
+            const vocabListContainer = document.getElementById('vocabListContainer');
+            const noVocabMsg = document.getElementById('noVocabMsg');
+            const openVocabReviewBtn = document.getElementById('openVocabReviewBtn');
+            
+            if (vocabList.length === 0) {
+                if (noVocabMsg) noVocabMsg.classList.remove('hidden');
+                if (vocabListContainer) {
+                    vocabListContainer.innerHTML = '';
+                    vocabListContainer.appendChild(noVocabMsg);
+                }
+                if (openVocabReviewBtn) openVocabReviewBtn.classList.add('hidden');
+                return;
+            }
+
+            if (noVocabMsg) noVocabMsg.classList.add('hidden');
+            if (openVocabReviewBtn) openVocabReviewBtn.classList.remove('hidden');
+            
+            if (vocabListContainer) {
+                vocabListContainer.innerHTML = vocabList.map((item, index) => `
+                    <div class="vocab-item glass-card p-4 rounded-xl border border-gray-100 shadow-sm relative group transition hover:border-emerald-200">
+                        <div class="flex justify-between items-start gap-2">
+                            <div class="flex-grow pr-2">
+                                <div class="text-[10px] font-black text-emerald-500 mb-1 uppercase tracking-tighter">${item.date}</div>
+                                <div class="text-gray-800 font-bold mb-1 text-xs sm:text-sm">
+                                    <span class="text-emerald-500 mr-1 font-bold">Word:</span> ${item.word}
+                                    <span class="text-[10px] bg-indigo-50 text-indigo-700 px-1.5 py-0.5 rounded font-mono font-bold inline-block ml-1">${item.phonetic}</span>
+                                </div>
+                                <!-- Nghĩa tiếng Việt mặc định ẩn -->
+                                <div id="vocab-vi-${index}" class="hidden text-slate-600 font-medium text-xs sm:text-sm bg-slate-50 p-2.5 rounded-lg border border-slate-100 mt-1 flex items-center justify-between gap-1.5">
+                                    <span><span class="text-slate-400 mr-1 font-bold">Nghĩa:</span> ${item.translation}</span>
+                                </div>
+                            </div>
+                            <div class="flex gap-1.5">
+                                <button onclick="speakHistoryItem('${item.word.replace(/'/g, "\\'")}')" class="text-gray-400 hover:text-blue-600 p-1.5 rounded-lg bg-slate-50 border border-slate-100 transition shadow-sm" title="Nghe phát âm">
+                                    <i class="fas fa-volume-up text-xs"></i>
+                                </button>
+                                <button onclick="toggleSingleVocabTranslation(${index})" class="text-gray-400 hover:text-blue-600 p-1.5 rounded-lg bg-slate-50 border border-slate-100 transition shadow-sm" title="Ẩn/Hiện nghĩa">
+                                    <i id="vocab-eye-icon-${index}" class="fas fa-eye text-xs"></i>
+                                </button>
+                                <button onclick="deleteVocab('${item.word.replace(/'/g, "\\'")}')" class="text-gray-400 hover:text-red-600 p-1.5 rounded-lg bg-slate-50 border border-slate-100 transition shadow-sm" title="Xóa từ này">
+                                    <i class="fas fa-trash-alt text-xs"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            allVocabVisible = false;
+            const btn = document.getElementById('toggleAllVocabBtn');
+            if (btn) btn.innerText = "Hiện tất cả";
+        }
+
+        // --- Ôn tập Từ vựng (Vocab Review Mode) ---
+        
+        function startVocabReviewMode() {
+            if (vocabList.length === 0) {
+                showToast("Sổ tay từ vựng của bạn đang rỗng, hãy bôi đen tra từ để lưu từ vựng trước nhé!", "warning");
+                return;
+            }
+
+            // Shuffle và lấy tối đa 5 từ
+            const shuffled = [...vocabList].sort(() => 0.5 - Math.random());
+            activeVocabReviews = shuffled.slice(0, Math.min(5, shuffled.length));
+            currentVocabReviewIndex = 0;
+
+            // Ẩn các workspace khác
+            learnModeSection.classList.add('hidden');
+            reviewModeSection.classList.add('hidden');
+            vocabReviewSection.classList.remove('hidden');
+
+            setupVocabReviewQuest();
+        }
+
+        function closeVocabReviewMode() {
+            vocabReviewSection.classList.add('hidden');
+            learnModeSection.classList.remove('hidden');
+        }
+
+        function setupVocabReviewQuest() {
+            vocabReviewResultArea.classList.add('hidden');
+            vocabReviewHintArea.classList.add('hidden');
+            document.getElementById('vocabReviewEnInput').value = "";
+            
+            const currentQuest = activeVocabReviews[currentVocabReviewIndex];
+            document.getElementById('vocabReviewViText').innerText = currentQuest.translation;
+            document.getElementById('vocabReviewPhonetic').innerText = currentQuest.phonetic;
+            document.getElementById('vocabReviewCounterBadge').innerText = `Từ ${currentVocabReviewIndex + 1}/${activeVocabReviews.length}`;
+            
+            setTimeout(() => {
+                document.getElementById('vocabReviewEnInput').focus();
+            }, 50);
+        }
+
+        function showVocabHint() {
+            const currentQuest = activeVocabReviews[currentVocabReviewIndex];
+            const word = currentQuest.word.trim();
+            
+            // Gợi ý ký tự đầu cuối cho mỗi từ đơn
+            const hints = word.split(' ').map(part => {
+                if (part.length <= 2) return part;
+                return part[0] + "_".repeat(part.length - 2) + part[part.length - 1];
+            }).join(' ');
+            
+            const hintArea = document.getElementById('vocabReviewHintArea');
+            hintArea.innerText = "Gợi ý: " + hints;
+            hintArea.classList.remove('hidden');
+        }
+
+        function speakVocabReviewSuggested() {
+            const currentQuest = activeVocabReviews[currentVocabReviewIndex];
+            if (currentQuest) speakText(currentQuest.word);
+        }
+
+        async function checkVocabAnswerAI() {
+            const userAnswer = document.getElementById('vocabReviewEnInput').value.trim();
+            if (!userAnswer) {
+                showToast("Vui lòng nhập đáp án của bạn!", "warning");
+                return;
+            }
+
+            const currentQuest = activeVocabReviews[currentVocabReviewIndex];
+            const correctWord = currentQuest.word.trim();
+
+            // Nếu khớp tuyệt đối (không phân biệt hoa thường)
+            if (userAnswer.toLowerCase() === correctWord.toLowerCase()) {
+                showVocabResult(100, "Chính xác tuyệt đối!", correctWord, "Tuyệt vời! Bạn đã dịch đúng hoàn toàn từ vựng này.");
+                return;
+            }
+
+            // Nếu là từ đơn ngắn (dưới 3 từ), so sánh chuỗi trực tiếp để giảm token
+            const isShortWord = correctWord.split(/\s+/).length <= 2;
+            if (isShortWord) {
+                showVocabResult(0, "Chưa chính xác!", correctWord, `Đáp án của bạn chưa đúng. Đáp án chính xác là: "${correctWord}". Hãy viết lại chính xác nhé.`);
+                return;
+            }
+
+            // Nếu là cụm từ dài, sử dụng AI để chấm linh hoạt
+            statusMsg.innerText = "AI đang kiểm tra bản dịch cụm từ...";
+            loadingOverlay.classList.remove('hidden');
+
+            try {
+                const systemPrompt = `Bạn là giáo viên tiếng Anh giao tiếp hỗ trợ ôn tập từ vựng/cụm từ.
+                Học viên được yêu cầu dịch nghĩa tiếng Việt "${currentQuest.translation}" sang cụm từ tiếng Anh chuẩn: "${correctWord}".
+                Học viên dịch là: "${userAnswer}"
+                
+                Yêu cầu:
+                1. Đánh giá xem bản dịch của học viên có hoàn toàn tương đương, tự nhiên và đúng ngữ cảnh với cụm từ đích hay không.
+                2. Chấm điểm (0-100). Nếu chỉ khác biệt nhỏ về mạo từ hoặc từ viết tắt mà vẫn đúng nghĩa, hãy cho điểm cao (>=80).
+                3. Giải thích ngắn gọn bằng tiếng Việt vì sao được điểm đó.
+                4. Trả về cấu trúc JSON đúng quy định.`;
+
+                const result = await callGemini(`Học viên dịch cụm từ là: "${userAnswer}"`, systemPrompt);
+                const score = result.score || 0;
+                const title = result.title || (score >= 80 ? "Chấp nhận được" : "Chưa chính xác");
+                const explanation = result.explanation || "";
+
+                showVocabResult(score, title, correctWord, explanation);
+            } catch (error) {
+                console.error("Lỗi AI chấm điểm từ vựng:", error);
+                showVocabResult(0, "Chưa chính xác!", correctWord, `Không thể kết nối AI chấm bài. Đáp án chính xác là: "${correctWord}".`);
+            } finally {
+                loadingOverlay.classList.add('hidden');
+            }
+        }
+
+        function showVocabResult(score, title, targetText, explanation) {
+            const resultArea = document.getElementById('vocabReviewResultArea');
+            const resultTitle = document.getElementById('vocabReviewResultTitle');
+            const scoreBadge = document.getElementById('vocabReviewScoreBadge');
+            const userText = document.getElementById('vocabReviewUserText');
+            const targetTextDiv = document.getElementById('vocabReviewTargetText');
+            const explanationText = document.getElementById('vocabReviewExplanationText');
+            const explanationBlock = document.getElementById('vocabReviewExplanationBlock');
+
+            userText.innerText = document.getElementById('vocabReviewEnInput').value.trim();
+            targetTextDiv.innerText = targetText;
+            
+            if (explanation) {
+                explanationText.innerText = explanation;
+                explanationBlock.classList.remove('hidden');
+            } else {
+                explanationBlock.classList.add('hidden');
+            }
+
+            scoreBadge.className = 'px-3 py-1.5 rounded-full text-xs font-bold';
+            resultArea.classList.remove('hidden');
+
+            if (score >= 80) {
+                resultTitle.innerText = `🎯 Xuất sắc: ${title}`;
+                scoreBadge.innerText = `Điểm: ${score}%`;
+                scoreBadge.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-green-100 text-green-700 shadow-sm';
+                resultArea.className = "glass-card rounded-2xl p-6 border-l-8 border-l-emerald-500 shadow-sm mt-4";
+            } else if (score >= 50) {
+                resultTitle.innerText = `👍 Khá tốt: ${title}`;
+                scoreBadge.innerText = `Điểm: ${score}%`;
+                scoreBadge.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-700 shadow-sm';
+                resultArea.className = "glass-card rounded-2xl p-6 border-l-8 border-l-amber-500 shadow-sm mt-4";
+            } else {
+                resultTitle.innerText = `✍️ Cần cố gắng: ${title}`;
+                scoreBadge.innerText = `Điểm: ${score}%`;
+                scoreBadge.className = 'px-3 py-1.5 rounded-full text-xs font-bold bg-red-100 text-red-700 shadow-sm';
+                resultArea.className = "glass-card rounded-2xl p-6 border-l-8 border-l-red-500 shadow-sm mt-4";
+            }
+            
+            resultArea.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function nextVocabReviewQuest() {
+            if (currentVocabReviewIndex + 1 < activeVocabReviews.length) {
+                currentVocabReviewIndex++;
+                setupVocabReviewQuest();
+            } else {
+                showToast("🎉 Tuyệt vời! Bạn đã hoàn thành đợt ôn tập từ vựng!", "success");
+                closeVocabReviewMode();
+            }
+        }
+
+        // ==================================================================================
+
+        topicSelector.addEventListener('change', generateNewQuestion);
+        newQuestBtn.addEventListener('click', generateNewQuestion);
+        submitBtn.addEventListener('click', checkAnswer);
+
+        // Lắng nghe sự kiện Enter cho ô nhập liệu ôn tập từ vựng
+        document.getElementById('vocabReviewEnInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                checkVocabAnswerAI();
+            }
+        });
+
+        // Khởi động toàn diện ứng dụng khi trình duyệt hoàn thành tải trang
+        window.onload = () => {
+            initTopicSelector();
+            renderHistory();
+            renderVocabs();
+            updateStreakDisplay();
+            updateDashboardStats();
+            
+            const savedKey = (safeStorage.getItem('user_gemini_api_key') || "").trim();
+            if (savedKey && savedKey.startsWith("AIzaSy")) {
+                activeRuntimeKey = savedKey;
+                generateNewQuestion();
+            } else {
+                viContextDisplay.innerText = "Chào mừng bạn! Vui lòng nhấn vào nút 'Cấu hình API Key' ở góc trên cùng để thiết lập mã kết nối AI và bắt đầu hành trình học tập.";
+                openApiKeyModal();
+            }
+
+            // Nạp trước danh sách giọng đọc của trình duyệt để sẵn sàng cho chức năng TTS
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.getVoices();
+            }
+        };
+    </script>
+
+</body></html>

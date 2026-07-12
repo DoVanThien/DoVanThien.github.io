@@ -1,0 +1,27 @@
+{
+  "name": "Poop Tracker - Nhật Ký Tiêu Hóa Của Bạn",
+  "short_name": "PoopTracker",
+  "description": "Ứng dụng theo dõi lịch đi vệ sinh, lượng nước uống và phân tích sức khỏe tiêu hóa.",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "https://img.icons8.com/emoji/96/000000/red-apple.png",
+      "sizes": "96x96",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/emoji/192/000000/red-apple.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://img.icons8.com/emoji/512/000000/red-apple.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,1105 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Poop Tracker - Nhật Ký Tiêu Hóa Của Bạn</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="styles.css">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#6366f1">
+    <style>
+        @media (max-width: 1024px) {
+            .back-home-nav-desktop {
+                display: none !important;
+            }
+        }
+        @media (min-width: 1025px) {
+            .back-home-nav-mobile, .dropdown-divider-home {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+
+<body class="theme-light">
+    <!-- Glassmorphism App Container -->
+    <div class="app-container">
+        <!-- Sidebar Navigation (Desktop) -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="logo-wrapper">
+                    <!-- Red Apple Logo (SVG) -->
+                    <svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round" class="logo-svg">
+                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"
+                            fill="var(--color-apple-red)" stroke="var(--color-apple-red-dark)" />
+                        <path d="M12 6c0-2 1-3 3-3" stroke="var(--color-leaf-green)" stroke-width="2" />
+                        <path d="M11 2c.5 1 1 2 1 3" stroke="var(--color-leaf-green)" stroke-width="2" />
+                    </svg>
+                </div>
+                <span class="brand-name">PoopTracker</span>
+            </div>
+
+            <!-- Profile Switcher Dropdown in Sidebar -->
+            <div class="profile-selector-container">
+                <div class="active-profile-card" id="activeProfileCard">
+                    <div class="profile-avatar" id="activeAvatar">🍎</div>
+                    <div class="profile-info">
+                        <div class="profile-name" id="activeName">Đang tải...</div>
+                        <div class="profile-status" id="activeStatus">Đang hoạt động</div>
+                    </div>
+                    <i data-lucide="chevron-down" class="chevron-icon"></i>
+                </div>
+                <div class="profile-dropdown shadow-blur" id="profileDropdown">
+                    <div class="profile-dropdown-list" id="profileDropdownList">
+                        <!-- Profiles loaded dynamically here -->
+                    </div>
+                    <button class="btn btn-text btn-block text-left" id="btnDropdownAddProfile"><i data-lucide="plus"></i> Thêm hồ sơ mới</button><div class="dropdown-divider-home" style="border-top: 1px solid var(--color-border); margin: 6px 0;"></div><a href="../index.html" class="btn btn-text btn-block text-left back-home-nav-mobile" style="display: flex; align-items: center; gap: 8px; color: var(--color-primary); font-weight: 600; text-decoration: none; padding: 10px 12px; font-size: 0.9rem;"><i data-lucide="home" style="width: 16.5px; height: 16.5px; stroke-width: 2;"></i> <span>Trang chủ Portal</span></a>
+                </div>
+            </div>
+
+            <!-- Navigation Links -->
+            <nav class="nav-menu">
+                <a href="#" class="nav-item active" data-tab="calendar">
+                    <i data-lucide="calendar"></i>
+                    <span>Lịch Theo Dõi</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="analytics">
+                    <i data-lucide="bar-chart-2"></i>
+                    <span>Thống Kê</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="profiles">
+                    <i data-lucide="users"></i>
+                    <span>Quản Lý Hồ Sơ</span>
+                </a>
+                <a href="#" class="nav-item" data-tab="settings"><i data-lucide="settings"></i><span>Cài Đặt</span></a><a href="../index.html" class="nav-item back-home-nav-desktop"><i data-lucide="home"></i><span>Trang Chủ Portal</span></a>
+            </nav>
+
+            <!-- Theme Toggle in Sidebar Footer -->
+            <div class="sidebar-footer">
+                <button class="theme-toggle-btn" id="themeToggleBtn">
+                    <i data-lucide="moon" class="dark-icon"></i>
+                    <i data-lucide="sun" class="light-icon"></i>
+                    <span id="themeToggleText">Chế độ tối</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header (Mobile profile bar & Page Title) -->
+            <header class="content-header">
+                <h1 id="pageTitle" class="page-title">Lịch Theo Dõi</h1>
+                <div class="header-stats-row" id="headerStatsRow">
+                    <div class="streak-badge streak-water" id="headerStreakWater" title="Chuỗi ngày uống đủ nước liên tiếp">
+                        <span>💧</span> <span id="waterStreakVal">0</span> ngày
+                    </div>
+                    <div class="streak-badge streak-poop" id="headerStreakPoop" title="Chuỗi ngày tiêu hóa khỏe mạnh (táo xanh) liên tiếp">
+                        <span>🔥</span> <span id="healthyStreakVal">0</span> ngày
+                    </div>
+                    <div class="water-quick-stats" id="headerWaterStats">
+                        <i data-lucide="droplet" class="text-water" style="width: 16px; height: 16px; transition: transform 0.3s;"></i>
+                        <span id="headerWaterText">0/2000 ml</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Tabs -->
+            <div class="tab-content-wrapper">
+                <!-- TAB: CALENDAR (Dashboard) -->
+                <section class="tab-pane active" id="tab-calendar">
+                    <div class="dashboard-grid">
+                        <!-- Left Panel: Calendar Grid -->
+                        <div class="card calendar-card shadow-blur">
+                            <div class="calendar-header-controls">
+                                <div class="calendar-view-modes">
+                                    <button class="btn-toggle active" data-view="month">Tháng</button>
+                                    <button class="btn-toggle" data-view="week">Tuần</button>
+                                    <button class="btn-toggle" data-view="year">Năm</button>
+                                </div>
+                                <div class="calendar-nav">
+                                    <button class="btn btn-icon" id="prevPeriodBtn"><i
+                                            data-lucide="chevron-left"></i></button>
+                                    <span class="calendar-current-label" id="currentPeriodLabel">Tháng 07, 2026</span>
+                                    <button class="btn btn-icon" id="nextPeriodBtn"><i
+                                            data-lucide="chevron-right"></i></button>
+                                </div>
+                            </div>
+
+                            <!-- Calendar Container (will be rendered via JS) -->
+                            <div id="calendarContainer" class="calendar-container month-view">
+                                <!-- Calendar Grid / Week view / Year view generated dynamically -->
+                            </div>
+
+                            <div class="calendar-legend">
+                                <div class="legend-item"><span class="legend-dot status-none"></span> Chưa ghi nhận
+                                </div>
+                                <div class="legend-item"><span class="legend-dot status-perfect"></span> Đi đều (Táo
+                                    xanh 🍏)</div>
+                                <div class="legend-item"><span class="legend-dot status-constipated"></span> Táo bón
+                                    (Táo đỏ 🍎)</div>
+                                <div class="legend-item"><span class="legend-dot status-yellow"></span> Thiếu xơ/K.thành
+                                    công (Táo vàng 🍋)</div>
+                                <div class="legend-item"><span class="legend-dot status-danger"></span> Tiêu chảy nguy
+                                    hiểm (Táo tím 🍇)</div>
+                            </div>
+                        </div>
+
+                        <!-- Right Panel: Quick Actions & Daily Status -->
+                        <div class="right-dashboard-panel">
+                            <!-- Quick Logs -->
+                            <div class="card log-card shadow-blur">
+                                <h3>Ghi nhận hôm nay</h3>
+                                <div class="action-buttons-grid">
+                                    <button class="btn btn-primary btn-log" id="btnLogPoop">
+                                        <div class="btn-icon-wrapper apple-shake">🍎</div>
+                                        <span>Ghi Đại Tiện</span>
+                                    </button>
+                                    <button class="btn btn-secondary btn-log" id="btnLogWater">
+                                        <div class="btn-icon-wrapper water-bounce"><i data-lucide="droplet"></i></div>
+                                        <span>Uống Nước</span>
+                                    </button>
+                                </div>
+                                <button class="btn btn-block btn-food-log" id="btnLogFood"
+                                    style="margin-top:12px; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color:white; border:none; box-shadow:0 4px 10px rgba(245, 158, 11, 0.25);">
+                                    <div style="display:flex; align-items:center; gap:8px; justify-content:center;">
+                                        <span style="font-size:1.4rem;">🍲</span>
+                                        <span style="font-weight:700;">Ghi Ăn Uống Hôm Nay</span>
+                                    </div>
+                                </button>
+                            </div>
+
+                            <!-- Smartwatch steps widget -->
+                            <div class="card smartwatch-widget shadow-blur hide" id="smartwatchWidget">
+                                <div class="smartwatch-header"
+                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                                    <h3 style="font-size:1rem; display:flex; align-items:center; gap:8px;">
+                                        <i data-lucide="watch" class="text-water"></i> Thiết bị đeo đồng bộ
+                                    </h3>
+                                    <span class="badge"
+                                        style="font-size:0.7rem; background:var(--color-primary-light); color:var(--color-primary-dark); padding:2px 8px; border-radius:10px; font-weight:700;">CONNECTED</span>
+                                </div>
+                                <div style="display:flex; justify-content:space-between; align-items:center;">
+                                    <div>
+                                        <span
+                                            style="font-size:0.8rem; color:var(--color-text-muted); display:block;">Vận
+                                            động hôm nay</span>
+                                        <span style="font-size:1.6rem; font-weight:800;"
+                                            id="smartwatchStepsVal">0</span>
+                                        <span style="font-size:0.8rem; color:var(--color-text-muted);">/ 10,000
+                                            bước</span>
+                                    </div>
+                                    <div
+                                        style="width: 50px; height: 50px; position:relative; display:flex; align-items:center; justify-content:center;">
+                                        <svg viewBox="0 0 36 36"
+                                            style="width:100%; height:100%; transform: rotate(-90deg);">
+                                            <path
+                                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                fill="none" stroke="var(--color-border)" stroke-width="3" />
+                                            <path
+                                                d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                fill="none" stroke="var(--color-water)" stroke-width="3"
+                                                stroke-dasharray="0, 100" id="smartwatchStepsProgressCircle" />
+                                        </svg>
+                                        <span style="position:absolute; font-size:0.75rem; font-weight:800;"
+                                            id="smartwatchStepsPercent">0%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Health Insights & Water Widget -->
+                            <div class="card water-widget shadow-blur">
+                                <div class="widget-header">
+                                    <h3>Nước uống hằng ngày</h3>
+                                    <span class="water-percentage" id="waterPercentText">0%</span>
+                                </div>
+                                <div class="water-progress-container">
+                                    <div class="water-wave-bar" id="waterProgressBar" style="height: 0%;">
+                                        <div class="wave"></div>
+                                    </div>
+                                    <div class="water-stats-detail">
+                                        <span class="water-current" id="waterCurrentVal">0</span>
+                                        <span class="water-goal" id="waterGoalVal">/ 2000 ml</span>
+                                    </div>
+                                </div>
+                                <div class="water-quick-adds">
+                                    <button class="btn btn-outline-water" data-amount="250">+250ml</button>
+                                    <button class="btn btn-outline-water" data-amount="500">+500ml</button>
+                                    <button class="btn btn-outline-water" data-amount="750">+750ml</button>
+                                </div>
+                            </div>
+
+                            <!-- Smart Health Alert -->
+                            <div class="card alert-card shadow-blur hide" id="healthAlertCard">
+                                <div class="alert-header">
+                                    <i data-lucide="alert-triangle" class="alert-icon text-alert"></i>
+                                    <h4>Nhắc nhở sức khỏe</h4>
+                                </div>
+                                <p class="alert-text" id="healthAlertText">Đang tải cảnh báo...</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: ANALYTICS -->
+                <section class="tab-pane" id="tab-analytics">
+                    <div class="analytics-layout">
+                        <!-- Top Filter Bar -->
+                        <div class="card filter-card shadow-blur">
+                            <div class="filter-controls">
+                                <div class="filter-group">
+                                    <label for="analyticsViewSelect">Dạng xem:</label>
+                                    <select id="analyticsViewSelect" class="form-control" style="min-width:100px;">
+                                        <option value="month">Theo Tháng</option>
+                                        <option value="year">Theo Năm</option>
+                                    </select>
+                                </div>
+
+                                <!-- Dynamic month picker -->
+                                <div class="filter-group" id="filterMonthGroup">
+                                    <label for="analyticsMonthPicker">Chọn Tháng:</label>
+                                    <input type="month" id="analyticsMonthPicker" class="form-control">
+                                </div>
+
+                                <!-- Dynamic year selector -->
+                                <div class="filter-group hide" id="filterYearGroup">
+                                    <label for="analyticsYearPicker">Chọn Năm:</label>
+                                    <select id="analyticsYearPicker" class="form-control">
+                                        <!-- Will populate dynamically based on available logs + current year -->
+                                    </select>
+                                </div>
+
+                                <div class="compare-switch-wrapper">
+                                    <label class="switch-container">
+                                        <input type="checkbox" id="compareProfilesCheckbox">
+                                        <span class="switch-slider"></span>
+                                    </label>
+                                    <span>So sánh giữa 2 Profile</span>
+                                </div>
+                                <div class="filter-group hide" id="compareProfileSelectGroup">
+                                    <label for="compareProfileSelect">So sánh với:</label>
+                                    <select id="compareProfileSelect" class="form-control">
+                                        <!-- Other profiles loaded dynamically -->
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Charts Grid -->
+                        <div class="charts-grid">
+                            <!-- Chart 1: Bowel Movement Frequency -->
+                            <div class="card chart-card shadow-blur">
+                                <h3 id="chartTitleBowel">Tần suất đi đại tiện</h3>
+                                <div class="chart-container">
+                                    <canvas id="bowelChart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Chart 2: Water Intake & Bowel Relationship -->
+                            <div class="card chart-card shadow-blur">
+                                <h3 id="chartTitleWater">Lượng nước & Sức khỏe tiêu hóa</h3>
+                                <div class="chart-container">
+                                    <canvas id="waterChart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Stat cards -->
+                        <div class="stats-summary-grid">
+                            <div class="card stat-box shadow-blur">
+                                <span class="stat-label">Tổng số lần đại tiện</span>
+                                <span class="stat-value text-primary" id="statTotalPoops">0</span>
+                                <span class="stat-subtext" id="statTotalPoopsSub">Lần trong khoảng thời gian này</span>
+                            </div>
+                            <div class="card stat-box shadow-blur">
+                                <span class="stat-label">Tỷ lệ đều đặn (Táo xanh 🍏)</span>
+                                <span class="stat-value text-green" id="statRegularityPercent">0%</span>
+                                <span class="stat-subtext" id="statRegularitySub">Được tính từ loại phân lý tưởng
+                                    (3-4)</span>
+                            </div>
+                            <div class="card stat-box shadow-blur">
+                                <span class="stat-label">Lượng nước uống trung bình</span>
+                                <span class="stat-value text-water" id="statAvgWater">0 ml/ngày</span>
+                                <span class="stat-subtext" id="statAvgWaterSub">Đạt 0% mục tiêu</span>
+                            </div>
+                        </div>
+
+                        <!-- AI Food Sensitivity analysis panel -->
+                        <div class="card ai-analysis-card shadow-blur" style="margin-top: 24px;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                                <div>
+                                    <h3 style="display:flex; align-items:center; gap:8px;">
+                                        <span style="font-size:1.5rem;">🤖</span> AI Chẩn Đoán Thực Phẩm Kích Ứng
+                                    </h3>
+                                    <p style="font-size:0.8rem; color:var(--color-text-muted); margin-top:2px;">Tìm mối
+                                        liên kết giữa thực đơn ăn uống và trạng thái tiêu hóa (táo bón, tiêu chảy) của
+                                        riêng bạn.</p>
+                                </div>
+                                <button class="btn btn-primary" id="btnRunAIAnalysis"
+                                    style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);">
+                                    <i data-lucide="sparkles"></i> Chạy AI Chẩn Đoán
+                                </button>
+                            </div>
+
+                            <!-- Analysis results view -->
+                            <div class="ai-analysis-results-container" id="aiAnalysisResults">
+                                <div style="text-align:center; padding: 24px; color: var(--color-text-muted);"
+                                    id="aiAnalysisPlaceholder">
+                                    <span style="font-size:2.2rem;">📊</span>
+                                    <p style="margin-top:10px; font-weight:600; font-size:0.9rem;">Hãy bấm nút "Chạy AI
+                                        Chẩn Đoán" để quét và phân tích mối liên hệ.</p>
+                                </div>
+                                <div class="ai-loading-container hide" id="aiAnalysisLoading">
+                                    <div class="spinner"></div>
+                                    <p style="margin-top:12px; font-weight:700; font-size:0.9rem;">AI đang quét nhật ký
+                                        ăn uống và đại tiện của cơ địa...</p>
+                                </div>
+                                <div class="ai-results-grid hide" id="aiAnalysisResultsGrid">
+                                    <!-- Results cards populated in JS -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: PROFILES -->
+                <section class="tab-pane" id="tab-profiles">
+                    <div class="profiles-layout">
+                        <div class="profiles-header">
+                            <h2>Danh sách Hồ sơ người dùng</h2>
+                            <div style="display:flex; gap:10px; width:100%; flex-wrap:wrap; margin-top: 10px;" class="profiles-header-buttons">
+                                <button class="btn btn-primary" id="btnAddNewProfileMain" style="flex-grow:1; justify-content:center;">
+                                    <i data-lucide="plus"></i> Tạo hồ sơ mới
+                                </button>
+                                <button class="btn btn-outline" id="btnOpenJoinGroupModal" style="flex-grow:1; justify-content:center; border-color:var(--color-primary); color:var(--color-primary);">
+                                    <i data-lucide="key-round"></i> Nhập mã mời liên kết
+                                </button>
+                            </div>
+                        </div>
+                        <div class="profiles-grid" id="profilesGrid">
+                            <!-- Profile cards generated dynamically -->
+                        </div>
+
+                        <!-- Gamification Badge Showcase Shelf -->
+                        <div class="card badges-shelf-card shadow-blur" style="margin-top:32px;">
+                            <div
+                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
+                                <h3 style="display:flex; align-items:center; gap:8px; margin:0;">
+                                    <i data-lucide="award" class="text-water"></i> Bộ Sưu Tập Huy Hiệu Thành Tích
+                                </h3>
+                                <div id="badgeCountDisplay"
+                                    style="font-weight:700; font-size:0.85rem; background:var(--color-primary-light); color:var(--color-primary-dark); padding:4px 12px; border-radius:12px;">
+                                    Tiến trình: 0/8 Huy hiệu
+                                </div>
+                            </div>
+
+                            <!-- Ultimate Emperor Medal Showcase -->
+                            <div class="emperor-medal-container locked" id="emperorMedalContainer">
+                                <div class="emperor-glow-ring"></div>
+                                <div class="emperor-cup-emoji">👑🏆👑</div>
+                                <div class="emperor-medal-info">
+                                    <h4 class="emperor-medal-title">HOÀNG ĐẾ TIÊU HÓA</h4>
+                                    <p class="emperor-medal-desc">Phần thưởng tối cao dành cho chiến binh mở khóa toàn
+                                        bộ 8 Huy hiệu sức khỏe.</p>
+                                    <div class="emperor-medal-progress-bar-container">
+                                        <div class="emperor-medal-progress-bar" id="emperorProgressBar"
+                                            style="width:0%;"></div>
+                                    </div>
+                                    <span class="emperor-status-text" id="emperorStatusText">Đang khóa (0/8)</span>
+                                </div>
+                                <button class="btn btn-primary btn-share-emperor hide" id="btnShareEmperor">
+                                    <i data-lucide="share-2"></i> Chia sẻ thành tích
+                                </button>
+                            </div>
+
+                            <div class="badges-shelf-grid" id="badgesShelfGrid">
+                                <!-- Badges populated dynamically in JS -->
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- TAB: SETTINGS -->
+                <section class="tab-pane" id="tab-settings">
+                    <div class="settings-layout">
+                        <!-- Settings Groups -->
+                        <div class="settings-column">
+                            <!-- Theme & Reminders -->
+                            <div class="card settings-card shadow-blur">
+                                <h3>Cài đặt chung</h3>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <div class="setting-title">Chế độ giao diện</div>
+                                        <div class="setting-desc">Chuyển đổi giao diện sáng/tối</div>
+                                    </div>
+                                    <div class="setting-action">
+                                        <button class="btn btn-outline" id="settingsThemeToggle">Chế độ tối</button>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <div class="setting-title">Nhắc nhở uống nước</div>
+                                        <div class="setting-desc">Nhận thông báo định kỳ hằng ngày trên trình duyệt
+                                        </div>
+                                    </div>
+                                    <div class="setting-action">
+                                        <label class="switch-container">
+                                            <input type="checkbox" id="notificationToggle">
+                                            <span class="switch-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <div class="setting-title">Tần suất nhắc nhở</div>
+                                        <div class="setting-desc">Khoảng cách thời gian giữa các lần thông báo</div>
+                                    </div>
+                                    <div class="setting-action">
+                                        <select id="notificationInterval" class="form-control">
+                                            <option value="60">Mỗi 1 giờ</option>
+                                            <option value="120" selected>Mỗi 2 giờ</option>
+                                            <option value="180">Mỗi 3 giờ</option>
+                                            <option value="240">Mỗi 4 giờ</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Smartwatch Integration -->
+                            <div class="card settings-card shadow-blur">
+                                <h3>Đồng bộ thiết bị đeo thông minh</h3>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <div class="setting-title">Kết nối Apple Health / Google Fit</div>
+                                        <div class="setting-desc">Tự động đồng bộ số bước đi bộ và nước uống từ đồng hồ
+                                            thông minh của bạn.</div>
+                                    </div>
+                                    <div class="setting-action">
+                                        <label class="switch-container">
+                                            <input type="checkbox" id="smartwatchSyncToggle">
+                                            <span class="switch-slider"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="setting-item hide" id="smartwatchSyncStatusRow">
+                                    <div class="setting-info">
+                                        <div class="setting-title">Trạng thái đồng bộ hóa</div>
+                                        <div class="setting-desc" id="smartwatchSyncStatusDesc">Đang kết nối...</div>
+                                    </div>
+                                    <div class="setting-action">
+                                        <button class="btn btn-outline" id="btnForceSmartwatchSync">
+                                            <i data-lucide="refresh-cw"></i> Đồng bộ ngay
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Data management -->
+                            <div class="card settings-card shadow-blur">
+                                <h3>Quản lý dữ liệu</h3>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <div class="setting-title">Sao lưu dữ liệu</div>
+                                        <div class="setting-desc">Xuất toàn bộ dữ liệu ra file JSON để lưu trữ</div>
+                                    </div>
+                                    <div class="setting-action">
+                                        <button class="btn btn-secondary" id="btnExportData">
+                                            <i data-lucide="download"></i> Xuất dữ liệu
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="setting-item">
+                                    <div class="setting-info">
+                                        <div class="setting-title">Khôi phục dữ liệu</div>
+                                        <div class="setting-desc">Nhập dữ liệu từ file JSON đã sao lưu trước đó</div>
+                                    </div>
+                                    <div class="setting-action">
+                                        <label for="importFile" class="btn btn-outline btn-file-label">
+                                            <i data-lucide="upload"></i> Chọn file nhập
+                                        </label>
+                                        <input type="file" id="importFile" accept=".json" class="hide-file-input">
+                                    </div>
+                                </div>
+                                <div class="setting-item danger-zone">
+                                    <div class="setting-info">
+                                        <div class="setting-title text-danger">Xóa toàn bộ dữ liệu</div>
+                                        <div class="setting-desc">Xóa vĩnh viễn tất cả profile và nhật ký. Thao tác
+                                            không thể hoàn tác.</div>
+                                    </div>
+                                    <div class="setting-action">
+                                        <button class="btn btn-danger" id="btnClearAllData">Xóa hết dữ liệu</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                         </div>
+
+                        <!-- App info & Health info -->
+                        <div class="settings-column">
+                            <div class="card settings-card shadow-blur">
+                                <h3>Thông tin về Thang đo phân Bristol</h3>
+                                <div class="bristol-info-list">
+                                    <div class="bristol-info-item">
+                                        <span class="bristol-tag type-1-2">Loại 1 - 2</span>
+                                        <span class="bristol-desc">Dạng viên nhỏ, cứng hoặc cục lồi lõm (Biểu hiện của
+                                            <strong>Táo bón</strong> - Táo đỏ 🍎)</span>
+                                    </div>
+                                    <div class="bristol-info-item">
+                                        <span class="bristol-tag type-3-4">Loại 3 - 4</span>
+                                        <span class="bristol-desc">Hình xúc xích, bề mặt nứt hoặc mịn (Lý tưởng, biểu
+                                            hiện của <strong>Đều đặn</strong> - Táo xanh 🍏)</span>
+                                    </div>
+                                    <div class="bristol-info-item">
+                                        <span class="bristol-tag type-5">Loại 5</span>
+                                        <span class="bristol-desc">Cục mềm sắc cạnh (Biểu hiện <strong>Thiếu chất
+                                                xơ</strong> - Táo vàng 🍋)</span>
+                                    </div>
+                                    <div class="bristol-info-item">
+                                        <span class="bristol-tag type-6-7">Loại 6 - 7</span>
+                                        <span class="bristol-desc">Nhão xốp hoặc lỏng hoàn toàn (Biểu hiện của
+                                            <strong>Tiêu chảy/Nguy hiểm</strong> - Táo tím 🍇)</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="card settings-card shadow-blur">
+                                <h3>Mẹo sức khỏe tiêu hóa</h3>
+                                <ul class="health-tips-list">
+                                    <li>Uống ít nhất 1.5 - 2 lít nước mỗi ngày giúp làm mềm phân.</li>
+                                    <li>Ăn nhiều chất xơ từ rau xanh, táo, chuối và ngũ cốc nguyên hạt.</li>
+                                    <li>Duy trì thói quen đi vệ sinh vào một khung giờ cố định trong ngày (ví dụ: sau
+                                        khi ngủ dậy).</li>
+                                    <li>Tăng cường vận động thể chất giúp kích thích nhu động ruột hoạt động hiệu quả
+                                        hơn.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            <!-- Footer Note -->
+            <div class="footer-note">Miliket made this app for Omachi &lt;3</div>
+        </main>
+    </div>
+
+    <!-- MODAL: ADD/EDIT PROFILE -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal shadow-blur">
+            <div class="modal-header">
+                <h3 id="profileModalTitle">Thêm hồ sơ mới</h3>
+                <button class="btn btn-icon" id="btnCloseProfileModal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="profileForm">
+                <input type="hidden" id="profileIdField">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="profileNameInput">Tên hồ sơ <span class="text-danger">*</span></label>
+                        <input type="text" id="profileNameInput" class="form-control"
+                            placeholder="Ví dụ: Bố, Mẹ, Bé Bon..." required maxlength="20">
+                    </div>
+
+                    <!-- Avatar Selection with Popup modal launcher -->
+                    <div class="form-group">
+                        <label>Ảnh đại diện (Avatar)</label>
+                        <div style="display:flex; align-items:center; gap:16px;">
+                            <div class="profile-avatar" id="profileSelectedAvatarPreview"
+                                style="width:54px; height:54px; font-size:2.2rem; cursor:pointer; border:2px dashed var(--color-primary); display:flex; align-items:center; justify-content:center; overflow:hidden;">
+                                🍎</div>
+                            <div style="display:flex; flex-direction:column; gap:8px;">
+                                <button type="button" class="btn btn-outline" id="btnOpenAvatarPicker" style="font-size:0.8rem; padding: 6px 12px;">Chọn emoji...</button>
+                                <label for="profileAvatarFileInput" class="btn btn-outline" style="font-size:0.8rem; padding: 6px 12px; margin:0; text-align:center; cursor:pointer; display:flex; align-items:center; gap:4px; justify-content:center;">
+                                    <i data-lucide="image" style="width:14px; height:14px;"></i>Tải ảnh lên...
+                                </label>
+                                <input type="file" id="profileAvatarFileInput" accept="image/*" style="display:none">
+                            </div>
+                        </div>
+                        <input type="hidden" id="profileAvatarField" value="🍎">
+                    </div>
+
+                    <!-- Profile details (Gender, Age, Weight, Height) -->
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="profileGenderInput">Giới tính</label>
+                            <select id="profileGenderInput" class="form-control">
+                                <option value="male">Nam</option>
+                                <option value="female">Nữ</option>
+                                <option value="other">Khác</option>
+                            </select>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="profileAgeInput">Tuổi (năm) <span class="text-danger">*</span></label>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('profileAgeInput').stepDown(); document.getElementById('profileAgeInput').dispatchEvent(new Event('input'))" style="padding:6px 10px; font-weight:bold;">-</button>
+                                <input type="number" id="profileAgeInput" class="form-control" placeholder="25" min="1"
+                                    max="120" value="25" required style="text-align:center;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('profileAgeInput').stepUp(); document.getElementById('profileAgeInput').dispatchEvent(new Event('input'))" style="padding:6px 10px; font-weight:bold;">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="profileWeightInput">Cân nặng (kg) <span class="text-danger">*</span></label>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('profileWeightInput').stepDown(); document.getElementById('profileWeightInput').dispatchEvent(new Event('input'))" style="padding:6px 10px; font-weight:bold;">-</button>
+                                <input type="number" id="profileWeightInput" class="form-control" placeholder="60" min="1"
+                                    max="250" value="60" required style="text-align:center;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('profileWeightInput').stepUp(); document.getElementById('profileWeightInput').dispatchEvent(new Event('input'))" style="padding:6px 10px; font-weight:bold;">+</button>
+                            </div>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="profileHeightInput">Chiều cao (cm) <span class="text-danger">*</span></label>
+                            <div style="display:flex; gap:4px; align-items:center;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('profileHeightInput').stepDown(); document.getElementById('profileHeightInput').dispatchEvent(new Event('input'))" style="padding:6px 10px; font-weight:bold;">-</button>
+                                <input type="number" id="profileHeightInput" class="form-control" placeholder="165" min="50"
+                                    max="250" value="165" required style="text-align:center;">
+                                <button type="button" class="btn btn-outline" onclick="document.getElementById('profileHeightInput').stepUp(); document.getElementById('profileHeightInput').dispatchEvent(new Event('input'))" style="padding:6px 10px; font-weight:bold;">+</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="profileWaterGoalInput">Mục tiêu nước uống hằng ngày (ml)</label>
+                        <input type="number" id="profileWaterGoalInput" class="form-control" placeholder="2100"
+                            min="500" max="6000" value="2100">
+                        <p class="text-hint">* Được tính tự động và tối ưu hóa dựa trên Cân nặng, Tuổi và Giới tính của
+                            bạn.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btnCancelProfile">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveProfile">Lưu lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL POPUP: AVATAR PICKER -->
+    <div class="modal-overlay" id="avatarPickerModal" style="z-index: 110;">
+        <div class="modal shadow-blur" style="max-width:400px;">
+            <div class="modal-header">
+                <h3>Chọn ảnh đại diện</h3>
+                <button class="btn btn-icon" id="btnCloseAvatarPicker"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding:16px;">
+                <div class="avatar-select-grid-large" id="avatarPickerGrid">
+                    <!-- Over 24 Emojis populated in JS -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: LOG POOP (ĐẠI TIỆN) -->
+    <div class="modal-overlay" id="poopModal">
+        <div class="modal shadow-blur modal-lg">
+            <div class="modal-header">
+                <h3>Ghi nhận Lần đi đại tiện</h3>
+                <button class="btn btn-icon" id="btnClosePoopModal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="poopForm">
+                <div class="modal-body">
+                    <!-- Date & Time Picker -->
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="poopDateInput">Ngày đi vệ sinh</label>
+                            <input type="date" id="poopDateInput" class="form-control" required>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="poopTimeInput">Thời gian cụ thể</label>
+                            <input type="time" id="poopTimeInput" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Bowel success status checkbox -->
+                    <div class="form-group">
+                        <label class="switch-container-label"
+                            style="display:flex; align-items:center; gap:10px; cursor:pointer;">
+                            <label class="switch-container">
+                                <input type="checkbox" id="poopSuccessCheckbox" checked>
+                                <span class="switch-slider"></span>
+                            </label>
+                            <span style="font-weight:700; font-size:0.9rem;">Đi ngoài thành công (Có ra phân)</span>
+                        </label>
+                        <p class="text-hint" id="poopSuccessHint">* Tắt mục này nếu bạn bị đau bụng, buồn đi vệ sinh
+                            nhưng rặn không ra (Lưu dưới dạng Táo Vàng 🍋).</p>
+                    </div>
+
+                    <!-- Bristol Scale Selection -->
+                    <div class="form-group" id="bristolSelectorGroup">
+                        <label>Chọn Loại phân (Thang đo Bristol) <span class="text-danger">*</span></label>
+                        <div class="bristol-selector-container">
+                            <input type="hidden" id="bristolTypeField" value="4">
+
+                            <div class="bristol-option type-consti" data-type="1">
+                                <div class="bristol-type-num">Loại 1</div>
+                                <div class="bristol-poop-emoji">🪨</div>
+                                <div class="bristol-type-title">Viên rời cứng</div>
+                                <div class="bristol-type-tag">Táo bón nặng 🍎</div>
+                            </div>
+
+                            <div class="bristol-option type-consti" data-type="2">
+                                <div class="bristol-type-num">Loại 2</div>
+                                <div class="bristol-poop-emoji">🪵</div>
+                                <div class="bristol-type-title">Xúc xích gồ ghề</div>
+                                <div class="bristol-type-tag">Táo bón nhẹ 🍎</div>
+                            </div>
+
+                            <div class="bristol-option type-perfect" data-type="3">
+                                <div class="bristol-type-num">Loại 3</div>
+                                <div class="bristol-poop-emoji">🌭</div>
+                                <div class="bristol-type-title">Xúc xích nứt nhẹ</div>
+                                <div class="bristol-type-tag">Bình thường 🍏</div>
+                            </div>
+
+                            <div class="bristol-option type-perfect active" data-type="4">
+                                <div class="bristol-type-num">Loại 4</div>
+                                <div class="bristol-poop-emoji">🐍</div>
+                                <div class="bristol-type-title">Xúc xích mịn/mềm</div>
+                                <div class="bristol-type-tag">Lý tưởng 🍏</div>
+                            </div>
+
+                            <div class="bristol-option type-yellow" data-type="5">
+                                <div class="bristol-type-num">Loại 5</div>
+                                <div class="bristol-poop-emoji">☁️</div>
+                                <div class="bristol-type-title">Mềm sắc cạnh</div>
+                                <div class="bristol-type-tag">Thiếu xơ 🍋</div>
+                            </div>
+
+                            <div class="bristol-option type-danger" data-type="6">
+                                <div class="bristol-type-num">Loại 6</div>
+                                <div class="bristol-poop-emoji">🥞</div>
+                                <div class="bristol-type-title">Nhão xốp vỡ vụn</div>
+                                <div class="bristol-type-tag">Tiêu chảy 🍇</div>
+                            </div>
+
+                            <div class="bristol-option type-danger" data-type="7">
+                                <div class="bristol-type-num">Loại 7</div>
+                                <div class="bristol-poop-emoji">💧</div>
+                                <div class="bristol-type-title">Lỏng hoàn toàn</div>
+                                <div class="bristol-type-tag">Nguy hiểm 🍇</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Symptoms Checkboxes -->
+                    <div class="form-group">
+                        <label>Triệu chứng đi kèm</label>
+                        <div class="symptoms-grid">
+                            <label class="symptom-checkbox-card">
+                                <input type="checkbox" name="symptoms" value="pain">
+                                <span>Đau bụng</span>
+                            </label>
+                            <label class="symptom-checkbox-card">
+                                <input type="checkbox" name="symptoms" value="bloating">
+                                <span>Đầy hơi / Khó tiêu</span>
+                            </label>
+                            <label class="symptom-checkbox-card">
+                                <input type="checkbox" name="symptoms" value="bleeding">
+                                <span>Có máu trong phân</span>
+                            </label>
+                            <label class="symptom-checkbox-card">
+                                <input type="checkbox" name="symptoms" value="strain">
+                                <span>Rặn khó khăn</span>
+                            </label>
+                            <label class="symptom-checkbox-card">
+                                <input type="checkbox" name="symptoms" value="easy">
+                                <span>Đi ngoài dễ dàng</span>
+                            </label>
+                            <label class="symptom-checkbox-card">
+                                <input type="checkbox" name="symptoms" value="urgency">
+                                <span>Mót rặn gấp</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Food Notes -->
+                    <div class="form-group">
+                        <label for="poopNotesInput">Ghi chú (Triệu chứng khác, cảm xúc...)</label>
+                        <textarea id="poopNotesInput" class="form-control" rows="2"
+                            placeholder="Cảm giác sau khi đi, có thoải mái không..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btnCancelPoop">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="btnSavePoop">Ghi nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: LOG FOOD (ĂN UỐNG) -->
+    <div class="modal-overlay" id="foodModal">
+        <div class="modal shadow-blur">
+            <div class="modal-header">
+                <h3>Ghi nhận Thực đơn Ăn uống</h3>
+                <button class="btn btn-icon" id="btnCloseFoodModal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="foodForm">
+                <div class="modal-body">
+                    <!-- Date & Time Picker -->
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="foodDateInput">Ngày ăn</label>
+                            <input type="date" id="foodDateInput" class="form-control" required>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="foodTimeInput">Giờ ăn</label>
+                            <input type="time" id="foodTimeInput" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Food input text -->
+                    <div class="form-group">
+                        <label for="foodNameInput">Bạn đã ăn món gì? <span class="text-danger">*</span></label>
+                        <input type="text" id="foodNameInput" class="form-control"
+                            placeholder="Ví dụ: Phở bò, Xà lách trộn, Bánh mì..." required>
+                    </div>
+
+                    <!-- Meal Type: Main or Snack -->
+                    <div class="form-group">
+                        <label>Loại bữa ăn</label>
+                        <div style="display:flex; gap:16px;">
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="radio" name="foodMealType" value="main" checked
+                                    style="accent-color:var(--color-primary);"> Bữa chính (Sáng, Trưa, Tối)
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; cursor:pointer;">
+                                <input type="radio" name="foodMealType" value="snack"
+                                    style="accent-color:var(--color-primary);"> Bữa phụ / Ăn vặt
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Portion Size (Light, Normal, Heavy) -->
+                    <div class="form-group">
+                        <label>Khẩu phần / Mức độ no</label>
+                        <div class="portion-selector">
+                            <input type="hidden" id="foodPortionField" value="normal">
+                            <div class="portion-option" data-portion="light">
+                                <span style="font-size:1.5rem;">🥗</span>
+                                <span>Ít / Nhẹ bụng</span>
+                            </div>
+                            <div class="portion-option active" data-portion="normal">
+                                <span style="font-size:1.5rem;">🍲</span>
+                                <span>Vừa đủ / No</span>
+                            </div>
+                            <div class="portion-option" data-portion="heavy">
+                                <span style="font-size:1.5rem;">🥩🍕</span>
+                                <span>Quá no / Đầy bụng</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btnCancelFood">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveFood">Ghi lại</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: LOG WATER (UỐNG NƯỚC CHI TIẾT) -->
+    <div class="modal-overlay" id="waterModal">
+        <div class="modal shadow-blur">
+            <div class="modal-header">
+                <h3>Ghi nhận Lượng nước uống</h3>
+                <button class="btn btn-icon" id="btnCloseWaterModal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="waterForm">
+                <div class="modal-body">
+                    <!-- Date & Time Picker -->
+                    <div class="form-row">
+                        <div class="form-group col-6">
+                            <label for="waterDateInput">Ngày uống</label>
+                            <input type="date" id="waterDateInput" class="form-control" required>
+                        </div>
+                        <div class="form-group col-6">
+                            <label for="waterTimeInput">Giờ uống</label>
+                            <input type="time" id="waterTimeInput" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <!-- Water amount input -->
+                    <div class="form-group">
+                        <label for="waterAmountInput">Lượng nước nạp vào (ml) <span class="text-danger">*</span></label>
+                        <select id="waterAmountInput" class="form-control" required style="padding: 10px 12px; border-radius: 10px;">
+                            <option value="50">50 ml</option>
+                            <option value="100">100 ml</option>
+                            <option value="150">150 ml</option>
+                            <option value="200">200 ml</option>
+                            <option value="250" selected>250 ml (Cốc tiêu chuẩn)</option>
+                            <option value="300">300 ml</option>
+                            <option value="350">350 ml</option>
+                            <option value="400">400 ml</option>
+                            <option value="450">450 ml</option>
+                            <option value="500">500 ml</option>
+                            <option value="600">600 ml</option>
+                            <option value="700">700 ml</option>
+                            <option value="800">800 ml</option>
+                            <option value="900">900 ml</option>
+                            <option value="1000">1000 ml</option>
+                        </select>
+                    </div>
+
+                    <!-- Beverage Type Selection -->
+                    <div class="form-group">
+                        <label>Chọn Loại đồ uống</label>
+                        <div class="beverage-selector-container">
+                            <input type="hidden" id="beverageTypeField" value="pure_water">
+
+                            <div class="beverage-option active" data-beverage="pure_water">
+                                <div class="beverage-emoji">💧</div>
+                                <div class="beverage-title">Nước lọc</div>
+                                <div class="beverage-factor">Hấp thu: 100%</div>
+                            </div>
+
+                            <div class="beverage-option" data-beverage="juice">
+                                <div class="beverage-emoji">🍎</div>
+                                <div class="beverage-title">Nước ép</div>
+                                <div class="beverage-factor">Hấp thu: 90%</div>
+                            </div>
+
+                            <div class="beverage-option" data-beverage="soft_drink">
+                                <div class="beverage-emoji">🥤</div>
+                                <div class="beverage-title">Nước ngọt</div>
+                                <div class="beverage-factor">Hấp thu: 70%</div>
+                            </div>
+
+                            <div class="beverage-option" data-beverage="milk_tea">
+                                <div class="beverage-emoji">🧋</div>
+                                <div class="beverage-title">Trà sữa</div>
+                                <div class="beverage-factor">Hấp thu: 60%</div>
+                            </div>
+
+                            <div class="beverage-option" data-beverage="tea_coffee">
+                                <div class="beverage-emoji">☕</div>
+                                <div class="beverage-title">Trà/Cà phê</div>
+                                <div class="beverage-factor">Hấp thu: 40%</div>
+                            </div>
+
+                            <div class="beverage-option" data-beverage="alcohol">
+                                <div class="beverage-emoji">🍺</div>
+                                <div class="beverage-title">Bia rượu</div>
+                                <div class="beverage-factor">Mất nước: -20%</div>
+                            </div>
+                        </div>
+                        <p class="text-hint">* Các đồ uống chứa cafein (trà/cà phê) hoặc cồn (bia rượu) có tính lợi
+                            tiểu, làm đào thải nước và có nguy cơ gây táo bón.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btnCancelWater">Hủy</button>
+                    <button type="submit" class="btn btn-primary" id="btnSaveWater">Ghi nhận</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL: CERTIFICATE / SHARE ACHIEVEMENT -->
+    <div class="modal-overlay" id="shareModal" style="z-index: 120;">
+        <div class="modal shadow-blur modal-certificate" style="max-width:550px;">
+            <div class="modal-header" style="border-bottom:none; padding-bottom:0;">
+                <button class="btn btn-icon" id="btnCloseShareModal" style="margin-left:auto;"><i
+                        data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="padding: 10px 32px 32px 32px; text-align:center;">
+                <!-- Certificate Wrapper (designed to look like a real credential certificate) -->
+                <div class="certificate-card" id="certificateCardToShare">
+                    <div class="certificate-border-decor"></div>
+                    <div class="certificate-crown">👑</div>
+                    <h2 class="certificate-main-title">BẰNG KHEN VINH DANH</h2>
+                    <p class="certificate-subtitle">Chứng nhận danh hiệu cao quý nhất của Poop Tracker</p>
+
+                    <div style="margin: 24px 0;">
+                        <span
+                            style="font-size:0.75rem; color:var(--color-text-muted); text-transform:uppercase; letter-spacing:1px; display:block; font-weight:700;">Trao
+                            tặng cho chiến binh</span>
+                        <h1 class="certificate-username" id="certUserName"></h1>
+                    </div>
+
+                    <div class="certificate-medal-graphic">🏆</div>
+                    <h3 class="certificate-medal-name">HOÀNG ĐẾ TIÊU HÓA</h3>
+                    <p class="certificate-medal-desc"
+                        style="max-width:380px; margin:8px auto; font-size:0.8rem; line-height:1.4; color:var(--color-text-muted);">
+                        Đã xuất sắc duy trì chuỗi kỷ luật sinh học lành mạnh, uống đủ nước, ăn rau xanh đều đặn và chinh
+                        phục thành công 8/8 Huy hiệu tiêu hóa đỉnh cao.</p>
+
+                    <div
+                        style="margin-top:24px; display:flex; justify-content:space-between; align-items:center; font-size:0.7rem; border-top:1px dashed var(--color-border); padding-top:16px; color:var(--color-text-muted);">
+                        <div>
+                            <span>Hệ thống theo dõi:</span>
+                            <strong style="display:block; color:var(--color-text-main);">Poop Tracker v3.0</strong>
+                        </div>
+                        <div>
+                            <span>Ngày chứng nhận:</span>
+                            <strong style="display:block; color:var(--color-text-main);"
+                                id="certDate">07/07/2026</strong>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
+                    <p style="font-size:0.8rem; color:var(--color-text-muted);">Nhấn nút dưới để sao chép văn bản thành
+                        tích nghệ thuật gửi cho bạn bè!</p>
+                    <div style="display:flex; gap:12px;">
+                        <button class="btn btn-primary" id="btnCopyShareText" style="flex-grow:1;">
+                            <i data-lucide="copy"></i> Sao chép văn bản vinh danh
+                        </button>
+                        <button class="btn btn-outline" id="btnDownloadCertImage" style="flex-grow:1;">
+                            <i data-lucide="camera"></i> Chụp ảnh bằng khen
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: NHẬP MÃ MỜI LIÊN KẾT (GUEST JOIN) -->
+    <div class="modal-overlay" id="joinGroupModal" style="z-index: 120;">
+        <div class="modal shadow-blur" style="max-width:450px;">
+            <div class="modal-header">
+                <h3>Nhập mã mời liên kết</h3>
+                <button class="btn btn-icon" id="btnCloseJoinGroupModal"><i data-lucide="x"></i></button>
+            </div>
+            <form id="joinGroupForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="joinGroupCodeInput">Mã mời của bạn <span class="text-danger">*</span></label>
+                        <input type="text" id="joinGroupCodeInput" class="form-control" placeholder="Ví dụ: PT-A3B9CD" required style="text-transform: uppercase; text-align: center; font-size: 1.25rem; font-weight: bold; letter-spacing: 2px; border-radius: 10px; padding: 12px;">
+                        <p class="text-hint" style="margin-top: 8px;">* Hỏi chủ sở hữu (Owner) mã mời của profile bạn muốn kết nối. Mã mời này chỉ được dùng cho duy nhất một thiết bị liên kết.</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline" id="btnCancelJoinGroup">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Liên kết ngay</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- PWA Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js')
+                    .then(reg => console.log('Service Worker registered successfully!', reg.scope))
+                    .catch(err => console.log('Service Worker registration failed:', err));
+            });
+        }
+    </script>
+    <script src="firebase-config.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
