@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
     }
 
     const model = modelName || 'gemini-2.5-flash';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const body: any = {
       contents: [{ parts: [{ text: prompt }] }],
@@ -67,6 +67,7 @@ export async function POST(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'x-goog-api-key': apiKey.trim(),
       },
       body: JSON.stringify(body),
     });
