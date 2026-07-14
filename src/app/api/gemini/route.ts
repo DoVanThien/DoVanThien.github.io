@@ -41,7 +41,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const model = modelName || 'gemini-2.5-flash';
+    const model = modelName || 'gemini-1.5-flash';
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
 
     const body: any = {
