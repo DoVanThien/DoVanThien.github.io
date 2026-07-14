@@ -67,8 +67,8 @@ interface VocabItem {
 }
 
 export default function AIEnglishMentor() {
-  const [profiles, setProfiles] = useState<string[]>(['Thiên', 'Khách']);
-  const [activeProfile, setActiveProfile] = useState<string>('Thiên');
+  const [profiles, setProfiles] = useState<string[]>(['Miliket', 'Omachi']);
+  const [activeProfile, setActiveProfile] = useState<string>('Miliket');
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const [showAddProfileModal, setShowAddProfileModal] = useState(false);
   const [newProfileNameInput, setNewProfileNameInput] = useState('');
@@ -141,11 +141,17 @@ export default function AIEnglishMentor() {
       } catch (e) {
         console.error(e);
       }
+    } else {
+      setProfiles(['Miliket', 'Omachi']);
+      localStorage.setItem('ai_english_profiles', JSON.stringify(['Miliket', 'Omachi']));
     }
     
     const savedActiveProfile = localStorage.getItem('ai_english_active_profile');
     if (savedActiveProfile) {
       setActiveProfile(savedActiveProfile);
+    } else {
+      setActiveProfile('Miliket');
+      localStorage.setItem('ai_english_active_profile', 'Miliket');
     }
   }, []);
 
