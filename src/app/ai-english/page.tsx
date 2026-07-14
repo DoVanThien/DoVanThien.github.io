@@ -320,7 +320,10 @@ export default function AIEnglishMentor() {
 
       const response = await fetch('/api/gemini', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-app-signature': 'ai-english-mentor-secure-v2'
+        },
         body: JSON.stringify({
           prompt,
           responseSchema: {
@@ -424,7 +427,10 @@ export default function AIEnglishMentor() {
 
       const response = await fetch('/api/gemini', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-app-signature': 'ai-english-mentor-secure-v2'
+        },
         body: JSON.stringify({
           prompt: "Hãy tạo một câu tiếng Việt độc đáo dựa trên yêu cầu hệ thống.",
           systemPrompt,
@@ -487,7 +493,10 @@ export default function AIEnglishMentor() {
 
       const response = await fetch('/api/gemini', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-app-signature': 'ai-english-mentor-secure-v2'
+        },
         body: JSON.stringify({
           prompt: `Học viên dịch là: "${trimmed}"`,
           systemPrompt,

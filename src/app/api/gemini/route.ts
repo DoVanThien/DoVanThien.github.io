@@ -2,6 +2,34 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
+    // 1. Protect API from external spam bots (Allow only same-origin requests)
+    const origin = req.headers.get('origin') || '';
+    const referer = req.headers.get('referer') || '';
+    const host = req.headers.get('host') || '';
+
+    // Allow requests from same host or local development
+    const isAllowedOrigin = 
+      (origin !== '' && origin.includes(host)) || 
+      (referer !== '' && referer.includes(host)) ||
+      host.includes('localhost') || 
+      host.includes('127.0.0.1');
+
+    if (!isAllowedOrigin) {
+      return NextResponse.json(
+        { error: { message: 'Truy cập bị từ chối: Nguồn yêu cầu không hợp lệ.' } },
+        { status: 403 }
+      );
+    }
+
+    // 2. Validate simple app signature to ensure request comes from our React app
+    const signature = req.headers.get('x-app-signature');
+    if (signature !== 'ai-english-mentor-secure-v2') {
+      return NextResponse.json(
+        { error: { message: 'Yêu cầu không hợp lệ: Thiếu chữ ký xác thực ứng dụng.' } },
+        { status: 400 }
+      );
+    }
+
     const { prompt, systemPrompt, modelName, responseMimeType, responseSchema } = await req.json();
 
     const apiKey = process.env.GEMINI_API_KEY;
