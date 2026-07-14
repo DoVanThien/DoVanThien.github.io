@@ -2,21 +2,18 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    // 1. Protect API from external spam bots (Allow only same-origin requests)
+    // 1. Protect API from external sites (Allow same-origin or empty headers like standalone PWAs)
     const origin = req.headers.get('origin') || '';
     const referer = req.headers.get('referer') || '';
     const host = req.headers.get('host') || '';
 
-    // Allow requests from same host or local development
-    const isAllowedOrigin = 
-      (origin !== '' && origin.includes(host)) || 
-      (referer !== '' && referer.includes(host)) ||
-      host.includes('localhost') || 
-      host.includes('127.0.0.1');
+    // Block only if origin or referer is explicitly from a foreign domain
+    const isForeignOrigin = origin !== '' && !origin.includes(host) && !host.includes('localhost') && !host.includes('127.0.0.1');
+    const isForeignReferer = referer !== '' && !referer.includes(host) && !host.includes('localhost') && !host.includes('127.0.0.1');
 
-    if (!isAllowedOrigin) {
+    if (isForeignOrigin || isForeignReferer) {
       return NextResponse.json(
-        { error: { message: 'Truy cập bị từ chối: Nguồn yêu cầu không hợp lệ.' } },
+        { error: { message: 'Truy cập bị từ chối: Nguồn yêu cầu không được phép.' } },
         { status: 403 }
       );
     }
