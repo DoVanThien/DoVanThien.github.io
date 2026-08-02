@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json(
         { 
           error: { 
-            message: 'Chưa cấu hình API Key trên máy chủ (Vercel/.env.local). Vui lòng cấu hình biến GEMINI_API_KEY.' 
+            message: 'Chưa cấu hình GEMINI_API_KEY trên máy chủ (Vercel/.env.local).' 
           } 
         },
         { status: 500 }

@@ -1129,7 +1129,7 @@ Trả về JSON như cấu trúc yêu cầu.`;
                       </div>
                     </div>
                   </div>
-                </div>
+              </div>
 
                 {/* LEVEL QUICK SWITCHER */}
                 <div className="space-y-1.5">
@@ -1979,6 +1979,8 @@ Trả về JSON như cấu trúc yêu cầu.`;
           </div>
         </div>
       )}
+
+
 
       {/* CONFIRMATION MODAL */}
       {showConfirmModal && (
