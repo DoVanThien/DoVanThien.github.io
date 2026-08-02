@@ -1022,9 +1022,9 @@ Trả về JSON như cấu trúc yêu cầu.`;
   };
 
   return (
-    <div className="min-h-screen text-slate-800 font-sans bg-slate-50 flex flex-col justify-between overflow-x-hidden">
+    <div className="min-h-screen text-slate-800 font-sans bg-slate-50 flex flex-col justify-between">
       {/* HEADER NAV */}
-      <header className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-slate-100 z-40 px-2 sm:px-8 py-2 sm:py-3.5 flex items-center justify-between gap-1.5 sm:gap-4 shadow-sm max-w-full overflow-x-hidden">
+      <header className="sticky top-0 bg-white/90 backdrop-blur-md border-b border-slate-100 z-40 px-2 sm:px-8 py-2 sm:py-3.5 flex items-center justify-between gap-1.5 sm:gap-4 shadow-sm max-w-full">
         <div className="flex items-center gap-1.5 sm:gap-3 flex-shrink-0">
           <div className="flex flex-col">
             <span className="text-[9px] sm:text-xs text-slate-400 font-bold uppercase tracking-wider hidden xs:block">AI Platform</span>
@@ -1077,7 +1077,7 @@ Trả về JSON như cấu trúc yêu cầu.`;
             </button>
 
             {profileDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-80 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 p-4 animate-fadeInUp space-y-3.5">
+              <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] sm:w-80 max-w-xs sm:max-w-sm bg-white border border-slate-200 rounded-2xl shadow-2xl z-50 p-4 animate-fadeInUp space-y-3.5">
                 {/* PROFILE LEVEL & PROGRESS CARD */}
                 <div className="bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 text-white p-4 rounded-xl space-y-3 shadow-inner">
                   <div className="flex justify-between items-center">
@@ -1363,43 +1363,57 @@ Trả về JSON như cấu trúc yêu cầu.`;
           {/* CHẾ ĐỘ 2: THI VIẾT ESSAY (EXTENDED WRITING CHALLENGE) */}
           {studyMode === 'writing' && (
             <div className="space-y-6">
-              <div className="bg-gradient-to-r from-purple-900 to-indigo-900 text-white rounded-2xl p-6 shadow-md relative overflow-hidden">
-                <div className="flex justify-between items-start gap-4">
-                  <div>
-                    <span className="px-3 py-1 bg-purple-500/30 text-purple-200 border border-purple-400/30 text-[11px] font-bold rounded-lg uppercase tracking-wider">
-                      Writing Challenge • Level {userLevel}
-                    </span>
-                    <h3 className="text-xl font-extrabold mt-2 flex items-center gap-2">
-                      <BookOpen className="w-6 h-6 text-purple-300" /> 
-                      {writingTask?.title || "Bài Thi Viết Essay Ôn Tập"}
+              <div className="bg-gradient-to-br from-purple-950 via-purple-900 to-indigo-950 text-white rounded-2xl p-4 sm:p-6 shadow-xl relative overflow-hidden border border-purple-800/40">
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3 sm:gap-4">
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="inline-flex items-center px-3 py-1 bg-purple-500/25 text-purple-200 border border-purple-400/30 text-[11px] font-bold rounded-lg uppercase tracking-wider whitespace-nowrap">
+                        Writing Challenge • Level {userLevel}
+                      </span>
+                    </div>
+                    
+                    <h3 className="text-base sm:text-xl font-extrabold flex items-start gap-2.5 text-white leading-snug">
+                      <BookOpen className="w-5 h-5 sm:w-6 sm:h-6 text-purple-300 flex-shrink-0 mt-0.5" /> 
+                      <span className="break-words">{writingTask?.title || "Bài Thi Viết Essay Ôn Tập"}</span>
                     </h3>
-                    <p className="text-purple-200 text-xs sm:text-sm mt-1 leading-relaxed">
+
+                    <p className="text-purple-200/90 text-xs sm:text-sm leading-relaxed">
                       Luyện tập kỹ năng viết câu dài, triển khai ý tưởng và kết nối đoạn văn theo chuẩn bài thi IELTS / Cambridge.
                     </p>
                   </div>
+
                   <button
                     onClick={handleGenerateWritingTask}
                     disabled={isLoadingWritingTask}
-                    className="bg-white/10 hover:bg-white/20 text-white px-3 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 flex-shrink-0 border border-white/20"
+                    className="self-start sm:self-auto w-full sm:w-auto justify-center bg-white/15 hover:bg-white/25 active:scale-95 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 flex-shrink-0 border border-white/20 shadow-sm"
                   >
-                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingWritingTask ? 'animate-spin' : ''}`} /> Đổi đề khác
+                    <RefreshCw className={`w-3.5 h-3.5 ${isLoadingWritingTask ? 'animate-spin' : ''}`} /> 
+                    <span>Đổi đề khác</span>
                   </button>
                 </div>
 
                 {isLoadingWritingTask ? (
-                  <div className="mt-4 p-4 bg-white/10 rounded-xl animate-pulse text-xs text-purple-200">
-                    AI Giám Khảo đang soạn đề bài viết essay phù hợp với bối cảnh...
+                  <div className="mt-4 p-4 bg-white/10 rounded-xl animate-pulse text-xs text-purple-200 flex items-center gap-2">
+                    <RefreshCw className="w-4 h-4 animate-spin text-purple-300 flex-shrink-0" />
+                    <span>AI Giám Khảo đang soạn đề bài viết essay phù hợp với trình độ {userLevel}...</span>
                   </div>
                 ) : writingTask && (
-                  <div className="mt-4 p-4 bg-white/10 backdrop-blur-sm rounded-xl border border-white/10 space-y-3">
-                    <p className="text-sm font-bold text-amber-300 leading-relaxed">
-                      📌 Đề bài: {writingTask.promptVi}
+                  <div className="mt-4 p-4 bg-white/10 backdrop-blur-md rounded-xl border border-white/15 space-y-3 shadow-inner">
+                    <p className="text-xs sm:text-sm font-bold text-amber-300 leading-relaxed flex items-start gap-2">
+                      <span className="text-sm flex-shrink-0">📌</span>
+                      <span><strong className="text-amber-200">Đề bài:</strong> {writingTask.promptVi}</span>
                     </p>
-                    <div className="text-xs text-purple-100 space-y-1">
-                      <p className="font-bold text-white">Gợi ý nội dung cần viết ({writingTask.minWords}-{writingTask.maxWords} từ):</p>
-                      <ul className="list-disc list-inside space-y-0.5 text-purple-200">
+                    
+                    <div className="text-xs text-purple-100 space-y-1.5 pt-2 border-t border-white/10">
+                      <p className="font-extrabold text-white text-xs">
+                        Gợi ý nội dung cần viết ({writingTask.minWords}-{writingTask.maxWords} từ):
+                      </p>
+                      <ul className="space-y-1.5 text-purple-200 pl-1">
                         {writingTask.guidingQuestions?.map((q, idx) => (
-                          <li key={idx}>{q}</li>
+                          <li key={idx} className="flex items-start gap-2 text-xs">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-400 flex-shrink-0 mt-1.5"></span>
+                            <span className="leading-relaxed">{q}</span>
+                          </li>
                         ))}
                       </ul>
                     </div>
@@ -1409,9 +1423,9 @@ Trả về JSON như cấu trúc yêu cầu.`;
 
               {/* ESSAY TEXTAREA */}
               <div className="space-y-4">
-                <div className="flex justify-between items-center ml-1">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 ml-1">
                   <label className="block text-sm font-bold text-slate-700">Bài essay tiếng Anh của bạn:</label>
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center justify-between sm:justify-end gap-3">
                     <button
                       type="button"
                       onClick={() => startVoiceInput('writing')}
@@ -1425,7 +1439,7 @@ Trả về JSON như cấu trúc yêu cầu.`;
                       {isListening ? <MicOff className="w-3.5 h-3.5" /> : <Mic className="w-3.5 h-3.5 text-purple-600" />}
                       <span>{isListening ? 'Đang nghe...' : '🎙️ Nhập giọng nói'}</span>
                     </button>
-                    <span className="text-xs text-slate-400">
+                    <span className="text-xs font-semibold text-slate-500">
                       {userEssay.trim() ? userEssay.trim().split(/\s+/).length : 0} từ
                     </span>
                   </div>
