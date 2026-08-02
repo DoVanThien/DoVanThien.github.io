@@ -50,6 +50,7 @@ import {
   PoopLog,
   WaterLog,
   FoodLog,
+  calculateProfileStats,
 } from '@/lib/poop-store';
 import {
   GlassCard,
@@ -261,63 +262,13 @@ export default function PoopTrackerPage() {
     }
   }, [activeProfileId, profiles]);
 
-  // Calculate Streak Water
-  const getWaterStreak = (): number => {
-    if (!activeProfile) return 0;
-    const profileWaters = waterLogs.filter(w => w.profile_id === activeProfile.id);
-    if (profileWaters.length === 0) return 0;
+  // Calculate Streaks & Stats using calculateProfileStats
+  const activeStats = activeProfile
+    ? calculateProfileStats(activeProfile.id, poopLogs, waterLogs, activeProfile.water_goal || 2000)
+    : { currentPoopStreak: 0, longestPoopStreak: 0, daysSinceLastPoop: 0, currentWaterStreak: 0, longestWaterStreak: 0, daysWaterGoalMissed: 0 };
 
-    const waterByDate: Record<string, number> = {};
-    profileWaters.forEach(w => {
-      waterByDate[w.date] = (waterByDate[w.date] || 0) + w.amount;
-    });
-
-    let streak = 0;
-    const current = new Date();
-    
-    // Đếm ngược từ hôm nay
-    for (let i = 0; i < 365; i++) {
-      const dateStr = current.toISOString().split('T')[0];
-      const dailyTotal = waterByDate[dateStr] || 0;
-      if (dailyTotal >= (activeProfile.water_goal || 2000)) {
-        streak++;
-      } else {
-        // Nếu là ngày hôm nay và lượng nước chưa đạt nhưng chưa hết ngày thì không ngắt streak ngay
-        const isToday = i === 0;
-        if (!isToday) break;
-      }
-      current.setDate(current.getDate() - 1);
-    }
-    return streak;
-  };
-
-  // Calculate healthy streak (Poop perfect days)
-  const getHealthyStreak = (): number => {
-    if (!activeProfile) return 0;
-    const profilePoops = poopLogs.filter(p => p.profile_id === activeProfile.id);
-    if (profilePoops.length === 0) return 0;
-
-    const poopPerfectDates = new Set(
-      profilePoops
-        .filter(p => p.success && (p.bristol_type === 3 || p.bristol_type === 4))
-        .map(p => p.date)
-    );
-
-    let streak = 0;
-    const current = new Date();
-
-    for (let i = 0; i < 365; i++) {
-      const dateStr = current.toISOString().split('T')[0];
-      if (poopPerfectDates.has(dateStr)) {
-        streak++;
-      } else {
-        const isToday = i === 0;
-        if (!isToday) break;
-      }
-      current.setDate(current.getDate() - 1);
-    }
-    return streak;
-  };
+  const getWaterStreak = (): number => activeStats.currentWaterStreak;
+  const getHealthyStreak = (): number => activeStats.currentPoopStreak;
 
   // Today Water summary
   const getTodayWater = (): number => {
@@ -1032,21 +983,44 @@ export default function PoopTrackerPage() {
     setAiLoading(true);
     setAiResult(null);
 
-    const profilePoops = poopLogs.filter(l => l.profile_id === activeProfile?.id).slice(-20);
-    const profileFoods = foodLogs.filter(l => l.profile_id === activeProfile?.id).slice(-20);
+    const profilePoops = poopLogs.filter(l => l.profile_id === activeProfile?.id).slice(-25);
+    const profileFoods = foodLogs.filter(l => l.profile_id === activeProfile?.id).slice(-25);
+    const profileWaters = waterLogs.filter(l => l.profile_id === activeProfile?.id).slice(-25);
+
+    // Check if food & water data exists
+    if (profileFoods.length === 0 && profileWaters.length === 0) {
+      setAiResult({
+        isEmpty: true,
+        summary: 'Chưa có thông tin thực phẩm hoặc nước uống nào được ghi nhận cho hồ sơ này. Hệ thống AI cần dữ liệu thực đơn ăn uống và lượng nước nạp vào để phân tích mối tương quan nguyên nhân - kết quả với tình trạng phân (táo bón, tiêu chảy) của bạn.',
+        sensitiveFoods: [],
+        healthyFoods: [],
+        waterAnalysis: ''
+      });
+      setAiLoading(false);
+      return;
+    }
 
     const promptText = `
-      Hãy đóng vai trò một Bác sĩ Tiêu hóa & Dinh dưỡng AI cao cấp. 
-      Tôi cung cấp nhật ký đi vệ sinh và nhật ký ăn uống của profile ${activeProfile?.name || 'Người dùng'} (Giới tính: ${activeProfile?.gender === 'female' ? 'Nữ' : 'Nam'}, Tuổi: ${activeProfile?.age}, Cân nặng: ${activeProfile?.weight}kg, Chiều cao: ${activeProfile?.height}cm).
+      Bạn là Chuyên gia AI Y học Tiêu hóa & Dinh dưỡng Lâm sàng cấp cao.
+      Hãy phân tích hồ sơ sinh học & nhật ký theo dõi của người dùng:
+      - Tên: ${activeProfile?.name || 'Người dùng'}
+      - Giới tính: ${activeProfile?.gender === 'female' ? 'Nữ' : 'Nam'}, Tuổi: ${activeProfile?.age}, Cân nặng: ${activeProfile?.weight}kg, Chiều cao: ${activeProfile?.height}cm
+      - Mục tiêu nước uống tiêu chuẩn hàng ngày: ${activeProfile?.water_goal || 2000} ml
 
-      Nhật ký đi vệ sinh gần đây (Bristol Type: 1-2 táo bón, 3-4 lý tưởng, 5 thiếu xơ, 6-7 tiêu chảy):
-      ${JSON.stringify(profilePoops.map(p => ({ date: p.date, time: p.time, success: p.success, bristol: p.bristol_type, symptoms: p.symptoms, notes: p.notes })))}
+      [NHẬT KÝ ĐẠI TIỆN GẦN ĐÂY] (Thang Bristol 1-7: 1-2 Táo bón nặng, 3-4 Lý tưởng, 5 Nước nhẹ/thiếu xơ, 6-7 Tiêu chảy):
+      ${profilePoops.length > 0 ? JSON.stringify(profilePoops.map(p => ({ date: p.date, time: p.time, success: p.success, bristol: p.bristol_type, symptoms: p.symptoms, notes: p.notes }))) : 'Chưa có dữ liệu đi đại tiện'}
 
-      Nhật ký ăn uống gần đây:
-      ${JSON.stringify(profileFoods.map(f => ({ date: f.date, time: f.time, food: f.food_name, mealType: f.meal_type, portion: f.portion_size })))}
+      [NHẬT KÝ ĂN UỐNG GẦN ĐÂY]:
+      ${profileFoods.length > 0 ? JSON.stringify(profileFoods.map(f => ({ date: f.date, time: f.time, food: f.food_name, mealType: f.meal_type, portion: f.portion_size }))) : 'Chưa có dữ liệu thực đơn ăn uống'}
 
-      Hãy tìm mối tương quan nhân quả giữa thực phẩm người dùng ăn (trong vòng 24 giờ trước các triệu chứng táo bón/tiêu chảy/đầy hơi) và chẩn đoán thực phẩm kích ứng.
-      Đưa ra khuyến nghị thiết thực bằng Tiếng Việt.
+      [NHẬT KÝ UỐNG NƯỚC & ĐỒ UỐNG GẦN ĐÂY]:
+      ${profileWaters.length > 0 ? JSON.stringify(profileWaters.map(w => ({ date: w.date, time: w.time, amount_ml: w.amount, beverage_type: w.beverage_type }))) : 'Chưa có dữ liệu uống nước'}
+
+      [YÊU CẦU PHÂN TÍCH Y HỌC CHUYÊN SÂU]:
+      1. TỔNG HỢP TIÊU HÓA: Đánh giá tổng quan mối liên quan giữa chất lượng phân (Bristol), triệu chứng (đau bụng, đầy hơi, khó tiêu) với thực đơn ăn uống và thói quen bổ sung chất lỏng.
+      2. PHÂN TÍCH LƯỢNG NƯỚC & ĐỒ UỐNG (waterAnalysis): Đánh giá tổng lượng nước uống vào từng ngày so với mục tiêu (${activeProfile?.water_goal || 2000}ml). Phân tích chi tiết loại đồ uống (nước tinh khiết, cà phê, trà, sữa, đồ có cồn) ảnh hưởng thế nào đến độ ẩm của phân (táo bón hay tiêu chảy).
+      3. THỰC PHẨM & ĐỒ UỐNG KÍCH ỨNG (sensitiveFoods): Chỉ ra đích danh món ăn/thức uống có nguy cơ gây dị ứng, kích ứng dạ dày - ruột, nêu nguyên nhân y học 24h-48h trước triệu chứng và lời khuyên khắc phục.
+      4. THỰC PHẨM LÀNH MẠNH (healthyFoods): Nêu các thực phẩm giàu chất xơ, vi lợi khuẩn hoặc đồ uống giúp phân lý tưởng (Bristol 3-4).
     `;
 
     try {
@@ -1063,6 +1037,7 @@ export default function PoopTrackerPage() {
             type: 'OBJECT',
             properties: {
               summary: { type: 'STRING' },
+              waterAnalysis: { type: 'STRING' },
               sensitiveFoods: {
                 type: 'ARRAY',
                 items: {
@@ -1088,7 +1063,7 @@ export default function PoopTrackerPage() {
                 }
               }
             },
-            required: ['summary', 'sensitiveFoods', 'healthyFoods']
+            required: ['summary', 'waterAnalysis', 'sensitiveFoods', 'healthyFoods']
           }
         })
       });
@@ -1763,46 +1738,74 @@ export default function PoopTrackerPage() {
                             <motion.div
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
-                              className="flex flex-col gap-4 border-t border-white/5 pt-4"
+                              className="flex flex-col gap-4 border-t border-slate-200/60 dark:border-white/10 pt-4"
                             >
-                              <div className="p-4 rounded-2xl bg-white/5 text-xs leading-relaxed text-gray-300">
-                                <strong className="text-white block mb-1">Tóm tắt sức khỏe tiêu hóa:</strong>
-                                {aiResult.summary}
-                              </div>
-
-                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                {/* Kích ứng */}
-                                <div className="flex flex-col gap-3">
-                                  <h4 className="text-xs font-bold text-red-400">Thực phẩm nghi vấn gây kích ứng:</h4>
-                                  {aiResult.sensitiveFoods?.length === 0 ? (
-                                    <div className="text-xs text-gray-400 italic">Không tìm thấy dấu hiệu kích ứng cụ thể nào.</div>
-                                  ) : (
-                                    aiResult.sensitiveFoods?.map((f: any, idx: number) => (
-                                      <div key={idx} className="p-3 rounded-2xl bg-red-500/10 border border-red-500/20 text-xs">
-                                        <div className="font-bold text-white">{f.food}</div>
-                                        <div className="text-gray-400 mt-1">{f.correlation}</div>
-                                        <div className="text-red-300 mt-0.5">Triệu chứng: {f.symptom}</div>
-                                        <div className="text-yellow-300 mt-1 font-semibold">Lời khuyên: {f.advice}</div>
-                                      </div>
-                                    ))
-                                  )}
+                              {aiResult.isEmpty ? (
+                                <div className="p-5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-xs leading-relaxed text-amber-950 dark:text-amber-200 flex flex-col gap-3" style={{ padding: '12px' }}>
+                                  <div className="flex items-center gap-2 font-bold text-sm text-amber-700 dark:text-amber-300">
+                                    <span>⚠️</span> Chưa Có Thông Tin Thực Phẩm Để Chẩn Đoán
+                                  </div>
+                                  <p className="text-slate-600 dark:text-amber-200/80">
+                                    {aiResult.summary}
+                                  </p>
+                                  <div>
+                                    <button
+                                      onClick={() => setCurrentTab('calendar')}
+                                      className="btn btn-outline text-xs px-3 py-1.5"
+                                    >
+                                      👉 Bấm vào đây để chuyển sang Tab Nhật Ký nhập thực đơn & nước uống
+                                    </button>
+                                  </div>
                                 </div>
+                              ) : (
+                                <>
+                                  <div className="p-4 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 text-xs leading-relaxed text-slate-800 dark:text-slate-200">
+                                    <strong className="text-indigo-600 dark:text-indigo-300 block mb-1 font-extrabold">🩺 Tóm tắt sức khỏe tiêu hóa:</strong>
+                                    {aiResult.summary}
+                                  </div>
 
-                                {/* Lành mạnh */}
-                                <div className="flex flex-col gap-3">
-                                  <h4 className="text-xs font-bold text-green-400">Thực phẩm tốt cho cơ địa của bạn:</h4>
-                                  {aiResult.healthyFoods?.length === 0 ? (
-                                    <div className="text-xs text-gray-400 italic">Không tìm thấy thực đơn lợi hại đặc biệt.</div>
-                                  ) : (
-                                    aiResult.healthyFoods?.map((f: any, idx: number) => (
-                                      <div key={idx} className="p-3 rounded-2xl bg-green-500/10 border border-green-500/20 text-xs">
-                                        <div className="font-bold text-white">{f.food}</div>
-                                        <div className="text-green-300 mt-1">{f.benefit}</div>
-                                      </div>
-                                    ))
+                                  {aiResult.waterAnalysis && (
+                                    <div className="p-4 rounded-2xl bg-sky-500/10 border border-sky-500/20 text-xs leading-relaxed text-sky-950 dark:text-sky-200">
+                                      <strong className="text-sky-600 dark:text-sky-300 block mb-1 font-extrabold">💧 Phân tích lượng nước & đồ uống nạp vào:</strong>
+                                      {aiResult.waterAnalysis}
+                                    </div>
                                   )}
-                                </div>
-                              </div>
+
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {/* Kích ứng */}
+                                    <div className="flex flex-col gap-3">
+                                      <h4 className="text-xs font-extrabold text-rose-500 dark:text-rose-400">⚠️ Thực phẩm nghi vấn gây kích ứng:</h4>
+                                      {aiResult.sensitiveFoods?.length === 0 ? (
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 italic">Không tìm thấy dấu hiệu kích ứng cụ thể nào.</div>
+                                      ) : (
+                                        aiResult.sensitiveFoods?.map((f: any, idx: number) => (
+                                          <div key={idx} className="p-3 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-xs">
+                                            <div className="font-extrabold text-rose-700 dark:text-white">{f.food}</div>
+                                            <div className="text-slate-600 dark:text-slate-300 mt-1">{f.correlation}</div>
+                                            <div className="text-rose-600 dark:text-rose-300 mt-0.5 font-semibold">Triệu chứng: {f.symptom}</div>
+                                            <div className="text-amber-600 dark:text-yellow-300 mt-1 font-bold">💡 Lời khuyên: {f.advice}</div>
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+
+                                    {/* Lành mạnh */}
+                                    <div className="flex flex-col gap-3">
+                                      <h4 className="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">🌱 Thực phẩm tốt cho cơ địa của bạn:</h4>
+                                      {aiResult.healthyFoods?.length === 0 ? (
+                                        <div className="text-xs text-slate-500 dark:text-slate-400 italic">Không tìm thấy thực đơn lợi hại đặc biệt.</div>
+                                      ) : (
+                                        aiResult.healthyFoods?.map((f: any, idx: number) => (
+                                          <div key={idx} className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-xs">
+                                            <div className="font-extrabold text-emerald-700 dark:text-white">{f.food}</div>
+                                            <div className="text-emerald-600 dark:text-emerald-300 mt-1">{f.benefit}</div>
+                                          </div>
+                                        ))
+                                      )}
+                                    </div>
+                                  </div>
+                                </>
+                              )}
                             </motion.div>
                           )}
 
@@ -1845,59 +1848,107 @@ export default function PoopTrackerPage() {
                       </div>
 
                       <div className="profiles-grid" id="profilesGrid">
-                        {profiles.map(p => (
-                          <div key={p.id} className="card profile-card shadow-blur">
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex items-center gap-3">
-                                <div className="profile-avatar">
-                                  {p.avatar}
+                        {profiles.map(p => {
+                          const pStats = calculateProfileStats(p.id, poopLogs, waterLogs, p.water_goal || 2000);
+
+                          return (
+                            <div key={p.id} className="card profile-card shadow-blur">
+                              <div className="flex items-center justify-between w-full">
+                                <div className="flex items-center gap-3">
+                                  <div className="profile-avatar">
+                                    {p.avatar}
+                                  </div>
+                                  <div className="profile-info">
+                                    <div className="profile-name">{p.name}</div>
+                                    <div className="profile-status">
+                                      {p.gender === 'female' ? 'Nữ' : p.gender === 'male' ? 'Nam' : 'Khác'} • {p.age} tuổi • {p.weight}kg • {p.height}cm
+                                    </div>
+                                  </div>
                                 </div>
-                                <div className="profile-info">
-                                  <div className="profile-name">{p.name}</div>
-                                  <div className="profile-status">
-                                    {p.gender === 'female' ? 'Nữ' : p.gender === 'male' ? 'Nam' : 'Khác'} • {p.age} tuổi • {p.weight}kg • {p.height}cm
+                                <div className="flex gap-2">
+                                  <button className="btn btn-outline" onClick={() => openEditProfileModal(p)}>Sửa</button>
+                                  {profiles.length > 2 && (
+                                    <button
+                                      className="btn btn-danger"
+                                      onClick={async () => {
+                                        if (confirm(`Bạn chắc chắn muốn xoá hồ sơ ${p.name}?`)) {
+                                          await deleteProfile(p.id);
+                                          showToast('Đã xoá hồ sơ', 'info');
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Biological Statistics Shelf for Profile */}
+                              <div className="w-full mt-4 pt-3 border-t border-slate-200/60 dark:border-white/10 flex flex-col gap-3 text-xs">
+                                <div className="w-full p-3 rounded-2xl bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 text-amber-950 dark:text-amber-200" style={{ padding: '8px' }}>
+                                  <div className="font-extrabold flex items-center justify-between mb-2 pb-1.5 border-b border-amber-500/20 text-xs sm:text-sm">
+                                    <span className="flex items-center gap-1.5 font-black"><span>💩</span> Nhật Ký Đại Tiện</span>
+                                    <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-700 dark:text-amber-300">
+                                      {pStats.currentPoopStreak > 0 ? `🔥 ${pStats.currentPoopStreak} ngày streak` : 'Chưa có streak'}
+                                    </span>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-slate-600 dark:text-slate-400 font-medium">Streak dài nhất:</span>
+                                      <span className="font-extrabold text-slate-900 dark:text-white">{pStats.longestPoopStreak} ngày</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-slate-600 dark:text-slate-400 font-medium">Chưa đi đại tiện:</span>
+                                      <span className={`font-extrabold ${pStats.daysSinceLastPoop === 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-amber-600 dark:text-amber-400'}`}>
+                                        {pStats.daysSinceLastPoop === 0 ? 'Hôm nay đã đi' : `${pStats.daysSinceLastPoop} ngày`}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+
+                                <div className="w-full p-3 rounded-2xl bg-sky-500/10 dark:bg-sky-500/15 border border-sky-500/25 text-sky-950 dark:text-sky-200" style={{ padding: '8px' }}>
+                                  <div className="font-extrabold flex items-center justify-between mb-2 pb-1.5 border-b border-sky-500/20 text-xs sm:text-sm">
+                                    <span className="flex items-center gap-1.5 font-black"><span>💧</span> Nhật Ký Uống Nước</span>
+                                    <span className="text-[11px] font-black px-2.5 py-0.5 rounded-full bg-sky-500/20 text-sky-700 dark:text-sky-300">
+                                      {pStats.currentWaterStreak > 0 ? `💧 ${pStats.currentWaterStreak} ngày streak` : 'Chưa có streak'}
+                                    </span>
+                                  </div>
+                                  <div className="space-y-1.5">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-slate-600 dark:text-slate-400 font-medium">Streak dài nhất:</span>
+                                      <span className="font-extrabold text-slate-900 dark:text-white">{pStats.longestWaterStreak} ngày</span>
+                                    </div>
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-slate-600 dark:text-slate-400 font-medium">Số ngày thiếu nước:</span>
+                                      <span className="font-extrabold text-rose-500 dark:text-rose-400">{pStats.daysWaterGoalMissed} ngày</span>
+                                    </div>
                                   </div>
                                 </div>
                               </div>
-                              <div className="flex gap-2">
-                                <button className="btn btn-outline" onClick={() => openEditProfileModal(p)}>Sửa</button>
-                                {profiles.length > 2 && (
-                                  <button
-                                    className="btn btn-danger"
-                                    onClick={async () => {
-                                      if (confirm(`Bạn chắc chắn muốn xoá hồ sơ ${p.name}?`)) {
-                                        await deleteProfile(p.id);
-                                        showToast('Đã xoá hồ sơ', 'info');
-                                      }
-                                    }}
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
-                                )}
+
+                              <div className="profile-details-list mt-3">
+                                <div className="profile-detail-row">
+                                  <span>Trạng thái hoạt động:</span>
+                                  <span>
+                                    {p.is_default ? (
+                                      <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">Mặc định</span>
+                                    ) : (
+                                      <button
+                                        onClick={() => {
+                                          setDefaultProfile(p.id);
+                                          showToast(`Đã đổi profile mặc định sang ${p.name}`, 'info');
+                                        }}
+                                        className="text-[10px] font-bold text-gray-400 hover:text-white px-2 py-0.5 rounded-full border border-white/10"
+                                      >
+                                        Đặt làm mặc định
+                                      </button>
+                                    )}
+                                  </span>
+                                </div>
                               </div>
                             </div>
-                            <div className="profile-details-list">
-                              <div className="profile-detail-row">
-                                <span>Trạng thái hoạt động:</span>
-                                <span>
-                                  {p.is_default ? (
-                                    <span className="text-[10px] font-bold text-indigo-400 bg-indigo-500/10 px-2 py-0.5 rounded-full">Mặc định</span>
-                                  ) : (
-                                    <button
-                                      onClick={() => {
-                                        setDefaultProfile(p.id);
-                                        showToast(`Đã đổi profile mặc định sang ${p.name}`, 'info');
-                                      }}
-                                      className="text-[10px] font-bold text-gray-400 hover:text-white px-2 py-0.5 rounded-full border border-white/10"
-                                    >
-                                      Đặt làm mặc định
-                                    </button>
-                                  )}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
 
                       {/* Gamification Badge Showcase Shelf */}

@@ -1,6 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Nunito:wght@400;500;600;700;800;900&display=swap');
+
 /* CSS Variables for Colors and System Styling */
 :root {
-    --font-primary: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-primary: 'Inter', 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     
     /* Light Theme Variables */
     --bg-app: linear-gradient(135deg, #f8fafc 0%, #edf2f7 50%, #e2e8f0 100%);
@@ -1511,9 +1513,9 @@ input:checked + .switch-slider:before {
 .profile-card {
     display: flex;
     flex-direction: column;
-    align-items: center;
+    align-items: stretch;
     gap: 16px;
-    padding: 32px 24px;
+    padding: 24px 20px;
     position: relative;
     overflow: hidden;
 }

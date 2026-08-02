@@ -465,12 +465,15 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
       if (waterErr) throw waterErr;
       if (foodErr) throw foodErr;
 
-      // Map dbPoops (profile_name -> profile_id, type -> success)
+      // Map dbPoops (profile_id or profile_name -> profile_id, type -> success)
       const mappedDbPoops: PoopLog[] = (dbPoops || []).map(dbL => {
-        const p = mappedDbProfiles.find(prof => prof.name === dbL.profile_name);
+        let p = mappedDbProfiles.find(prof => prof.id === dbL.profile_id);
+        if (!p) {
+          p = mappedDbProfiles.find(prof => prof.name === dbL.profile_name);
+        }
         return {
           id: dbL.id,
-          profile_id: p ? p.id : '',
+          profile_id: p ? p.id : (dbL.profile_id || ''),
           date: dbL.date,
           time: dbL.time,
           success: dbL.type === 'success',
@@ -742,6 +745,7 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
 
         const dbPayload = {
           id: newLog.id,
+          profile_id: activeId,
           profile_name: profileName,
           type: newLog.success ? 'success' : 'fail',
           date: newLog.date,
@@ -1036,3 +1040,148 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
     }
   },
 }));
+
+export interface ProfileHealthStats {
+  currentPoopStreak: number;
+  longestPoopStreak: number;
+  daysSinceLastPoop: number;
+  currentWaterStreak: number;
+  longestWaterStreak: number;
+  daysWaterGoalMissed: number;
+}
+
+export function calculateProfileStats(
+  profileId: string,
+  poopLogs: PoopLog[],
+  waterLogs: WaterLog[],
+  waterGoal: number = 2000
+): ProfileHealthStats {
+  const toLocalISO = (d: Date) => {
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  };
+
+  const todayStr = toLocalISO(new Date());
+
+  // 1. POOP STATS
+  const validPoopLogs = poopLogs.filter(
+    p => p.profile_id === profileId && p.success !== false && (p as any).type !== 'fail'
+  );
+  const uniquePoopDates = Array.from(new Set(validPoopLogs.map(p => p.date))).sort();
+
+  // Longest Poop Streak
+  let longestPoopStreak = 0;
+  let currentPoopRun = 0;
+  if (uniquePoopDates.length > 0) {
+    longestPoopStreak = 1;
+    currentPoopRun = 1;
+    for (let i = 1; i < uniquePoopDates.length; i++) {
+      const prev = new Date(uniquePoopDates[i - 1] + 'T00:00:00');
+      const curr = new Date(uniquePoopDates[i] + 'T00:00:00');
+      const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        currentPoopRun++;
+      } else {
+        currentPoopRun = 1;
+      }
+      if (currentPoopRun > longestPoopStreak) {
+        longestPoopStreak = currentPoopRun;
+      }
+    }
+  }
+
+  // Current Poop Streak
+  let currentPoopStreak = 0;
+  const poopDateSet = new Set(uniquePoopDates);
+  let checkPoopDate = new Date();
+
+  // If today has no log yet, start from yesterday so current day in progress doesn't break ongoing streak
+  if (!poopDateSet.has(todayStr)) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (poopDateSet.has(toLocalISO(yesterday))) {
+      checkPoopDate = yesterday;
+    }
+  }
+
+  while (poopDateSet.has(toLocalISO(checkPoopDate))) {
+    currentPoopStreak++;
+    checkPoopDate.setDate(checkPoopDate.getDate() - 1);
+  }
+
+  // Days Since Last Poop
+  let daysSinceLastPoop = 0;
+  if (uniquePoopDates.length > 0) {
+    const lastPoopStr = uniquePoopDates[uniquePoopDates.length - 1];
+    const lastDate = new Date(lastPoopStr + 'T00:00:00');
+    const todayDate = new Date(todayStr + 'T00:00:00');
+    const diffTime = todayDate.getTime() - lastDate.getTime();
+    daysSinceLastPoop = Math.max(0, Math.floor(diffTime / (1000 * 60 * 60 * 24)));
+  }
+
+  // 2. WATER STATS
+  const profileWaters = waterLogs.filter(w => w.profile_id === profileId);
+  const dailyWaterMap: Record<string, number> = {};
+  profileWaters.forEach(w => {
+    dailyWaterMap[w.date] = (dailyWaterMap[w.date] || 0) + w.amount;
+  });
+
+  const waterMetDates = Array.from(
+    new Set(Object.keys(dailyWaterMap).filter(d => dailyWaterMap[d] >= waterGoal))
+  ).sort();
+  const waterMetSet = new Set(waterMetDates);
+
+  // Longest Water Streak
+  let longestWaterStreak = 0;
+  let currentWaterRun = 0;
+  if (waterMetDates.length > 0) {
+    longestWaterStreak = 1;
+    currentWaterRun = 1;
+    for (let i = 1; i < waterMetDates.length; i++) {
+      const prev = new Date(waterMetDates[i - 1] + 'T00:00:00');
+      const curr = new Date(waterMetDates[i] + 'T00:00:00');
+      const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays === 1) {
+        currentWaterRun++;
+      } else {
+        currentWaterRun = 1;
+      }
+      if (currentWaterRun > longestWaterStreak) {
+        longestWaterStreak = currentWaterRun;
+      }
+    }
+  }
+
+  // Current Water Streak
+  let currentWaterStreak = 0;
+  let checkWaterDate = new Date();
+
+  if (!waterMetSet.has(todayStr)) {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (waterMetSet.has(toLocalISO(yesterday))) {
+      checkWaterDate = yesterday;
+    }
+  }
+
+  while (waterMetSet.has(toLocalISO(checkWaterDate))) {
+    currentWaterStreak++;
+    checkWaterDate.setDate(checkWaterDate.getDate() - 1);
+  }
+
+  // Days Water Goal Missed
+  const daysWaterGoalMissed = Object.keys(dailyWaterMap).filter(
+    d => dailyWaterMap[d] < waterGoal
+  ).length;
+
+  return {
+    currentPoopStreak,
+    longestPoopStreak,
+    daysSinceLastPoop,
+    currentWaterStreak,
+    longestWaterStreak,
+    daysWaterGoalMissed
+  };
+}

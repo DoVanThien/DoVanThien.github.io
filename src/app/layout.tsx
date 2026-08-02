@@ -1,10 +1,10 @@
 import type { Metadata, Viewport } from "next";
-import { Outfit } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 
-const outfit = Outfit({
-  variable: "--font-outfit",
-  subsets: ["latin"],
+const inter = Inter({
+  variable: "--font-inter",
+  subsets: ["latin", "vietnamese"],
   weight: ["300", "400", "500", "600", "700", "800", "900"],
 });
 
@@ -52,7 +52,7 @@ export default function RootLayout({
           referrerPolicy="no-referrer"
         />
       </head>
-      <body className={`${outfit.variable} font-sans min-h-screen flex flex-col antialiased`} suppressHydrationWarning>
+      <body className={`${inter.variable} font-sans min-h-screen flex flex-col antialiased`} suppressHydrationWarning>
         {children}
       </body>
     </html>
