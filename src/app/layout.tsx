@@ -19,7 +19,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className="h-full">
+    <html lang="vi" className="h-full" suppressHydrationWarning>
       <head>
         {/* FontAwesome CDN for AI English Mentor icons */}
         <link 
@@ -29,7 +29,7 @@ export default function RootLayout({
           referrerPolicy="no-referrer"
         />
       </head>
-      <body className={`${outfit.variable} font-sans min-h-full flex flex-col antialiased`}>
+      <body className={`${outfit.variable} font-sans min-h-full flex flex-col antialiased`} suppressHydrationWarning>
         {children}
       </body>
     </html>

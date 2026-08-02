@@ -77,8 +77,8 @@ export default function PortalPage() {
           </Link>
 
           {/* App 2: Poop Tracker */}
-          <a
-            href="/DI_IA_CALENDER/index.html"
+          <Link
+            href="/poop-tracker"
             className="group relative flex flex-col p-10 rounded-[24px] border border-white/8 bg-slate-900/60 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-emerald-500/40 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.15)] overflow-hidden"
             onMouseMove={handleMouseMove}
             style={{
@@ -107,7 +107,7 @@ export default function PortalPage() {
               <span>Mở Ứng Dụng</span>
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </div>
-          </a>
+          </Link>
 
           {/* App 3: Demon Slayer Gallery */}
           <a
