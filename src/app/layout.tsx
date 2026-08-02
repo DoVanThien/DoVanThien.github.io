@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
 
@@ -9,8 +9,24 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: "Do Van Thien's App Space - Premium Hub",
-  description: "Không gian trải nghiệm các ứng dụng web độc bản cá nhân được tối ưu hóa UI/UX tích hợp AI.",
+  title: "AI English Mentor Pro",
+  description: "Ứng dụng luyện nói tiếng Anh giao tiếp bản xứ & chấm bài essay bằng AI.",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "AI English Pro",
+  },
+  icons: {
+    icon: "/icon-192.png",
+    apple: "/apple-touch-icon.png",
+  },
+};
+
+export const viewport: Viewport = {
+  themeColor: "#2563eb",
+  width: "device-width",
+  initialScale: 1,
 };
 
 export default function RootLayout({
@@ -19,8 +35,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className="h-full" suppressHydrationWarning>
+    <html lang="vi" suppressHydrationWarning>
       <head>
+        {/* iOS Web App Support (Add to Home Screen on iPhone) */}
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <meta name="apple-mobile-web-app-title" content="AI English Pro" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+        <link rel="manifest" href="/manifest.json" />
+
         {/* FontAwesome CDN for AI English Mentor icons */}
         <link 
           rel="stylesheet" 
@@ -29,7 +52,7 @@ export default function RootLayout({
           referrerPolicy="no-referrer"
         />
       </head>
-      <body className={`${outfit.variable} font-sans min-h-full flex flex-col antialiased`} suppressHydrationWarning>
+      <body className={`${outfit.variable} font-sans min-h-screen flex flex-col antialiased`} suppressHydrationWarning>
         {children}
       </body>
     </html>
