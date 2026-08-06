@@ -91,7 +91,8 @@ export default function AIEnglishMentor() {
   const [currentTopic, setCurrentTopic] = useState('Tán gẫu xã giao (Small Talk)');
   const [currentTone, setCurrentTone] = useState('Chia sẻ hào hứng, vui vẻ');
   const [topicSelection, setTopicSelection] = useState('random');
-  const [currentQuestion, setCurrentQuestion] = useState('Ê, tối qua mới cày xong bộ phim Hàn Quốc mới á, cuốn dã man luôn! Tính ra coi từ 8 giờ tối tới 3 giờ sáng luôn không biết mệt!');
+  const [currentQuestion, setCurrentQuestion] = useState('Chiều nay bạn có rảnh không, mình qua trao đổi nhanh về dự án mới nhé.');
+  const [currentContext, setCurrentContext] = useState('Đồng nghiệp trao đổi công việc trong văn phòng');
   
   const [userTranslation, setUserTranslation] = useState('');
   const [isLoadingQuestion, setIsLoadingQuestion] = useState(false);
@@ -253,16 +254,16 @@ export default function AIEnglishMentor() {
     setUserEssay('');
 
     try {
-      const systemPrompt = `Bạn là giám khảo chuyên nghiệp chấm thi viết tiếng Anh (IELTS / Cambridge Writing Specialist).
-Nhiệm vụ: Tạo 1 đề thi viết đoạn văn/bài luận ngắn bằng tiếng Việt phù hợp với trình độ tiếng Anh ${userLevel} của học viên.
+      const systemPrompt = `Bạn là giám khảo chuyên nghiệp chấm thi viết tiếng Anh (IELTS / Cambridge Writing Examiner).
+Nhiệm vụ: Tạo 1 đề thi viết đoạn văn / bài luận ngắn (Short Essay / Paragraph Writing) bằng tiếng Việt bám sát thực tế đời sống hoặc môi trường học tập/công sở, được thiết kế vừa vặn với trình độ CEFR: "${userLevel}".
 
-Yêu cầu đề thi:
-- Chủ đề chính: "${currentTopic}".
-- Trình độ target: "${userLevel}".
-- Đề bài phải hấp dẫn, liên quan tới bối cảnh đời sống/công sở thực tế, yêu cầu người học viết đoạn văn (80-150 từ) bằng tiếng Anh.
-- Nêu rõ 3 gợi ý câu hỏi chính mà bài viết cần đáp ứng.
+YÊU CẦU ĐỀ THI:
+1. Chủ đề chính: "${currentTopic}".
+2. Trình độ kỳ vọng: "${userLevel}".
+3. Đề bài phải hấp dẫn, thiết thực, yêu cầu học viên nêu quan điểm, trải nghiệm hoặc giải pháp cho một vấn đề thực tế (độ dài yêu cầu từ 80 - 150 từ bằng tiếng Anh).
+4. Cung cấp 3 câu hỏi gợi ý định hướng nội dung bài viết một cách rõ ràng.
 
-Trả về dữ liệu dưới dạng JSON có cấu trúc:
+Trả về dữ liệu dưới dạng JSON đúng cấu trúc:
 {
   "title": "Tiêu đề bài thi viết",
   "promptVi": "Nội dung đề bài chi tiết bằng tiếng Việt",
@@ -315,23 +316,27 @@ Trả về dữ liệu dưới dạng JSON có cấu trúc:
     setIsLoadingWritingCheck(true);
 
     try {
-      const systemPrompt = `Bạn là giám khảo chuyên nghiệp chấm thi viết tiếng Anh (IELTS/Cambridge Writing Examiner).
-Nhiệm vụ: Chấm điểm bài viết luận/đoạn văn của học viên dựa trên đề bài: "${writingTask?.promptVi || currentTopic}".
-Trình độ kỳ vọng của học viên: "${userLevel}".
+      const systemPrompt = `Bạn là Giám khảo IELTS / Cambridge Writing Chuyên nghiệp (Senior IELTS Examiner).
+Nhiệm vụ: Chấm điểm và phân tích bài essay của học viên theo 4 tiêu chí chuẩn IELTS Writing quốc tế dựa trên đề bài: "${writingTask?.promptVi || currentTopic}".
+Trình độ mục tiêu của học viên: "${userLevel}".
 
-Học viên đã nộp bài viết tiếng Anh sau:
+Bài viết của học viên:
 "${userEssay}"
 
-YÊU CẦU ĐÁNH GIÁ CHUYÊN SÂU:
-1. "bandScore": Thang điểm Band (VD: "Band 6.5 / Level ${userLevel}").
-2. "taskAchievement": Điểm khả năng đáp ứng đề bài (0-100).
-3. "coherenceCohesion": Điểm mạch luận, kết nối câu và đoạn văn (0-100).
-4. "lexicalResource": Điểm vốn từ vựng & collocations (0-100).
-5. "grammarAccuracy": Điểm ngữ pháp và đa dạng cấu trúc (0-100).
-6. "nativeRewrite": Bản viết lại toàn bộ bài essay sao cho hoàn hảo, tự nhiên nhất như người bản xứ hoặc bài mẫu Band 8.0+.
-7. "feedbackVi": Nhận xét chi tiết bằng tiếng Việt: Chỉ rõ ưu điểm, từ nối hay, lỗi sai cần khắc phục và bí quyết nâng band điểm.
+YÊU CẦU NGHÊM NGẶT & CHI TIẾT VỀ ĐÁNH GIÁ:
+1. "bandScore": Điểm Overall Band Score IELTS chuẩn xác dựa trên trung bình 4 tiêu chí bên dưới (VD: "Band 6.0", "Band 6.5", "Band 7.0", "Band 7.5", "Band 8.0").
+2. "taskAchievement": Điểm Trả lời Đề bài / Khả năng triển khai ý tưởng (0-100).
+3. "coherenceCohesion": Điểm Mạch lạc, Tính kết nối & Sử dụng từ nối (0-100).
+4. "lexicalResource": Điểm Vốn từ vựng, Đa dạng collocations & Độ chính xác dùng từ (0-100).
+5. "grammarAccuracy": Điểm Ngữ pháp, Đa dạng cấu trúc câu & Độ chính xác (0-100).
+6. "nativeRewrite": Bài essay được viết lại hoàn chỉnh đạt chuẩn mốc Band 8.0+ / Native Standard, tự nhiên, mượt mà và sắc sảo.
+7. "feedbackVi": Nhận xét chi tiết bằng tiếng Việt bao gồm 4 phần rõ ràng:
+   - 🌟 Ưu điểm nổi bật của bài viết.
+   - ⚠️ Các lỗi ngữ pháp / dùng từ cần sửa ngay (nêu rõ câu gốc và câu sửa).
+   - 💡 Từ vựng / Collocations đắt giá đề xuất thay thế để nâng Band.
+   - 🚀 Lời khuyên cụ thể để tăng điểm Band trong lần viết sau.
 
-Trả về JSON như cấu trúc yêu cầu.`;
+Trả về JSON đúng cấu trúc yêu cầu.`;
 
       const response = await fetch('/api/gemini', {
         method: 'POST',
@@ -721,31 +726,20 @@ Trả về JSON như cấu trúc yêu cầu.`;
     setResultVisible(false);
 
     try {
-      const systemPrompt = `Bạn là chuyên gia ngôn ngữ tiếng Anh & tiếng Việt giao tiếp khẩu ngữ đời thực (Real-life Spoken Language Expert).
-      Nhiệm vụ: Tạo ra DUY NHẤT 1 tình huống tiếng Việt KHẨU NGỮ GIAO TIẾP ĐỜI THƯỜNG mà người Việt thực sự thốt ra khi nói chuyện ngoài đời.
+      const systemPrompt = `Bạn là Chuyên gia Biên soạn Giáo trình Tiếng Anh Giao tiếp Thực chiến (Cambridge & Oxford English Curriculum Director).
+Nhiệm vụ: Tạo 1 câu tình huống tiếng Việt KHẨU NGỮ GIAO TIẾP ĐỜI THƯỜNG chân thực 100% mà người Việt Nam thực sự mở miệng nói hàng ngày trong công sở, du lịch hoặc sinh hoạt.
 
-      QUY TẮC BẮT BUỘC VỀ CÂU THOẠI TIẾNG VIỆT:
-      1. Chủ đề: "${chosenTopic}".
-      2. Bối cảnh/Sắc thái: "${chosenTone}".
-      3. TRÌNH ĐỘ CEFR MỤC TIÊU: "${userLevel}". Cấu trúc từ vựng và câu tạo ra phải vừa vặn phù hợp với độ khó của trình độ ${userLevel} (A1: cực đơn giản, A2: cơ bản, B1: trung cấp đời sống, B2: khá giỏi công sở, C1: nâng cao từ vựng sắc sảo).
-      4. ĐỘ DÀI ĐAN XEN LINH HOẠT (LÚC NGẮN LÚC DÀI):
-         - Đan xen ngẫu nhiên giữa câu NGẮN (bày tỏ phản xạ nhanh, từ 6 - 12 từ) và tình huống DÀI HƠN CÓ GIẢI THÍCH (từ 15 - 30 từ).
-         - Khi câu DÀI giải thích tình huống: phải là lời giải thích bằng văn nói truyền miệng đời thực (gồm 1-2 câu ngắn nối tiếp nhau tự nhiên), KHÔNG ĐƯỢC khô cứng như văn viết.
-      5. VĂN NÓI KHẨU NGỮ NGUYÊN BẢN 100%:
-         - BẮT BUỘC dùng văn phong giao tiếp hàng ngày của người Việt: có thán từ (trời ơi, ê, thôi xong, thiệt tình, tự nhiên...), trợ từ (nha, á, nè, xíu, coi, hú, cày, bao, đuối, vội, hả, với...).
-         - Sử dụng từ nối khẩu ngữ tự nhiên khi giải thích (Chuyện là..., Tự nhiên..., Nói nghe nè..., Tưởng đâu... ai ngờ..., Chẳng hiểu sao..., Thề luôn...).
-         - TUYỆT ĐỐI TRÁNH văn viết trang trọng, từ ngữ sách giáo khoa gượng gạo (VD TRÁNH: "Tôi rất tiếc khi phải thông báo...", "Tôi đang gặp trục trặc kỹ thuật...").
-      6. VÍ DỤ MINH HỌA (ĐAN XEN NGẮN & DÀI):
-         [Ví dụ tình huống ngắn]:
-         + "Trời ơi kẹt xe cứng ngắc rồi, chắc trễ họp quá!"
-         + "Ê tí đi ăn trưa nhớ hú tao với nha!"
-         + "Alo anh ship tới đâu rồi, em đang vội đi họp gấp nè!"
-         [Ví dụ tình huống dài có giải thích bối cảnh]:
-         + "Nói nghe nè, tối qua đang cày báo cáo thì tự nhiên máy tính sập nguồn cái rụi, làm mất sạch dữ liệu chưa kịp lưu luôn á! Giờ không biết sao làm cho kịp deadline nữa..."
-         + "Chuyện là tuần sau em có chuyến công tác đột xuất ở Đà Nẵng, mà giờ lên web đặt vé máy bay thì thấy hết sạch chuyến giờ đẹp rồi, bực ghê!"
-         + "Tự nhiên hôm nay cái xe bị dở chứng đề máy không lên, phải dắt bộ cả km tìm tiệm sửa đuối muốn xỉu luôn!"
-
-      Chỉ trả về dữ liệu đúng định dạng JSON có chứa trường "vietnamese_content" mô tả tình huống tiếng Việt khẩu ngữ sinh động đó.`;
+YÊU CẦU CHẤT LƯỢNG CAO:
+1. Chủ đề: "${chosenTopic}". Sắc thái: "${chosenTone}".
+2. TRÌNH ĐỘ CEFR: "${userLevel}". Cấu trúc từ vựng và độ phức tạp phù hợp chính xác với ${userLevel} (A1: câu đơn giản ngắn gọn; A2: câu đời sống thông dụng; B1: tình huống sinh hoạt/công việc tự nhiên; B2: tình huống công sở/trao đổi chi tiết; C1: câu diễn đạt tinh tế, sắc sảo).
+3. BỐI CẢNH CHÂN THỰC 100%:
+   - Phản ánh đúng ngữ cảnh giao tiếp đời sống hiện đại ở Việt Nam: môi trường công sở (check mail, xin duyệt ngân sách, làm slide, họp giao ban, xin nghỉ phép, deadline), sinh hoạt hàng ngày (đặt đồ ăn, kẹt xe, đổ xăng, mua hàng sắm sửa, hẹn đi cà phê), du lịch & giao tế.
+   - Dùng văn phong khẩu ngữ tự nhiên mượt mà người Việt nói ngoài đời, tuyệt đối KHÔNG dịch thô từ tiếng Anh sang, KHÔNG lạm dụng từ cảm thán gượng gạo.
+4. YÊU CẦU ĐẦU RA JSON:
+   {
+     "vietnamese_content": "Câu khẩu ngữ tiếng Việt đời thực tự nhiên nhất",
+     "context_description": "Mô tả ngắn bối cảnh xảy ra câu thoại (8-15 từ)"
+   }`;
 
       const response = await fetch('/api/gemini', {
         method: 'POST',
@@ -754,14 +748,15 @@ Trả về JSON như cấu trúc yêu cầu.`;
           'x-app-signature': 'ai-english-mentor-secure-v2'
         },
         body: JSON.stringify({
-          prompt: "Hãy tạo một câu tiếng Việt độc đáo dựa trên yêu cầu hệ thống.",
+          prompt: "Hãy tạo một tình huống tiếng Việt giao tiếp đời thực chất lượng cao.",
           systemPrompt,
           responseSchema: {
             type: "OBJECT",
             properties: {
-              vietnamese_content: { type: "STRING" }
+              vietnamese_content: { type: "STRING" },
+              context_description: { type: "STRING" }
             },
-            required: ["vietnamese_content"]
+            required: ["vietnamese_content", "context_description"]
           }
         })
       });
@@ -774,11 +769,12 @@ Trả về JSON như cấu trúc yêu cầu.`;
       const data = await response.json();
       const result = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
       
-      setCurrentQuestion(result.vietnamese_content || "Trời ơi, kẹt xe cứng ngắc rồi, kiểu này trễ giờ làm chắc luôn!");
+      setCurrentQuestion(result.vietnamese_content || "Chiều nay bạn có rảnh không, mình qua trao đổi nhanh về hợp đồng mới nhé.");
+      setCurrentContext(result.context_description || "Đồng nghiệp trao đổi công việc trong văn phòng.");
       setUserTranslation('');
       setIsLoadingQuestion(false);
     } catch (error: any) {
-      setCurrentQuestion("Không thể tải tình huống. Vui lòng kiểm tra cấu hình biến môi trường GEMINI_API_KEY.");
+      setCurrentQuestion("Không thể tải tình huống. Vui lòng kiểm tra cấu hình biến môi trường OPENROUTER_API_KEY / GEMINI_API_KEY.");
       triggerToast("Lỗi kết nối AI: " + error.message, 'error');
       setIsLoadingQuestion(false);
     }
@@ -801,26 +797,24 @@ Trả về JSON như cấu trúc yêu cầu.`;
     setIsLoadingCheck(true);
 
     try {
-      const systemPrompt = `Bạn là chuyên gia ngôn ngữ tiếng Anh giao tiếp bản xứ (Native English Speaker & Communication Coach).
-      Nhiệm vụ: Đánh giá câu dịch của học viên từ tiếng Việt sang tiếng Anh và đưa ra đáp án dịch mẫu ĐÃ ĐƯỢC CHUẨN HÓA VĂN NÓI BẢN XỨ (Native Spoken English).
+      const systemPrompt = `Bạn là Chuyên gia Ngôn ngữ & Huấn luyện viên Giao tiếp Tiếng Anh Bản xứ (Native English Communication Coach).
+Nhiệm vụ: Đánh giá bản dịch tiếng Anh của học viên cho tình huống tiếng Việt và đưa ra đáp án chuẩn văn nói bản xứ (Native Spoken English).
 
-      Câu gốc tiếng Việt (Văn nói): "${currentQuestion}"
-      Trình độ CEFR Mục Tiêu Học Viên: "${userLevel}"
+Câu gốc tiếng Việt: "${currentQuestion}"
+Trình độ CEFR Mục tiêu: "${userLevel}"
 
-      YÊU CẦU ĐẶC BIỆT VỀ ĐÁP ÁN MẪU (suggestion):
-      1. DÙNG TIẾNG ANH GIAO TIẾP ĐỜI THƯỜNG (Spoken English): Đáp án mẫu 'suggestion' bắt buộc phải là câu mà người bản xứ (Mỹ/Anh) thực sự mở miệng nói hàng ngày (dùng Phrasal Verbs, Collocations, Idioms, Slang đời sống) phù hợp với trình độ ${userLevel}.
-      2. TUYỆT ĐỐI TRÁNH: Dịch thô từng từ (Chinglish/Việt-lish) hoặc dùng tiếng Anh trang trọng sách vở gượng gạo (Formal/Textbook English).
-         - Ví dụ: Với câu "Trời ơi kẹt xe cứng ngắc rồi, chắc trễ họp quá!"
-           + ĐÚNG NATIVE SPOKEN: "I'm stuck in bumper-to-bumper traffic, I'm gonna be late for the meeting!"
-           + SAI/SÁCH VỞ: "I am experiencing heavy traffic jam, so I will be late for the meeting."
+YÊU CẦU ĐÁNH GIÁ & NHẬN XÉT:
+1. "score": Thang điểm 0 - 100 dựa trên:
+   - Độ chính xác ngữ nghĩa.
+   - Độ tự nhiên (Native Naturalness & Spoken Fluency).
+   - Độ phù hợp với trình độ ${userLevel}.
+2. "title": Tiêu đề ngắn gọn phản ánh chất lượng bản dịch (VD: "Xuất sắc & Rất tự nhiên!", "Khá tốt!", "Cần diễn đạt tự nhiên hơn").
+3. "suggestion": 1 câu dịch mẫu tiếng Anh chuẩn khẩu ngữ người bản xứ (Mỹ/Anh) sử dụng Collocations hoặc Phrasal Verbs tự nhiên nhất.
+4. "explanation": Nhận xét chi tiết bằng tiếng Việt:
+   - Giải thích ưu/nhược điểm trong cách dùng từ của học viên.
+   - Cung cấp thêm 2 cách nói bản xứ khác: 1 cách xuề xòa thân mật (Casual) & 1 cách lịch sự công sở (Professional/Polite).
 
-      YÊU CẦU ĐÁNH GIÁ & NHẬN XÉT:
-      1. "score": Thang điểm 0-100 (Ưu tiên đánh giá cao các câu dịch dùng từ tự nhiên, chuẩn văn nói bản xứ hơn là đúng ngữ pháp sách vở mà cứng nhắc, đánh giá tương ứng với kỳ vọng ở trình độ ${userLevel}).
-      2. "title": Tiêu đề ngắn phản ánh chất lượng (VD: "Rất tự nhiên!", "Chuẩn văn nói bản xứ!", "Cần tự nhiên hơn").
-      3. "suggestion": 1 câu tiếng Anh chuẩn khẩu ngữ bản xứ nhất.
-      4. "explanation": Nhận xét chi tiết bằng tiếng Việt: Chỉ rõ tại sao cách dùng từ của học viên đã tự nhiên hay chưa. Cung cấp thêm 1-2 cách nói bản xứ khác (VD: 1 cách thân mật xuề xòa & 1 cách giao tiếp công sở tự nhiên) để học viên mở rộng vốn câu giao tiếp.
-
-      Trả về dữ liệu dưới dạng JSON như cấu trúc yêu cầu.`;
+Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
 
       const response = await fetch('/api/gemini', {
         method: 'POST',
@@ -1261,9 +1255,17 @@ Trả về JSON như cấu trúc yêu cầu.`;
                     <span className="text-sm sm:text-base">AI đang thiết lập tình huống giao tiếp đời thực...</span>
                   </div>
                 ) : (
-                  <div className="text-lg sm:text-xl text-slate-800 leading-relaxed font-bold mb-4 pl-2">
-                    {currentQuestion}
-                  </div>
+                  <>
+                    {currentContext && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-bold mb-3 ml-2 border border-blue-100">
+                        <Info className="w-3.5 h-3.5 text-blue-500" />
+                        <span>Bối cảnh: {currentContext}</span>
+                      </div>
+                    )}
+                    <div className="text-lg sm:text-xl text-slate-800 leading-relaxed font-bold mb-4 pl-2">
+                      {currentQuestion}
+                    </div>
+                  </>
                 )}
                 
                 <div className="text-xs text-slate-400 italic pl-2 flex items-start gap-1.5">
@@ -1296,8 +1298,8 @@ Trả về JSON như cấu trúc yêu cầu.`;
                 <textarea 
                   value={userTranslation}
                   onChange={(e) => setUserTranslation(e.target.value)}
-                  rows={3} 
-                  className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition text-base sm:text-lg resize-none shadow-inner bg-white font-medium" 
+                  rows={5} 
+                  className="w-full p-4 sm:p-5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-blue-100 focus:border-blue-400 outline-none transition text-base sm:text-lg resize-y min-h-[130px] sm:min-h-[160px] shadow-inner bg-white font-medium leading-relaxed" 
                   placeholder="Nhập câu dịch tiếng Anh của bạn hoặc bấm biểu tượng mic để nói..."
                 />
                 
@@ -1447,8 +1449,8 @@ Trả về JSON như cấu trúc yêu cầu.`;
                 <textarea 
                   value={userEssay}
                   onChange={(e) => setUserEssay(e.target.value)}
-                  rows={8} 
-                  className="w-full p-4 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-purple-100 focus:border-purple-400 outline-none transition text-sm sm:text-base resize-none shadow-inner bg-white font-medium leading-relaxed" 
+                  rows={9} 
+                  className="w-full p-4 sm:p-5 rounded-2xl border border-slate-200 focus:ring-4 focus:ring-purple-100 focus:border-purple-400 outline-none transition text-base sm:text-lg resize-y min-h-[200px] sm:min-h-[240px] shadow-inner bg-white font-medium leading-relaxed" 
                   placeholder="Write your English essay here (100 - 150 words)..."
                 />
                 
