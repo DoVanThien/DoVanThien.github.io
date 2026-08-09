@@ -1,5 +1,6 @@
-import React, { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import React, { InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, useEffect, useId, useRef } from 'react';
 import { motion, HTMLMotionProps } from 'framer-motion';
+import LiquidGlass from 'liquid-glass-react';
 
 // --- Liquid Glass SVG Refraction Filter (SVG Filter Definition) ---
 export const LiquidGlassSVGFilters: React.FC = () => {
@@ -54,7 +55,7 @@ export const GlassCard: React.FC<GlassCardProps> = ({
         overflow: 'hidden',
         ...style
       }}
-      className={`glass-card relative transition-all duration-300 ${className}`}
+      className={`glass-card relative transition-[transform,box-shadow,background-color] duration-300 ${className}`}
       {...props}
     >
       {/* Edge Fresnel Liquid Specular reflection */}
@@ -152,8 +153,8 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
         y: -1,
         boxShadow: '0 10px 30px rgba(0, 0, 0, 0.2), inset 0 1px 2px rgba(255, 255, 255, 0.5)'
       }}
-      whileTap={{ scale: 0.97 }}
-      transition={{ type: 'spring', stiffness: 450, damping: 20 }}
+      whileTap={{ scale: 0.96 }}
+      transition={{ type: 'spring', duration: 0.3, bounce: 0 }}
       style={{
         ...bgStyle,
         borderRadius: `${borderRadius}px`,
@@ -164,7 +165,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
         padding: '12px 28px',
         ...style
       }}
-      className={`glass-button relative overflow-hidden flex items-center justify-center gap-2 transition-all text-sm sm:text-base ${textColor} ${className}`}
+      className={`glass-button relative overflow-hidden flex items-center justify-center gap-2 transition-[transform,box-shadow,background-color,color] duration-150 ease-out text-sm sm:text-base ${textColor} ${className}`}
       {...props}
     >
       <div
@@ -201,7 +202,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({ className = '', theme = 
         boxShadow: isLight ? 'inset 0 1px 2px rgba(0, 0, 0, 0.04)' : 'inset 0 1px 3px rgba(0, 0, 0, 0.3)',
         ...style
       }}
-      className={`w-full outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all font-semibold ${
+      className={`w-full outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-[border-color,box-shadow,background-color] duration-150 font-semibold ${
         isLight ? 'placeholder:text-slate-400' : 'placeholder:text-slate-400'
       } ${className}`}
       {...props}
@@ -238,7 +239,7 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({ children, className = 
         backgroundSize: '16px',
         ...style
       }}
-      className={`w-full outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all font-semibold ${
+      className={`w-full outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-[border-color,box-shadow,background-color] duration-150 font-semibold ${
         isLight ? '[&>option]:bg-white [&>option]:text-slate-900' : '[&>option]:bg-slate-900 [&>option]:text-white'
       } ${className}`}
       {...props}
@@ -271,7 +272,7 @@ export const GlassTextArea: React.FC<GlassTextAreaProps> = ({ className = '', th
         boxShadow: isLight ? 'inset 0 1px 2px rgba(0, 0, 0, 0.04)' : 'inset 0 1px 3px rgba(0, 0, 0, 0.3)',
         ...style
       }}
-      className={`w-full outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-all font-semibold ${
+      className={`w-full outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition-[border-color,box-shadow,background-color] duration-150 font-semibold ${
         isLight ? 'placeholder:text-slate-400' : 'placeholder:text-slate-400'
       } ${className}`}
       {...props}
@@ -302,12 +303,79 @@ export const GlassModal: React.FC<GlassModalProps> = ({
   maxWidth = 'max-w-lg',
   theme = 'dark'
 }) => {
-  if (!isOpen) return null;
-
   const isLight = theme === 'light';
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const onCloseRef = useRef(onClose);
+  const titleId = useId();
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const dialog = dialogRef.current;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const focusableSelector = [
+      'button:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      'textarea:not([disabled])',
+      '[href]',
+      '[tabindex]:not([tabindex="-1"])'
+    ].join(',');
+
+    const focusFirstElement = () => {
+      const firstFocusable = dialog?.querySelector<HTMLElement>(focusableSelector);
+      (firstFocusable || dialog)?.focus();
+    };
+
+    const frame = window.requestAnimationFrame(focusFirstElement);
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== 'Tab' || !dialog) return;
+      const focusable = Array.from(dialog.querySelectorAll<HTMLElement>(focusableSelector))
+        .filter(element => !element.hasAttribute('hidden'));
+      if (focusable.length === 0) {
+        event.preventDefault();
+        dialog.focus();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus();
+    };
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   return (
     <div
+      className="glass-modal-layer"
       style={{
         position: 'fixed',
         inset: 0,
@@ -325,6 +393,9 @@ export const GlassModal: React.FC<GlassModalProps> = ({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
+        aria-hidden="true"
+        className="glass-modal-backdrop"
         style={{
           position: 'fixed',
           inset: 0,
@@ -338,15 +409,20 @@ export const GlassModal: React.FC<GlassModalProps> = ({
 
       {/* Glass Dialog Container */}
       <motion.div
-        initial={{ scale: 0.94, opacity: 0, y: 15 }}
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={titleId}
+        tabIndex={-1}
+        initial={{ scale: 0.98, opacity: 0, y: 12 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        exit={{ scale: 0.94, opacity: 0, y: 15 }}
-        transition={{ type: 'spring', stiffness: 380, damping: 28 }}
+        exit={{ scale: 0.98, opacity: 0, y: -8 }}
+        transition={{ duration: 0.24, ease: 'easeOut' }}
         style={{
           position: 'relative',
           zIndex: 10,
           width: '100%',
-          borderRadius: '36px',
+          borderRadius: '28px',
           background: isLight ? 'rgba(255, 255, 255, 0.95)' : 'rgba(15, 23, 42, 0.92)',
           backdropFilter: 'blur(45px) saturate(210%)',
           WebkitBackdropFilter: 'blur(45px) saturate(210%)',
@@ -359,7 +435,7 @@ export const GlassModal: React.FC<GlassModalProps> = ({
           flexDirection: 'column',
           overflow: 'hidden'
         }}
-        className={`w-full ${maxWidth} relative`}
+        className={`glass-modal-shell w-full ${maxWidth} relative`}
       >
         {/* Specular edge highlight reflection */}
         <div
@@ -371,12 +447,13 @@ export const GlassModal: React.FC<GlassModalProps> = ({
             background: isLight
               ? 'linear-gradient(135deg, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 60%)'
               : 'linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0) 60%)',
-            borderRadius: '32px'
+            borderRadius: '28px'
           }}
         />
 
         {/* Modal Header */}
         <div
+          className="glass-modal-header"
           style={{
             position: 'relative',
             zIndex: 10,
@@ -392,7 +469,7 @@ export const GlassModal: React.FC<GlassModalProps> = ({
           <div className="flex items-center gap-3">
             {icon && <span className="text-2xl">{icon}</span>}
             <div>
-              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: isLight ? '#0f172a' : '#ffffff', lineHeight: 1.3, letterSpacing: '-0.02em' }}>
+              <h3 id={titleId} style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: isLight ? '#0f172a' : '#ffffff', lineHeight: 1.3, letterSpacing: '-0.02em' }}>
                 {title}
               </h3>
               {badge && (
@@ -404,9 +481,24 @@ export const GlassModal: React.FC<GlassModalProps> = ({
               )}
             </div>
           </div>
+          <div className="liquid-modal-close-wrap">
+          <LiquidGlass
+            className="liquid-modal-close"
+            displacementScale={38}
+            blurAmount={0.08}
+            saturation={125}
+            aberrationIntensity={1.1}
+            elasticity={0.06}
+            cornerRadius={22}
+            padding="0"
+            overLight={!isLight}
+            style={{ position: 'absolute', top: '50%', left: '50%' }}
+          >
           <button
             onClick={onClose}
             type="button"
+            aria-label="Đóng hộp thoại"
+            className="glass-modal-close"
             style={{
               background: isLight ? 'rgba(15, 23, 42, 0.08)' : 'rgba(255, 255, 255, 0.12)',
               border: 'none',
@@ -417,17 +509,20 @@ export const GlassModal: React.FC<GlassModalProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'all 0.2s'
+              transition: 'background-color 150ms ease-out, color 150ms ease-out, transform 150ms ease-out'
             }}
           >
             <svg fill="none" viewBox="0 0 24 24" strokeWidth="2.5" stroke="currentColor" style={{ width: '20px', height: '20px' }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+          </LiquidGlass>
+          </div>
         </div>
 
         {/* Modal Body */}
         <div
+          className="glass-modal-body"
           style={{
             position: 'relative',
             zIndex: 10,

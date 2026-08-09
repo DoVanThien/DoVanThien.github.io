@@ -99,6 +99,7 @@ export interface PoopTrackerState {
   // Settings & Utilities
   clearAllData: () => Promise<void>;
   syncWithCloud: () => Promise<void>;
+  importData: (importedJson: any) => Promise<void>;
 }
 
 // 18 Badge definitions configuration
@@ -1046,6 +1047,109 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
       }
     } catch (err) {
       console.warn('Lỗi chạy đồng bộ huy hiệu (đang chạy offline):', err);
+    }
+  },
+
+  importData: async (importedJson: any) => {
+    if (!importedJson || typeof importedJson !== 'object') {
+      throw new Error('Dữ liệu JSON không hợp lệ.');
+    }
+
+    const rawProfiles: PoopProfile[] = Array.isArray(importedJson.profiles)
+      ? importedJson.profiles
+      : (Array.isArray(importedJson.pt_profiles) ? importedJson.pt_profiles : []);
+
+    const importedPoops: PoopLog[] = Array.isArray(importedJson.poopLogs)
+      ? importedJson.poopLogs
+      : (Array.isArray(importedJson.pt_poop_logs) ? importedJson.pt_poop_logs : []);
+
+    const importedWaters: WaterLog[] = Array.isArray(importedJson.waterLogs)
+      ? importedJson.waterLogs
+      : (Array.isArray(importedJson.pt_water_logs) ? importedJson.pt_water_logs : []);
+
+    const importedFoods: FoodLog[] = Array.isArray(importedJson.foodLogs)
+      ? importedJson.foodLogs
+      : (Array.isArray(importedJson.pt_food_logs) ? importedJson.pt_food_logs : []);
+
+    if (rawProfiles.length === 0 && importedPoops.length === 0 && importedWaters.length === 0 && importedFoods.length === 0) {
+      throw new Error('File JSON không chứa bất kỳ nhật ký hoặc thông tin hồ sơ hợp lệ nào.');
+    }
+
+    // 1. Merge Local Profiles
+    const currentProfiles = get().profiles;
+    const normalizedProfiles = rawProfiles.map(normalizeProfile);
+    const { merged: mergedProfiles } = smartUnionMerge(currentProfiles, normalizedProfiles);
+
+    // 2. Smart Union Merge cho các nhật ký
+    const { merged: mergedPoops } = smartUnionMerge(get().poopLogs, importedPoops);
+    const { merged: mergedWaters } = smartUnionMerge(get().waterLogs, importedWaters);
+    const { merged: mergedFoods } = smartUnionMerge(get().foodLogs, importedFoods);
+
+    set({
+      profiles: mergedProfiles,
+      poopLogs: mergedPoops,
+      waterLogs: mergedWaters,
+      foodLogs: mergedFoods,
+    });
+
+    await get().syncWithCloud();
+
+    // 3. Cập nhật và đẩy mới lên Supabase Cloud
+    if (supabase) {
+      try {
+        for (const p of mergedProfiles) {
+          await ensureProfileOnSupabase(p);
+        }
+
+        if (importedPoops.length > 0) {
+          for (const pLog of importedPoops) {
+            if (!pLog.id) continue;
+            const prof = mergedProfiles.find(p => p.id === pLog.profile_id);
+            await supabase.from('poop_logs').upsert([{
+              id: pLog.id,
+              profile_id: pLog.profile_id,
+              profile_name: prof ? prof.name : 'Unknown',
+              type: pLog.success ? 'success' : 'fail',
+              date: pLog.date,
+              time: pLog.time,
+              bristol_type: pLog.bristol_type || 4,
+              symptoms: Array.isArray(pLog.symptoms) ? pLog.symptoms : [],
+              notes: pLog.notes || ''
+            }], { onConflict: 'id' });
+          }
+        }
+
+        if (importedWaters.length > 0) {
+          for (const wLog of importedWaters) {
+            if (!wLog.id) continue;
+            await supabase.from('water_logs').upsert([{
+              id: wLog.id,
+              profile_id: wLog.profile_id,
+              date: wLog.date,
+              time: wLog.time,
+              amount: Number(wLog.amount),
+              beverage_type: wLog.beverage_type || 'pure_water'
+            }], { onConflict: 'id' });
+          }
+        }
+
+        if (importedFoods.length > 0) {
+          for (const fLog of importedFoods) {
+            if (!fLog.id) continue;
+            await supabase.from('food_logs').upsert([{
+              id: fLog.id,
+              profile_id: fLog.profile_id,
+              date: fLog.date,
+              time: fLog.time,
+              food_name: fLog.food_name,
+              meal_type: fLog.meal_type || 'main',
+              portion_size: fLog.portion_size || 'normal'
+            }], { onConflict: 'id' });
+          }
+        }
+      } catch (e) {
+        console.warn('Lỗi khi đẩy dữ liệu import lên Supabase:', e);
+      }
     }
   },
 }));

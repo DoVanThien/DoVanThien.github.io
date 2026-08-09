@@ -117,6 +117,7 @@ export default function PoopTrackerPage() {
     updateFoodLog,
     deleteFoodLog,
     clearAllData,
+    importData,
   } = usePoopTrackerStore();
 
   // App Navigation & UI states
@@ -526,7 +527,7 @@ export default function PoopTrackerPage() {
                   setCalendarDate(new Date(year, mIdx, 1));
                   setCalendarViewMode('month');
                 }}
-                className={`p-3 sm:p-4 rounded-3xl border cursor-pointer flex flex-col justify-between overflow-hidden transition-all hover:scale-[1.01] hover:shadow-lg ${
+                className={`p-3 sm:p-4 rounded-3xl border cursor-pointer flex flex-col justify-between overflow-hidden transition-[transform,box-shadow,background-color,border-color] duration-150 ease-out hover:scale-[1.01] hover:shadow-lg ${
                   theme === 'light'
                     ? 'bg-white/90 border-slate-200/80 shadow-xs hover:border-indigo-400/60'
                     : 'bg-slate-800/80 border-white/10 shadow-xs hover:border-indigo-400/60'
@@ -648,7 +649,7 @@ export default function PoopTrackerPage() {
               <div
                 key={dateStr}
                 onClick={() => handleDayClick(dateStr)}
-                className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-all hover:scale-[1.01] ${
+                className={`p-3.5 rounded-2xl border flex items-center justify-between cursor-pointer transition-[transform,box-shadow,background-color,border-color] duration-150 ease-out hover:scale-[1.01] ${
                   isToday
                     ? 'border-2 border-indigo-500 bg-indigo-50/60 dark:bg-indigo-950/40 shadow-md ring-2 ring-indigo-500/20'
                     : theme === 'light'
@@ -715,7 +716,7 @@ export default function PoopTrackerPage() {
                   {/* Water circle indicator */}
                   <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-700 relative overflow-hidden flex items-center justify-center border border-sky-400/30">
                     <div
-                      className="absolute bottom-0 left-0 right-0 bg-sky-500 opacity-80 transition-all duration-300"
+                      className="absolute bottom-0 left-0 right-0 bg-sky-500 opacity-80 transition-[height,opacity] duration-300"
                       style={{ height: `${waterPercent}%` }}
                     />
                     <span className="text-[10px] font-black z-10 text-slate-900 dark:text-white">
@@ -812,7 +813,7 @@ export default function PoopTrackerPage() {
             <div
               key={idx}
               onClick={() => handleDayClick(item.dateStr)}
-              className={`p-2 rounded-2xl border flex flex-col justify-between items-center min-h-[60px] cursor-pointer relative group transition-all hover:scale-105 active:scale-95 shadow-sm ${
+              className={`p-2 rounded-2xl border flex flex-col justify-between items-center min-h-[60px] cursor-pointer relative group transition-[transform,box-shadow,background-color,border-color] duration-150 ease-out hover:scale-[1.02] active:scale-[0.96] shadow-sm ${
                 item.isCurrentMonth
                   ? theme === 'light' ? 'text-slate-900 font-bold' : 'text-slate-100 font-bold'
                   : 'text-gray-400 opacity-40'
@@ -1118,9 +1119,13 @@ export default function PoopTrackerPage() {
           {/* Active profile switch box */}
           {activeProfile && (
             <div className="profile-selector-container">
-              <div
+              <button
+                type="button"
                 onClick={() => setIsAvatarPickerOpen(!isAvatarPickerOpen)}
                 className="active-profile-card"
+                aria-expanded={isAvatarPickerOpen}
+                aria-controls="profile-quick-selector"
+                aria-label={`Đổi hồ sơ đang hoạt động: ${activeProfile.name}`}
               >
                 <div className="profile-avatar">
                   {getAvatarHTML(activeProfile.avatar)}
@@ -1136,16 +1141,17 @@ export default function PoopTrackerPage() {
                   <div className="profile-status">Đang hoạt động</div>
                 </div>
                 <ChevronRight className="chevron-icon w-4 h-4" />
-              </div>
+              </button>
 
               {/* Profile quick selector list overlay */}
               {isAvatarPickerOpen && (
                 <div className="profile-dropdown show">
-                  <div className="profile-dropdown-list">
+                  <div className="profile-dropdown-list" id="profile-quick-selector" aria-label="Chọn hồ sơ">
                     {profiles.map((p, idx) => {
                       const pName = p.name && p.name.trim() !== '' ? p.name : (idx === 0 ? 'Miliket 🍎' : (idx === 1 ? 'Omachi 🍏' : `Hồ sơ ${idx + 1}`));
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={p.id}
                           onClick={() => {
                             setActiveProfileId(p.id);
@@ -1153,11 +1159,12 @@ export default function PoopTrackerPage() {
                             showToast(`Đã chuyển sang profile ${pName}`, 'info');
                           }}
                           className={`profile-dropdown-item ${p.id === activeProfileId ? 'active' : ''}`}
+                          aria-pressed={p.id === activeProfileId}
                         >
                           <span className="text-lg">{p.avatar || '🍎'}</span>
                           <span className="profile-name">{pName}</span>
                           {p.is_default && <span className="text-[9px] bg-indigo-500/40 px-1.5 py-0.5 rounded text-white ml-auto">Default</span>}
-                        </div>
+                        </button>
                       );
                     })}
                   </div>
@@ -1262,21 +1269,21 @@ export default function PoopTrackerPage() {
                   </div>
                   {(() => {
                     const todayWater = getTodayWater();
-                    const baselineGoal = 2000;
+                    const baselineGoal = activeProfile.water_goal || 2000;
                     const isGoalReached = todayWater >= baselineGoal;
                     const fillPct = Math.min(100, Math.round((todayWater / baselineGoal) * 100));
 
                     return (
                       <div
-                        className={`water-quick-stats font-extrabold px-4 py-2 rounded-2xl text-xs flex items-center gap-1.5 transition-all relative overflow-hidden ${
+                        className={`water-quick-stats font-extrabold px-4 py-2 rounded-2xl text-xs flex items-center gap-1.5 transition-[background-color,box-shadow] relative overflow-hidden ${
                           isGoalReached
-                            ? 'water-quick-stats-complete border-emerald-400/80 text-emerald-950 dark:text-emerald-100 shadow-md ring-1 ring-emerald-400/40'
-                            : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 shadow-sm'
+                            ? 'water-quick-stats-complete shadow-md'
+                            : 'water-quick-stats-progress bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 border border-slate-200/80 shadow-sm'
                         }`}
                       >
                         {/* Liquid Progress Bar Fill Layer */}
                         <div
-                          className={`water-liquid-fill absolute bottom-0 left-0 h-full transition-all duration-700 ease-out pointer-events-none ${
+                          className={`water-liquid-fill absolute bottom-0 left-0 h-full transition-[width,background-color] duration-700 ease-out pointer-events-none ${
                             isGoalReached
                               ? 'bg-gradient-to-r from-emerald-500/80 via-teal-500/85 to-green-500/90'
                               : 'bg-gradient-to-r from-sky-400/70 via-blue-500/75 to-indigo-500/80'
@@ -1287,7 +1294,7 @@ export default function PoopTrackerPage() {
                         </div>
 
                         {/* Text stays strictly UNCHANGED regardless of completion */}
-                        <span className="relative z-10 flex items-center gap-1.5 font-black">
+                        <span className="water-quick-stats-label relative z-10 flex items-center gap-1.5 font-black">
                           <span className="text-sky-500 dark:text-sky-300">💧</span>
                           <span><strong>{todayWater}</strong>/{baselineGoal} ml</span>
                         </span>
@@ -1322,7 +1329,7 @@ export default function PoopTrackerPage() {
                               <button
                                 key={mode}
                                 onClick={() => setCalendarViewMode(mode)}
-                                className={`flex-1 rounded-full px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-black transition-all capitalize text-center ${
+                                className={`flex-1 rounded-full px-3 py-2 sm:px-5 sm:py-2.5 text-xs sm:text-sm font-black transition-[background-color,color,box-shadow] duration-150 ease-out capitalize text-center ${
                                   calendarViewMode === mode
                                     ? theme === 'light'
                                       ? 'bg-white text-indigo-700 shadow-md border border-slate-200/80 font-black rounded-full'
@@ -1485,7 +1492,7 @@ export default function PoopTrackerPage() {
                             {/* Horizontal Liquid Progress Bar */}
                             <div className="w-full bg-slate-800/60 dark:bg-slate-800/60 light:bg-slate-200/90 h-4 rounded-full p-0.5 border border-white/10 relative overflow-hidden my-3">
                               <div
-                                className="h-full rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-500 shadow-md transition-all duration-500"
+                                className="h-full rounded-full bg-gradient-to-r from-sky-400 via-sky-500 to-indigo-500 shadow-md transition-[width] duration-500"
                                 style={{ width: `${Math.max(4, waterPct)}%` }}
                               />
                             </div>
@@ -1499,19 +1506,19 @@ export default function PoopTrackerPage() {
                             <div className="grid grid-cols-3 gap-2.5">
                               <button
                                 onClick={() => handleQuickWaterAdd(250)}
-                                className="py-2.5 rounded-xl border border-sky-400/30 bg-sky-500/15 text-sky-300 font-extrabold text-xs hover:bg-sky-500/30 transition-all flex items-center justify-center gap-1 active:scale-95"
+                                className="py-2.5 rounded-xl border border-sky-400/30 bg-sky-500/15 text-sky-700 dark:text-sky-300 font-extrabold text-xs hover:bg-sky-500/30 transition-[transform,background-color] duration-150 ease-out flex items-center justify-center gap-1 active:scale-[0.96]"
                               >
                                 +250ml
                               </button>
                               <button
                                 onClick={() => handleQuickWaterAdd(500)}
-                                className="py-2.5 rounded-xl border border-sky-400/30 bg-sky-500/15 text-sky-300 font-extrabold text-xs hover:bg-sky-500/30 transition-all flex items-center justify-center gap-1 active:scale-95"
+                                className="py-2.5 rounded-xl border border-sky-400/30 bg-sky-500/15 text-sky-700 dark:text-sky-300 font-extrabold text-xs hover:bg-sky-500/30 transition-[transform,background-color] duration-150 ease-out flex items-center justify-center gap-1 active:scale-[0.96]"
                               >
                                 +500ml
                               </button>
                               <button
                                 onClick={() => handleQuickWaterAdd(750)}
-                                className="py-2.5 rounded-xl border border-sky-400/30 bg-sky-500/15 text-sky-300 font-extrabold text-xs hover:bg-sky-500/30 transition-all flex items-center justify-center gap-1 active:scale-95"
+                                className="py-2.5 rounded-xl border border-sky-400/30 bg-sky-500/15 text-sky-700 dark:text-sky-300 font-extrabold text-xs hover:bg-sky-500/30 transition-[transform,background-color] duration-150 ease-out flex items-center justify-center gap-1 active:scale-[0.96]"
                               >
                                 +750ml
                               </button>
@@ -2087,12 +2094,12 @@ export default function PoopTrackerPage() {
                         {/* Data management settings */}
                         <div className="card settings-card shadow-blur" style={{ border: '1px solid rgba(239, 68, 68, 0.2)' }}>
                           <h3 style={{ color: 'var(--color-apple-red)' }}>Khu vực dữ liệu nhạy cảm</h3>
-                          <div className="setting-item">
+                          <div className="setting-item data-transfer-item">
                             <div className="setting-info">
                               <div className="setting-title">Xuất dữ liệu backup</div>
                               <div className="setting-desc">Tải về toàn bộ nhật ký dưới dạng file JSON</div>
                             </div>
-                            <div className="setting-action">
+                            <div className="setting-action data-transfer-actions flex items-center gap-2 flex-wrap">
                               <button
                                 onClick={() => {
                                   const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(
@@ -2107,6 +2114,39 @@ export default function PoopTrackerPage() {
                                 className="btn btn-outline"
                               >
                                 <Download className="w-4 h-4 mr-1.5 inline-block" /> Tải JSON
+                              </button>
+
+                              <input
+                                type="file"
+                                id="import-json-input"
+                                accept=".json"
+                                style={{ display: 'none' }}
+                                onChange={async (e) => {
+                                  const file = e.target.files?.[0];
+                                  if (!file) return;
+                                  const reader = new FileReader();
+                                  reader.onload = async (event) => {
+                                    try {
+                                      const parsed = JSON.parse(event.target?.result as string);
+                                      await importData(parsed);
+                                      showToast('Đã nhập dữ liệu & đồng bộ Supabase thành công!', 'success');
+                                    } catch (err: any) {
+                                      showToast('Lỗi nhập dữ liệu: ' + (err.message || 'File JSON không hợp lệ'), 'error');
+                                    } finally {
+                                      e.target.value = '';
+                                    }
+                                  };
+                                  reader.readAsText(file);
+                                }}
+                              />
+
+                              <button
+                                onClick={() => {
+                                  document.getElementById('import-json-input')?.click();
+                                }}
+                                className="btn btn-primary"
+                              >
+                                <Upload className="w-4 h-4 mr-1.5 inline-block" /> Nhập JSON
                               </button>
                             </div>
                           </div>
@@ -2137,7 +2177,7 @@ export default function PoopTrackerPage() {
                       <div className="settings-column">
                         <div className="card settings-card shadow-blur">
                           <h3>Thang đo Bristol (Phân loại)</h3>
-                          <div className="flex flex-col gap-2.5 text-[11px] leading-relaxed text-gray-300 mt-3">
+                          <div className="flex flex-col gap-2.5 text-[13px] leading-relaxed text-slate-700 dark:text-slate-300 mt-3">
                             <div className="p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-300" style={{ padding: '10px 12px' }}>
                               <strong>Loại 1 - 2:</strong> Dạng viên nhỏ cứng (Táo bón 🍎)
                             </div>
@@ -2155,7 +2195,7 @@ export default function PoopTrackerPage() {
 
                         <div className="card settings-card shadow-blur">
                               <h3>Mẹo cho hệ tiêu hoá khoẻ</h3>
-                              <ul className="list-disc pl-4 text-[11px] leading-relaxed text-gray-400 flex flex-col gap-2 mt-3">
+                              <ul className="list-disc pl-4 text-[13px] leading-relaxed text-slate-600 dark:text-slate-400 flex flex-col gap-3 mt-3">
                                 <li>Uống đủ nước tối thiểu theo mục tiêu hàng ngày (1.5 - 2.5 lít) để bôi trơn nhu động.</li>
                                 <li>Tăng chất xơ từ trái cây (táo, chuối), yến mạch và các loại rau cải xanh.</li>
                                 <li>Thực hiện đi ngoài vào khung giờ vàng buổi sáng (5h-8h) sau khi ngủ dậy để hình thành nhịp sinh học tốt.</li>
@@ -2177,7 +2217,7 @@ export default function PoopTrackerPage() {
             </div>
           
           {/* TOAST COMPONENT */}
-          <AnimatePresence>
+          <AnimatePresence initial={false}>
             {toastMessage && (
               <motion.div
                 initial={{ opacity: 0, y: 30, x: '-50%' }}
@@ -2206,6 +2246,8 @@ export default function PoopTrackerPage() {
                     ? 'bg-rose-600/95 text-white border-rose-400/30'
                     : 'bg-indigo-600/95 text-white border-indigo-400/30'
                 }`}
+                role="status"
+                aria-live="polite"
               >
                 {toastMessage}
               </motion.div>
@@ -2221,7 +2263,7 @@ export default function PoopTrackerPage() {
             icon="📅"
             badge="NHẬT KÝ THEO DÕI"
           >
-            <div className="flex flex-col gap-3.5 py-1">
+            <div className="day-log-modal flex flex-col gap-3.5 py-1">
               <p className={`text-xs ${theme === 'light' ? 'text-slate-600' : 'text-slate-300'}`}>
                 Bạn muốn ghi nhận thông tin nhật ký sinh học nào cho ngày <strong>{selectedCalendarDate}</strong>?
               </p>
@@ -2237,20 +2279,20 @@ export default function PoopTrackerPage() {
                   if (!hasLogs) return null;
 
                   return (
-                    <div className="mb-2">
+                    <div className="history-log-section mb-2">
                       <h4 className={`text-sm font-bold mb-2 ${theme === 'light' ? 'text-slate-700' : 'text-slate-200'}`}>
                         Lịch sử trong ngày
                       </h4>
-                      <div className="flex flex-col gap-2">
+                      <div className="history-log-list flex flex-col gap-2">
                         {dayPoops.map(p => (
-                          <div key={p.id} className="relative overflow-hidden rounded-xl group">
+                          <div key={p.id} className="history-log-swipe relative overflow-hidden rounded-xl group">
                             <div 
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 await deletePoopLog(p.id);
                                 showToast('Đã xóa nhật ký đại tiện!', 'info');
                               }}
-                              className="absolute right-0 top-0 bottom-0 w-16 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white flex items-center justify-center rounded-xl cursor-pointer shadow-md transition-colors z-0"
+                              className="absolute right-0 top-0 bottom-0 w-16 bg-rose-500 hover:bg-rose-600 active:scale-[0.96] text-white flex items-center justify-center rounded-xl cursor-pointer shadow-md transition-[transform,background-color] duration-150 z-0"
                               title="Xóa log"
                             >
                               <Trash2 className="w-5 h-5 text-white stroke-[2.25]" />
@@ -2271,7 +2313,7 @@ export default function PoopTrackerPage() {
                                 setIsDayActionModalOpen(false);
                                 setIsPoopModalOpen(true);
                               }}
-                              className={`relative z-10 p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${
+                              className={`history-log-row history-log-row--poop relative z-10 p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${
                                 theme === 'light' ? 'bg-white border-emerald-300 text-emerald-950 shadow-xs' : 'bg-[#182235] border-emerald-500/40 text-emerald-100 shadow-md'
                               }`}
                             >
@@ -2287,14 +2329,14 @@ export default function PoopTrackerPage() {
                           </div>
                         ))}
                         {dayWaters.map(w => (
-                          <div key={w.id} className="relative overflow-hidden rounded-xl group">
+                          <div key={w.id} className="history-log-swipe relative overflow-hidden rounded-xl group">
                             <div 
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 await deleteWaterLog(w.id);
                                 showToast('Đã xóa nhật ký nước!', 'info');
                               }}
-                              className="absolute right-0 top-0 bottom-0 w-16 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white flex items-center justify-center rounded-xl cursor-pointer shadow-md transition-colors z-0"
+                              className="absolute right-0 top-0 bottom-0 w-16 bg-rose-500 hover:bg-rose-600 active:scale-[0.96] text-white flex items-center justify-center rounded-xl cursor-pointer shadow-md transition-[transform,background-color] duration-150 z-0"
                               title="Xóa log"
                             >
                               <Trash2 className="w-5 h-5 text-white stroke-[2.25]" />
@@ -2313,7 +2355,7 @@ export default function PoopTrackerPage() {
                                 setIsDayActionModalOpen(false);
                                 setIsWaterModalOpen(true);
                               }}
-                              className={`relative z-10 p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${
+                              className={`history-log-row history-log-row--water relative z-10 p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${
                                 theme === 'light' ? 'bg-white border-sky-300 text-sky-950 shadow-xs' : 'bg-[#182235] border-sky-500/40 text-sky-100 shadow-md'
                               }`}
                             >
@@ -2329,14 +2371,14 @@ export default function PoopTrackerPage() {
                           </div>
                         ))}
                         {dayFoods.map(f => (
-                          <div key={f.id} className="relative overflow-hidden rounded-xl group">
+                          <div key={f.id} className="history-log-swipe relative overflow-hidden rounded-xl group">
                             <div 
                               onClick={async (e) => {
                                 e.stopPropagation();
                                 await deleteFoodLog(f.id);
                                 showToast('Đã xóa nhật ký ăn uống!', 'info');
                               }}
-                              className="absolute right-0 top-0 bottom-0 w-16 bg-rose-500 hover:bg-rose-600 active:scale-95 text-white flex items-center justify-center rounded-xl cursor-pointer shadow-md transition-colors z-0"
+                              className="absolute right-0 top-0 bottom-0 w-16 bg-rose-500 hover:bg-rose-600 active:scale-[0.96] text-white flex items-center justify-center rounded-xl cursor-pointer shadow-md transition-[transform,background-color] duration-150 z-0"
                               title="Xóa log"
                             >
                               <Trash2 className="w-5 h-5 text-white stroke-[2.25]" />
@@ -2356,7 +2398,7 @@ export default function PoopTrackerPage() {
                                 setIsDayActionModalOpen(false);
                                 setIsFoodModalOpen(true);
                               }}
-                              className={`relative z-10 p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${
+                              className={`history-log-row history-log-row--food relative z-10 p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-colors ${
                                 theme === 'light' ? 'bg-white border-amber-300 text-amber-950 shadow-xs' : 'bg-[#182235] border-amber-500/40 text-amber-100 shadow-md'
                               }`}
                             >
@@ -2379,7 +2421,7 @@ export default function PoopTrackerPage() {
                 <h4 className={`text-sm font-bold mt-2 ${theme === 'light' ? 'text-slate-700' : 'text-slate-200'}`}>
                   Ghi nhận mới
                 </h4>
-                <div className="grid grid-cols-1 gap-3">
+                <div className="history-new-actions grid grid-cols-1 gap-3">
                 <button
                   type="button"
                   onClick={() => {
@@ -2392,7 +2434,7 @@ export default function PoopTrackerPage() {
                     setIsDayActionModalOpen(false);
                     setIsPoopModalOpen(true);
                   }}
-                  className={`p-4 rounded-2xl border flex items-center gap-3 transition-all active:scale-95 ${
+                  className={`history-new-action history-new-action--poop p-4 rounded-2xl border flex items-center gap-3 transition-[transform,background-color,border-color] duration-150 ease-out active:scale-[0.96] ${
                     theme === 'light'
                       ? 'bg-emerald-50 hover:bg-emerald-100/80 border-emerald-300 shadow-xs'
                       : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-300 hover:bg-emerald-500/25'
@@ -2417,7 +2459,7 @@ export default function PoopTrackerPage() {
                     setIsDayActionModalOpen(false);
                     setIsWaterModalOpen(true);
                   }}
-                  className={`p-4 rounded-2xl border flex items-center gap-3 transition-all active:scale-95 ${
+                  className={`history-new-action history-new-action--water p-4 rounded-2xl border flex items-center gap-3 transition-[transform,background-color,border-color] duration-150 ease-out active:scale-[0.96] ${
                     theme === 'light'
                       ? 'bg-sky-50 hover:bg-sky-100/80 border-sky-300 shadow-xs'
                       : 'bg-sky-500/15 border-sky-500/30 text-sky-300 hover:bg-sky-500/25'
@@ -2442,7 +2484,7 @@ export default function PoopTrackerPage() {
                     setIsDayActionModalOpen(false);
                     setIsFoodModalOpen(true);
                   }}
-                  className={`p-4 rounded-2xl border flex items-center gap-3 transition-all active:scale-95 ${
+                  className={`history-new-action history-new-action--food p-4 rounded-2xl border flex items-center gap-3 transition-[transform,background-color,border-color] duration-150 ease-out active:scale-[0.96] ${
                     theme === 'light'
                       ? 'bg-amber-50 hover:bg-amber-100/80 border-amber-300 shadow-xs'
                       : 'bg-amber-500/15 border-amber-500/30 text-amber-300 hover:bg-amber-500/25'
@@ -2456,7 +2498,7 @@ export default function PoopTrackerPage() {
                 </button>
                 </div>
 
-              <div className="pt-4 mt-2 border-t flex justify-end border-white/10" style={{ paddingTop: '12px' }}>
+              <div className="modal-actions history-modal-actions pt-4 mt-2 border-t flex justify-end border-white/10" style={{ paddingTop: '12px' }}>
                 <GlassButton theme={theme} variant="secondary" onClick={() => setIsDayActionModalOpen(false)}>
                   Đóng
                 </GlassButton>
@@ -2587,7 +2629,7 @@ export default function PoopTrackerPage() {
                             key={a}
                             type="button"
                             onClick={() => setProfileAvatar(a)}
-                            className={`text-xl p-1.5 rounded-xl transition-all ${
+                            className={`text-xl p-1.5 rounded-xl transition-[transform,background-color,box-shadow] duration-150 ${
                               profileAvatar === a 
                                 ? 'bg-indigo-600 text-white shadow-md ring-2 ring-indigo-400 scale-110' 
                                 : theme === 'light' ? 'hover:bg-slate-200/80 text-slate-800' : 'hover:bg-white/15 text-white'
@@ -2602,7 +2644,7 @@ export default function PoopTrackerPage() {
                 </div>
               </div>
 
-              <div className={`pt-5 mt-4 border-t flex gap-3.5 justify-end items-center ${
+              <div className={`modal-actions pt-5 mt-4 border-t flex gap-3.5 justify-end items-center ${
                 theme === 'light' ? 'border-slate-200/80' : 'border-white/10'
               }`}>
                 <GlassButton theme={theme} type="button" variant="secondary" onClick={() => setIsProfileModalOpen(false)}>
@@ -2647,7 +2689,7 @@ export default function PoopTrackerPage() {
                   <label className={`text-xs font-extrabold block mb-2.5 ${theme === 'light' ? 'text-slate-800' : 'text-slate-200'}`}>
                     Chọn Loại phân (Thang đo Bristol) <span className="text-red-500">*</span>
                   </label>
-                  <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-none">
+                  <div className="bristol-modal-grid">
                     {[
                       { type: 1, label: 'Loại 1', icon: '🪨', desc: 'Viên rời cứng', tag: 'Táo bón nặng 🍎' },
                       { type: 2, label: 'Loại 2', icon: '🪵', desc: 'Xúc xích gồ ghề', tag: 'Táo bón nhẹ 🍎' },
@@ -2658,24 +2700,33 @@ export default function PoopTrackerPage() {
                       { type: 7, label: 'Loại 7', icon: '💧', desc: 'Lỏng nước', tag: 'Tiêu chảy nguy hiểm 🍇' },
                     ].map(item => {
                       const isSelected = bristolType === item.type;
+                      const stateColor = item.type <= 2
+                        ? 'red'
+                        : item.type <= 4
+                        ? 'green'
+                        : item.type <= 6
+                        ? 'yellow'
+                        : 'purple';
                       return (
-                        <div
+                        <button
+                          type="button"
                           key={item.type}
                           onClick={() => setBristolType(item.type)}
-                          className={`min-w-[130px] p-3.5 rounded-3xl border cursor-pointer flex flex-col items-center justify-between text-center gap-1 transition-all ${
+                          aria-pressed={isSelected}
+                          className={`bristol-modal-option bristol-state-${stateColor} p-3.5 rounded-2xl border cursor-pointer flex flex-col items-center justify-between text-center gap-1 transition-[transform,background-color,border-color,box-shadow] duration-150 ease-out active:scale-[0.96] ${
                             isSelected
-                              ? 'bg-emerald-50/80 dark:bg-emerald-950/40 border-2 border-emerald-500 text-slate-900 dark:text-white shadow-md ring-2 ring-emerald-400/30'
+                              ? 'is-selected text-slate-900 dark:text-white shadow-md'
                               : theme === 'light'
                               ? 'bg-white border-slate-200 text-slate-800 hover:border-slate-300 shadow-sm'
                               : 'bg-slate-800/60 border-white/10 text-slate-200 hover:bg-slate-700/60'
                           }`}
                           style={{ padding: '10px 0px' }}
                         >
-                          <span className="text-[11px] font-bold text-slate-400">{item.label}</span>
-                          <span className="text-3xl my-1">{item.icon}</span>
-                          <span className="text-xs font-black text-slate-800 dark:text-white">{item.desc}</span>
-                          <span className="text-[10px] font-semibold text-slate-500">{item.tag}</span>
-                        </div>
+                          <span className="bristol-modal-label text-[11px] font-bold text-slate-400">{item.label}</span>
+                          <span className="bristol-modal-icon text-3xl my-1">{item.icon}</span>
+                          <span className="bristol-modal-desc text-xs font-black text-slate-800 dark:text-white">{item.desc}</span>
+                          <span className="bristol-modal-tag text-[10px] font-semibold text-slate-500">{item.tag}</span>
+                        </button>
                       );
                     })}
                   </div>
@@ -2698,7 +2749,7 @@ export default function PoopTrackerPage() {
                       <div
                         key={item.id}
                         onClick={() => toggleSymptom(item.id)}
-                        className={`pl-5 pr-4 py-3.5 rounded-2xl border cursor-pointer text-xs font-extrabold flex items-center gap-3.5 transition-all shadow-sm min-h-[50px] ${
+                        className={`pl-5 pr-4 py-3.5 rounded-2xl border cursor-pointer text-xs font-extrabold flex items-center gap-3.5 transition-[transform,background-color,border-color,box-shadow] duration-150 ease-out active:scale-[0.96] shadow-sm min-h-[50px] ${
                           isSelected
                             ? 'bg-indigo-50 dark:bg-indigo-950/40 border-2 border-indigo-600 text-indigo-900 dark:text-white font-extrabold'
                             : theme === 'light'
@@ -2732,7 +2783,7 @@ export default function PoopTrackerPage() {
                 />
               </div>
 
-              <div className={`pt-4 mt-2 border-t flex gap-3 justify-end items-center ${
+              <div className={`modal-actions pt-4 mt-2 border-t flex gap-3 justify-end items-center ${
                 theme === 'light' ? 'border-slate-100' : 'border-white/10'
               }`} style={{ paddingTop: '12px' }}>
                 <GlassButton theme={theme} type="button" variant="secondary" onClick={() => setIsPoopModalOpen(false)}>
@@ -2787,7 +2838,7 @@ export default function PoopTrackerPage() {
                       key={amt}
                       type="button"
                       onClick={() => setWaterAmount(amt)}
-                      className={`flex-1 text-xs py-1.5 rounded-xl border font-bold transition-all ${
+                      className={`flex-1 text-xs py-1.5 rounded-xl border font-bold transition-[transform,background-color,border-color,color] duration-150 ease-out active:scale-[0.96] ${
                         waterAmount === amt
                           ? 'bg-sky-500 text-white border-sky-400 shadow-sm'
                           : theme === 'light'
@@ -2817,7 +2868,7 @@ export default function PoopTrackerPage() {
                       <div
                         key={item.id}
                         onClick={() => setBeverageType(item.id)}
-                        className={`p-3.5 px-4 rounded-2xl border cursor-pointer min-h-[64px] flex flex-col justify-center transition-all ${
+                        className={`p-3.5 px-4 rounded-2xl border cursor-pointer min-h-[64px] flex flex-col justify-center transition-[transform,background-color,border-color,box-shadow] duration-150 ease-out active:scale-[0.96] ${
                           isSelected
                             ? 'bg-sky-600 border-sky-500 text-white shadow-md shadow-sky-500/30 ring-2 ring-sky-400/50'
                             : theme === 'light'
@@ -2838,7 +2889,7 @@ export default function PoopTrackerPage() {
                 </div>
               </div>
 
-              <div className={`pt-5 mt-6 border-t flex gap-3.5 justify-end items-center ${
+              <div className={`modal-actions pt-5 mt-6 border-t flex gap-3.5 justify-end items-center ${
                 theme === 'light' ? 'border-slate-200/80' : 'border-white/10'
               }`} style={{ paddingTop: '12px' }}>
                 <GlassButton theme={theme} type="button" variant="secondary" onClick={() => setIsWaterModalOpen(false)}>
@@ -2894,7 +2945,7 @@ export default function PoopTrackerPage() {
                 </div>
               </div>
 
-              <div className={`pt-5 mt-6 border-t flex gap-3.5 justify-end items-center ${
+              <div className={`modal-actions pt-5 mt-6 border-t flex gap-3.5 justify-end items-center ${
                 theme === 'light' ? 'border-slate-200/80' : 'border-white/10'
               }`} style={{ paddingTop: '12px' }}>
                 <GlassButton theme={theme} type="button" variant="secondary" onClick={() => setIsFoodModalOpen(false)}>
