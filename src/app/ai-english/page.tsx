@@ -49,6 +49,25 @@ const TONES = [
   "Bày tỏ sự tiếc nuối, xin lỗi"
 ];
 
+function safeString(val: any, fallback = ""): string {
+  if (val === null || val === undefined) return fallback;
+  if (typeof val === 'string') return val;
+  if (typeof val === 'number' || typeof val === 'boolean') return String(val);
+  if (typeof val === 'object') {
+    if (Array.isArray(val)) {
+      return val.map(item => safeString(item)).join('\n');
+    }
+    return Object.entries(val)
+      .map(([k, v]) => {
+        const keyLabel = k.replace(/_/g, ' ').toUpperCase();
+        const valueText = typeof v === 'object' ? JSON.stringify(v, null, 2) : String(v);
+        return `• ${keyLabel}: ${valueText}`;
+      })
+      .join('\n\n');
+  }
+  return String(val);
+}
+
 interface HistoryItem {
   id?: string;
   vi: string;
@@ -297,7 +316,17 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc:
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      const result = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      const rawResult = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+
+      const result = {
+        title: safeString(rawResult.title, "Bài thi Essay"),
+        promptVi: safeString(rawResult.promptVi, ""),
+        guidingQuestions: Array.isArray(rawResult.guidingQuestions)
+          ? rawResult.guidingQuestions.map((q: any) => safeString(q))
+          : [],
+        minWords: typeof rawResult.minWords === 'number' ? rawResult.minWords : 80,
+        maxWords: typeof rawResult.maxWords === 'number' ? rawResult.maxWords : 150
+      };
 
       setWritingTask(result);
       setIsLoadingWritingTask(false);
@@ -314,6 +343,9 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc:
     }
 
     setIsLoadingWritingCheck(true);
+    setTimeout(() => {
+      document.getElementById('essayLoadingCard')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
 
     try {
       const systemPrompt = `Bạn là Giám khảo IELTS / Cambridge Writing Chuyên nghiệp (Senior IELTS Examiner).
@@ -365,7 +397,17 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      const result = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      const rawResult = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+
+      const result = {
+        bandScore: safeString(rawResult.bandScore, "Band 6.5"),
+        taskAchievement: typeof rawResult.taskAchievement === 'number' ? rawResult.taskAchievement : 80,
+        coherenceCohesion: typeof rawResult.coherenceCohesion === 'number' ? rawResult.coherenceCohesion : 80,
+        lexicalResource: typeof rawResult.lexicalResource === 'number' ? rawResult.lexicalResource : 80,
+        grammarAccuracy: typeof rawResult.grammarAccuracy === 'number' ? rawResult.grammarAccuracy : 80,
+        nativeRewrite: safeString(rawResult.nativeRewrite, ""),
+        feedbackVi: safeString(rawResult.feedbackVi, "")
+      };
 
       setWritingResult(result);
       setIsLoadingWritingCheck(false);
@@ -387,6 +429,7 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
 
       const updatedEssayHistory = [newEssayItem, ...essayHistory];
       setEssayHistory(updatedEssayHistory);
+      setLocalEngData(`ai_eng_essay_${activeProfile}`, updatedEssayHistory);
 
       const newStreak = currentStreak + 1;
       const newMaxStreak = Math.max(maxStreak, newStreak);
@@ -395,6 +438,7 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
 
       if (hasCloud && supabase) {
         try {
+          await ensureEngProfileOnSupabase(activeProfile, userLevel);
           await supabase.from('ai_english_essay_history').insert({
             profile_name: activeProfile,
             title: newEssayItem.title,
@@ -457,10 +501,60 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
   }, []);
 
   // Fetch data directly from Supabase
-  const loadDataForProfile = async (profileName: string) => {
+  // Helpers hỗ trợ lưu trữ local cho AI English
+  const getLocalEngData = <T,>(key: string): T[] => {
+    if (typeof window === 'undefined') return [];
+    try {
+      return JSON.parse(localStorage.getItem(key) || '[]');
+    } catch {
+      return [];
+    }
+  };
+
+  const setLocalEngData = <T,>(key: string, data: T[]) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch (e) {
+      console.error('LocalStorage write error:', e);
+    }
+  };
+
+  const ensureEngProfileOnSupabase = async (pName: string, level = userLevel) => {
     if (hasCloud && supabase) {
       try {
-        // 1. Profile metadata (level, streak, max_streak)
+        await supabase.from('ai_english_profiles').upsert({
+          profile_name: pName,
+          user_level: level,
+          current_streak: currentStreak,
+          max_streak: maxStreak,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'profile_name' });
+      } catch (e) {
+        console.warn('Lỗi ensureEngProfileOnSupabase:', e);
+      }
+    }
+  };
+
+  // Fetch data with 2-Way Smart Union Merge (Local-First + Supabase)
+  const loadDataForProfile = async (profileName: string) => {
+    const keyHistory = `ai_eng_history_${profileName}`;
+    const keyEssay = `ai_eng_essay_${profileName}`;
+    const keyVocab = `ai_eng_vocab_${profileName}`;
+
+    // Step 1: Đọc ngay từ LocalStorage để giao diện hiển thị 0ms
+    const localHistory = getLocalEngData<HistoryItem>(keyHistory);
+    const localEssay = getLocalEngData<EssayHistoryItem>(keyEssay);
+    const localVocab = getLocalEngData<VocabItem>(keyVocab);
+
+    setStudyHistory(localHistory);
+    setEssayHistory(localEssay);
+    setVocabList(localVocab);
+
+    // Step 2: Nếu có Supabase, thực hiện Smart Union Merge 2 chiều
+    if (hasCloud && supabase) {
+      try {
+        // 1. Profile metadata
         const { data: profileData } = await supabase
           .from('ai_english_profiles')
           .select('*')
@@ -472,87 +566,172 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
           setCurrentStreak(profileData.current_streak || 0);
           setMaxStreak(profileData.max_streak || 0);
         } else {
-          await supabase.from('ai_english_profiles').insert({
-            profile_name: profileName,
-            user_level: 'B1',
-            current_streak: 0,
-            max_streak: 0
-          });
+          await ensureEngProfileOnSupabase(profileName, 'B1');
           setUserLevel('B1');
           setCurrentStreak(0);
           setMaxStreak(0);
         }
 
-        // 2. Fetch history
+        // 2. Fetch history từ Cloud & Union Merge theo nội dung câu tiếng Việt
         const { data: cloudHistory } = await supabase
           .from('ai_english_history')
           .select('*')
           .eq('profile_name', profileName)
           .order('created_at', { ascending: false });
           
-        if (cloudHistory) {
-          const formattedHistory: HistoryItem[] = cloudHistory.map(row => ({
-            id: row.id,
-            vi: row.vietnamese_text,
-            en: row.english_translation,
-            date: new Date(row.created_at).toLocaleDateString('vi-VN'),
-            profile_name: row.profile_name
-          }));
-          setStudyHistory(formattedHistory);
-        } else {
-          setStudyHistory([]);
+        const mappedCloudHistory: HistoryItem[] = (cloudHistory || []).map(row => ({
+          id: row.id,
+          vi: row.vietnamese_text,
+          en: row.english_translation,
+          date: new Date(row.created_at).toLocaleDateString('vi-VN'),
+          profile_name: row.profile_name
+        }));
+
+        const mergedHistoryMap = new Map<string, HistoryItem>();
+        mappedCloudHistory.forEach(item => {
+          const key = (item.vi || '').trim();
+          if (key) mergedHistoryMap.set(key, item);
+        });
+
+        const unsyncedHistory: HistoryItem[] = [];
+        localHistory.forEach(item => {
+          const key = (item.vi || '').trim();
+          if (key) {
+            if (!mergedHistoryMap.has(key)) {
+              mergedHistoryMap.set(key, item);
+              unsyncedHistory.push(item);
+            }
+          }
+        });
+        const finalHistory = Array.from(mergedHistoryMap.values());
+        setStudyHistory(finalHistory);
+        setLocalEngData(keyHistory, finalHistory);
+
+        // Push bù history được tạo ở local lúc offline
+        if (unsyncedHistory.length > 0) {
+          await ensureEngProfileOnSupabase(profileName);
+          for (const item of unsyncedHistory) {
+            await supabase.from('ai_english_history').insert({
+              profile_name: profileName,
+              vietnamese_text: item.vi,
+              english_translation: item.en
+            });
+          }
         }
 
-        // 3. Fetch essay history
+        // 3. Fetch essay history từ Cloud & Union Merge theo nội dung bài essay
         const { data: cloudEssayHistory } = await supabase
           .from('ai_english_essay_history')
           .select('*')
           .eq('profile_name', profileName)
           .order('created_at', { ascending: false });
 
-        if (cloudEssayHistory) {
-          const formattedEssay: EssayHistoryItem[] = cloudEssayHistory.map(row => ({
-            id: row.id,
-            title: row.title || 'Bài Thi Viết Essay',
-            promptVi: row.prompt_vi || '',
-            userEssay: row.user_essay || '',
-            bandScore: row.band_score || 'Band 6.5',
-            taskAchievement: row.task_achievement || 80,
-            coherenceCohesion: row.coherence_cohesion || 80,
-            lexicalResource: row.lexical_resource || 80,
-            grammarAccuracy: row.grammar_accuracy || 80,
-            nativeRewrite: row.native_rewrite || '',
-            feedbackVi: row.feedback_vi || '',
-            date: new Date(row.created_at).toLocaleDateString('vi-VN'),
-            profile_name: row.profile_name
-          }));
-          setEssayHistory(formattedEssay);
-        } else {
-          setEssayHistory([]);
+        const mappedCloudEssay: EssayHistoryItem[] = (cloudEssayHistory || []).map(row => ({
+          id: row.id,
+          title: row.title || 'Bài Thi Viết Essay',
+          promptVi: row.prompt_vi || '',
+          userEssay: row.user_essay || '',
+          bandScore: row.band_score || 'Band 6.5',
+          taskAchievement: row.task_achievement || 80,
+          coherenceCohesion: row.coherence_cohesion || 80,
+          lexicalResource: row.lexical_resource || 80,
+          grammarAccuracy: row.grammar_accuracy || 80,
+          nativeRewrite: row.native_rewrite || '',
+          feedbackVi: row.feedback_vi || '',
+          date: new Date(row.created_at).toLocaleDateString('vi-VN'),
+          profile_name: row.profile_name
+        }));
+
+        const mergedEssayMap = new Map<string, EssayHistoryItem>();
+        mappedCloudEssay.forEach(item => {
+          const key = (item.userEssay || '').trim();
+          if (key) mergedEssayMap.set(key, item);
+        });
+
+        const unsyncedEssay: EssayHistoryItem[] = [];
+        localEssay.forEach(item => {
+          const key = (item.userEssay || '').trim();
+          if (key) {
+            if (!mergedEssayMap.has(key)) {
+              mergedEssayMap.set(key, item);
+              unsyncedEssay.push(item);
+            }
+          }
+        });
+        const finalEssay = Array.from(mergedEssayMap.values());
+        setEssayHistory(finalEssay);
+        setLocalEngData(keyEssay, finalEssay);
+
+        // Push bù essay được tạo ở local lúc offline
+        if (unsyncedEssay.length > 0) {
+          await ensureEngProfileOnSupabase(profileName);
+          for (const item of unsyncedEssay) {
+            await supabase.from('ai_english_essay_history').insert({
+              profile_name: profileName,
+              title: item.title,
+              prompt_vi: item.promptVi,
+              user_essay: item.userEssay,
+              band_score: item.bandScore,
+              task_achievement: item.taskAchievement,
+              coherence_cohesion: item.coherenceCohesion,
+              lexical_resource: item.lexicalResource,
+              grammar_accuracy: item.grammarAccuracy,
+              native_rewrite: item.nativeRewrite,
+              feedback_vi: item.feedbackVi
+            });
+          }
         }
 
-        // 4. Fetch vocab
+        // 4. Fetch vocab từ Cloud & Union Merge theo từ vựng
         const { data: cloudVocab } = await supabase
           .from('ai_english_vocab')
           .select('*')
           .eq('profile_name', profileName)
           .order('created_at', { ascending: false });
-          
-        if (cloudVocab) {
-          const formattedVocab: VocabItem[] = cloudVocab.map(row => ({
-            id: row.id,
-            word: row.word,
-            phonetic: row.phonetic,
-            translation: row.translation,
-            date: new Date(row.created_at).toLocaleDateString('vi-VN'),
-            profile_name: row.profile_name
-          }));
-          setVocabList(formattedVocab);
-        } else {
-          setVocabList([]);
+
+        const mappedCloudVocab: VocabItem[] = (cloudVocab || []).map(row => ({
+          id: row.id,
+          word: row.word,
+          phonetic: row.phonetic,
+          translation: row.translation,
+          date: new Date(row.created_at).toLocaleDateString('vi-VN'),
+          profile_name: row.profile_name
+        }));
+
+        const mergedVocabMap = new Map<string, VocabItem>();
+        mappedCloudVocab.forEach(item => {
+          const key = (item.word || '').toLowerCase().trim();
+          if (key) mergedVocabMap.set(key, item);
+        });
+
+        const unsyncedVocab: VocabItem[] = [];
+        localVocab.forEach(item => {
+          const key = (item.word || '').toLowerCase().trim();
+          if (key) {
+            if (!mergedVocabMap.has(key)) {
+              mergedVocabMap.set(key, item);
+              unsyncedVocab.push(item);
+            }
+          }
+        });
+        const finalVocab = Array.from(mergedVocabMap.values());
+        setVocabList(finalVocab);
+        setLocalEngData(keyVocab, finalVocab);
+
+        // Push bù vocab được tạo ở local lúc offline
+        if (unsyncedVocab.length > 0) {
+          await ensureEngProfileOnSupabase(profileName);
+          for (const item of unsyncedVocab) {
+            await supabase.from('ai_english_vocab').insert({
+              profile_name: profileName,
+              word: item.word,
+              phonetic: item.phonetic,
+              translation: item.translation
+            });
+          }
         }
       } catch (err) {
-        console.error('Fetch data from Supabase failed:', err);
+        console.error('Fetch data from Supabase failed, sử dụng dữ liệu LocalStorage:', err);
       }
     }
   };
@@ -694,9 +873,11 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
 
     const updatedList = [newVocab, ...vocabList];
     setVocabList(updatedList);
+    setLocalEngData(`ai_eng_vocab_${activeProfile}`, updatedList);
 
     if (hasCloud && supabase) {
       try {
+        await ensureEngProfileOnSupabase(activeProfile, userLevel);
         await supabase.from('ai_english_vocab').insert({
           profile_name: activeProfile,
           word: newVocab.word,
@@ -795,6 +976,9 @@ YÊU CẦU CHẤT LƯỢNG CAO:
     }
 
     setIsLoadingCheck(true);
+    setTimeout(() => {
+      document.getElementById('translationLoadingCard')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
 
     try {
       const systemPrompt = `Bạn là Chuyên gia Ngôn ngữ & Huấn luyện viên Giao tiếp Tiếng Anh Bản xứ (Native English Communication Coach).
@@ -844,12 +1028,12 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
       }
 
       const data = await response.json();
-      const result = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      const rawResult = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
 
-      const score = result.score || 0;
-      const title = result.title || "Kết quả";
-      const suggestion = result.suggestion || "N/A";
-      const explanation = result.explanation || "Không có nhận xét";
+      const score = typeof rawResult.score === 'number' ? rawResult.score : 0;
+      const title = safeString(rawResult.title, "Kết quả");
+      const suggestion = safeString(rawResult.suggestion, "N/A");
+      const explanation = safeString(rawResult.explanation, "Không có nhận xét");
 
       setAiScore(score);
       setAiTitle(title);
@@ -887,6 +1071,7 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
 
     const updatedHistory = [newHistory, ...studyHistory];
     setStudyHistory(updatedHistory);
+    setLocalEngData(`ai_eng_history_${activeProfile}`, updatedHistory);
 
     const newStreak = currentStreak + 1;
     const newMaxStreak = Math.max(maxStreak, newStreak);
@@ -895,6 +1080,7 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
 
     if (hasCloud && supabase) {
       try {
+        await ensureEngProfileOnSupabase(activeProfile, userLevel);
         await supabase.from('ai_english_history').insert({
           profile_name: activeProfile,
           vietnamese_text: newHistory.vi,
@@ -963,6 +1149,7 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
 
   const clearEssayHistory = async () => {
     setEssayHistory([]);
+    setLocalEngData(`ai_eng_essay_${activeProfile}`, []);
     if (hasCloud && supabase) {
       try {
         await supabase
@@ -980,6 +1167,7 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
   const clearHistory = async () => {
     setStudyHistory([]);
     setCurrentStreak(0);
+    setLocalEngData(`ai_eng_history_${activeProfile}`, []);
 
     if (hasCloud && supabase) {
       try {
@@ -1001,6 +1189,7 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
 
   const clearVocab = async () => {
     setVocabList([]);
+    setLocalEngData(`ai_eng_vocab_${activeProfile}`, []);
 
     if (hasCloud && supabase) {
       try {
@@ -1308,12 +1497,40 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
                   disabled={isLoadingCheck || !userTranslation.trim()}
                   className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 disabled:hover:bg-blue-600 text-white py-4 rounded-2xl font-bold text-lg transform active:scale-[0.98] transition shadow-lg shadow-blue-100 flex items-center justify-center gap-2"
                 >
-                  <Send className="w-5 h-5" /> Gửi Chấm Điểm AI
+                  {isLoadingCheck ? (
+                    <>
+                      <RefreshCw className="w-5 h-5 animate-spin" /> Đang Phân Tích &amp; Chấm Điểm AI...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" /> Gửi Chấm Điểm AI
+                    </>
+                  )}
                 </button>
               </div>
 
+              {/* LOADING UI FOR TRANSLATION CHECK */}
+              {isLoadingCheck && (
+                <div id="translationLoadingCard" className="bg-gradient-to-br from-blue-50 via-indigo-50/40 to-white rounded-2xl p-6 sm:p-8 border border-blue-200/80 shadow-xl space-y-4 text-center animate-fadeInUp mt-4">
+                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-blue-600 text-white shadow-lg shadow-blue-200 mb-1 animate-bounce">
+                    <Sparkles className="w-8 h-8" />
+                  </div>
+                  <h4 className="text-xl font-black text-blue-950">
+                    AI Native Coach Đang Thẩm Định Bản Dịch Của Bạn...
+                  </h4>
+                  <p className="text-xs sm:text-sm text-slate-600 font-medium max-w-md mx-auto leading-relaxed">
+                    Đang phân tích độ tự nhiên, vốn từ bản xứ, cấu trúc ngữ pháp và sắc thái giao tiếp với trình độ <strong className="text-blue-700 font-bold">{userLevel}</strong>...
+                  </p>
+                  <div className="flex justify-center items-center gap-2 pt-2">
+                    <span className="w-3 h-3 rounded-full bg-blue-500 animate-pulse"></span>
+                    <span className="w-3 h-3 rounded-full bg-indigo-500 animate-pulse [animation-delay:0.2s]"></span>
+                    <span className="w-3 h-3 rounded-full bg-blue-600 animate-pulse [animation-delay:0.4s]"></span>
+                  </div>
+                </div>
+              )}
+
               {/* FEEDBACK RESULT AREA */}
-              {resultVisible && (
+              {!isLoadingCheck && resultVisible && (
                 <div id="resultCard" className="space-y-4 animate-fadeInUp">
                   <div className="flex items-center gap-2 mt-6">
                     <div className="h-px bg-slate-200 flex-grow"></div>
@@ -1352,7 +1569,7 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
                       <div>
                         <p className="text-xs text-slate-400 mb-1.5 font-extrabold uppercase tracking-wider">Nhận xét chi tiết &amp; sửa đổi ngữ pháp:</p>
                         <div className="text-slate-700 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 text-sm whitespace-pre-line">
-                          {aiExplanation}
+                          {safeString(aiExplanation)}
                         </div>
                       </div>
                     </div>
@@ -1471,8 +1688,57 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
                 </button>
               </div>
 
+              {/* ESSAY EVALUATION LOADING UI */}
+              {isLoadingWritingCheck && (
+                <div id="essayLoadingCard" className="bg-gradient-to-br from-purple-50 via-indigo-50/50 to-white rounded-2xl p-6 sm:p-8 border border-purple-200/80 shadow-xl space-y-6 animate-fadeInUp mt-4">
+                  <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left border-b border-purple-100 pb-5">
+                    <div className="w-16 h-16 rounded-2xl bg-purple-600 text-white flex items-center justify-center shadow-lg shadow-purple-200 flex-shrink-0 animate-bounce">
+                      <Sparkles className="w-8 h-8" />
+                    </div>
+                    <div>
+                      <span className="text-xs font-extrabold text-purple-600 uppercase tracking-widest bg-purple-100 px-3 py-1 rounded-full">
+                        Cambridge IELTS Examiner Online
+                      </span>
+                      <h4 className="text-xl font-black text-purple-950 mt-1.5">
+                        Giám Khảo AI Đang Chấm Điểm &amp; Đánh Giá Bài Essay...
+                      </h4>
+                      <p className="text-xs text-slate-600 font-medium mt-1">
+                        Vui lòng đợi vài giây trong khi AI phân tích chi tiết bài viết của bạn theo 4 tiêu chí chuẩn IELTS quốc tế.
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* 4 CRITERIA SKELETON */}
+                  <div className="grid grid-cols-2 gap-3">
+                    {[
+                      { name: 'Task Achievement', color: 'bg-blue-500' },
+                      { name: 'Coherence & Cohesion', color: 'bg-purple-500' },
+                      { name: 'Lexical Resource', color: 'bg-emerald-500' },
+                      { name: 'Grammar Accuracy', color: 'bg-amber-500' }
+                    ].map((item, idx) => (
+                      <div key={idx} className="bg-white p-3.5 rounded-xl border border-purple-100 shadow-sm space-y-2">
+                        <div className="flex justify-between items-center text-xs font-bold text-slate-700">
+                          <span>{item.name}</span>
+                          <span className="text-purple-600 text-[10px] animate-pulse">Đang chấm điểm...</span>
+                        </div>
+                        <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                          <div className={`${item.color} h-full rounded-full animate-pulse`} style={{ width: `${65 + idx * 8}%` }}></div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="bg-white/90 p-4 rounded-xl border border-purple-100 text-xs text-purple-900 space-y-1.5 shadow-sm">
+                    <p className="font-bold flex items-center gap-2 text-purple-950">
+                      <RefreshCw className="w-4 h-4 animate-spin text-purple-600 flex-shrink-0" />
+                      <span>Đang tổng hợp bài viết luận mẫu bản xứ (Native Rewrite) &amp; nhận xét chi tiết...</span>
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* ESSAY EVALUATION RESULT */}
-              {writingResult && (
+              {!isLoadingWritingCheck && writingResult && (
                 <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-lg space-y-6 animate-fadeInUp">
                   <div className="flex justify-between items-center border-b border-slate-100 pb-4">
                     <div>
@@ -1532,17 +1798,17 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
                     <p className="text-xs font-extrabold text-purple-900 uppercase tracking-wider flex items-center gap-1.5">
                       <Sparkles className="w-4 h-4 text-purple-600" /> Bài Viết Luận Mẫu Bản Xứ Hoàn Hảo (Native Rewrite):
                     </p>
-                    <p className="text-sm font-medium text-slate-800 leading-relaxed italic bg-white p-3 rounded-lg border border-purple-100">
-                      "{writingResult.nativeRewrite}"
+                    <p className="text-sm font-medium text-slate-800 leading-relaxed italic bg-white p-3 rounded-lg border border-purple-100 whitespace-pre-line">
+                      "{safeString(writingResult.nativeRewrite)}"
                     </p>
                   </div>
 
                   {/* DETAILED FEEDBACK */}
                   <div className="space-y-2">
                     <p className="text-xs font-extrabold text-slate-700 uppercase tracking-wider">Nhận xét chi tiết & Hướng dẫn cải thiện:</p>
-                    <p className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
-                      {writingResult.feedbackVi}
-                    </p>
+                    <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100 whitespace-pre-line">
+                      {safeString(writingResult.feedbackVi)}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1728,8 +1994,8 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
                               <p className="font-extrabold text-purple-900 flex items-center gap-1 text-[11px]">
                                 <Sparkles className="w-3.5 h-3.5 text-purple-600" /> Bài mẫu bản xứ (Native Rewrite):
                               </p>
-                              <p className="text-purple-900 font-semibold italic text-xs leading-relaxed">
-                                "{item.nativeRewrite}"
+                              <p className="text-purple-900 font-semibold italic text-xs leading-relaxed whitespace-pre-line">
+                                "{safeString(item.nativeRewrite)}"
                               </p>
                             </div>
                           </div>

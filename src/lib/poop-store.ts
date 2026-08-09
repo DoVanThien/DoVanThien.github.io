@@ -80,7 +80,7 @@ export interface PoopTrackerState {
   // Actions
   loadInitialData: () => Promise<void>;
   setActiveProfileId: (id: string) => void;
-  setDefaultProfile: (id: string) => Promise<void>;
+  setDefaultProfile: (id: string) => void;
   addProfile: (profile: Omit<PoopProfile, 'id' | 'badges' | 'is_default'>) => Promise<void>;
   updateProfile: (id: string, updates: Partial<PoopProfile>) => Promise<void>;
   deleteProfile: (id: string) => Promise<void>;
@@ -369,6 +369,58 @@ export function recalculateBadges(
   return earned;
 }
 
+// Helper cho 2-Way Smart Sync
+// Helper cho 2-Way Smart Sync
+function normalizeProfile(p: PoopProfile): PoopProfile {
+  const cleanName = (p.name || '').toLowerCase();
+  let id = p.id;
+  if (!isValidUUID(id) || cleanName.includes('miliket')) id = DEFAULT_MILIKET_ID;
+  else if (cleanName.includes('omachi')) id = DEFAULT_OMACHI_ID;
+  return { ...p, id };
+}
+
+async function ensureProfileOnSupabase(profile: PoopProfile | undefined) {
+  if (!supabase || !profile) return;
+  const normalized = normalizeProfile(profile);
+  try {
+    const dbPayload = {
+      id: normalized.id,
+      profile_name: normalized.name,
+      avatar: normalized.avatar || '😊',
+      target_water: normalized.water_goal || 2000,
+      gender: normalized.gender || 'female',
+    };
+    await supabase.from('poop_profiles').upsert([dbPayload], { onConflict: 'id' });
+  } catch (e) {
+    console.warn('Lỗi ensureProfileOnSupabase:', e);
+  }
+}
+
+function smartUnionMerge<T extends { id: string }>(localList: T[], cloudList: T[]): { merged: T[]; unsyncedLocal: T[] } {
+  const mergedMap = new Map<string, T>();
+  const unsyncedLocal: T[] = [];
+
+  cloudList.forEach(item => {
+    if (item.id) {
+      mergedMap.set(item.id, item);
+    }
+  });
+
+  localList.forEach(item => {
+    if (item.id) {
+      if (!mergedMap.has(item.id)) {
+        mergedMap.set(item.id, item);
+        unsyncedLocal.push(item);
+      }
+    }
+  });
+
+  return {
+    merged: Array.from(mergedMap.values()),
+    unsyncedLocal,
+  };
+}
+
 export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
   profiles: [],
   activeProfileId: null,
@@ -380,224 +432,244 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
 
   loadInitialData: async () => {
     set({ loading: true, error: null });
-    try {
-      if (!supabase) throw new Error('Supabase is not configured');
 
-      // 1. Tải danh sách profile
-      let { data: dbProfiles, error: profileErr } = await supabase
-        .from('poop_profiles')
-        .select('*')
-        .order('created_at', { ascending: true });
+    // Step 1: Đọc ngay dữ liệu từ LocalStorage để giao diện hiển thị 0ms không bị giật lag
+    let rawLocalProfiles: PoopProfile[] = JSON.parse(localStorage.getItem('pt_profiles') || '[]');
+    let localPoops: PoopLog[] = JSON.parse(localStorage.getItem('pt_poop_logs') || '[]');
+    let localWaters: WaterLog[] = JSON.parse(localStorage.getItem('pt_water_logs') || '[]');
+    let localFoods: FoodLog[] = JSON.parse(localStorage.getItem('pt_food_logs') || '[]');
+    let localActiveId = localStorage.getItem('pt_active_profile_id');
+    let localDefaultId = localStorage.getItem('pt_default_profile_id');
 
-      if (profileErr) throw profileErr;
-
-      // 2. Nếu chưa có profile nào, khởi tạo tự động 2 profile mặc định Miliket & Omachi
-      if (!dbProfiles || dbProfiles.length === 0) {
-        const miliketProfileDb = {
+    if (!rawLocalProfiles || rawLocalProfiles.length === 0) {
+      rawLocalProfiles = [
+        {
           id: DEFAULT_MILIKET_ID,
-          profile_name: 'Miliket 🍎',
+          name: 'Miliket 🍎',
           avatar: '🍎',
           gender: 'female',
-          target_water: 1800,
-        };
-
-        const omachiProfileDb = {
+          age: 23,
+          weight: 48,
+          height: 158,
+          water_goal: 1800,
+          badges: [],
+          is_default: true,
+        },
+        {
           id: DEFAULT_OMACHI_ID,
-          profile_name: 'Omachi 🍏',
+          name: 'Omachi 🍏',
           avatar: '🍏',
           gender: 'female',
-          target_water: 1800,
-        };
+          age: 24,
+          weight: 47,
+          height: 156,
+          water_goal: 1800,
+          badges: [],
+          is_default: false,
+        },
+      ];
+    }
 
-        const { data: inserted, error: insertErr } = await supabase
+    let localProfiles = rawLocalProfiles.map(normalizeProfile);
+
+    if (!localDefaultId) {
+      const def = localProfiles.find(p => p.is_default) || localProfiles[0];
+      localDefaultId = def ? def.id : DEFAULT_MILIKET_ID;
+      localStorage.setItem('pt_default_profile_id', localDefaultId);
+    }
+
+    localProfiles = localProfiles.map(p => ({
+      ...p,
+      is_default: p.id === localDefaultId,
+    }));
+    localStorage.setItem('pt_profiles', JSON.stringify(localProfiles));
+
+    // Mỗi lần vào app/trang -> Luôn hiển thị profile mặc định trước
+    let defaultProf = localProfiles.find(p => p.is_default) || localProfiles[0];
+    localActiveId = defaultProf ? defaultProf.id : DEFAULT_MILIKET_ID;
+    localStorage.setItem('pt_active_profile_id', localActiveId);
+
+    // Set ngay local state
+    set({
+      profiles: localProfiles,
+      activeProfileId: localActiveId,
+      poopLogs: localPoops,
+      waterLogs: localWaters,
+      foodLogs: localFoods,
+      loading: false,
+    });
+
+    // Step 2: Nếu có Supabase, thực hiện 2-Way Smart Union Merge với Cloud
+    if (supabase) {
+      try {
+        let { data: dbProfiles } = await supabase
           .from('poop_profiles')
-          .insert([miliketProfileDb, omachiProfileDb])
-          .select();
+          .select('*')
+          .order('created_at', { ascending: true });
 
-        if (insertErr) throw insertErr;
-        dbProfiles = inserted;
-      }
+        if (!dbProfiles || dbProfiles.length === 0) {
+          const miliketDb = {
+            id: DEFAULT_MILIKET_ID,
+            profile_name: 'Miliket 🍎',
+            avatar: '🍎',
+            gender: 'female',
+            target_water: 1800,
+          };
+          const omachiDb = {
+            id: DEFAULT_OMACHI_ID,
+            profile_name: 'Omachi 🍏',
+            avatar: '🍏',
+            gender: 'female',
+            target_water: 1800,
+          };
+          const { data: inserted } = await supabase
+            .from('poop_profiles')
+            .insert([miliketDb, omachiDb])
+            .select();
+          dbProfiles = inserted || [];
+        }
 
-      // 3. Map dbProfiles to local format
-      const localProfiles: PoopProfile[] = JSON.parse(localStorage.getItem('pt_profiles') || '[]');
-      let mappedDbProfiles: PoopProfile[] = (dbProfiles || []).map(dbP => {
-        const locP = localProfiles.find(lp => lp.id === dbP.id) || {} as Partial<PoopProfile>;
-        return {
-          id: dbP.id,
-          name: dbP.profile_name,
-          avatar: dbP.avatar || '😊',
-          gender: dbP.gender as 'male' | 'female' | 'other' || 'female',
-          age: locP.age || 24,
-          weight: locP.weight || 50,
-          height: locP.height || 160,
-          water_goal: dbP.target_water || 2000,
-          badges: locP.badges || [],
-          is_default: locP.is_default || false,
+        const mappedDbProfiles: PoopProfile[] = (dbProfiles || []).map(dbP => {
+          const cleanName = (dbP.profile_name || '').toLowerCase();
+          let pId = dbP.id;
+          if (cleanName.includes('miliket')) pId = DEFAULT_MILIKET_ID;
+          else if (cleanName.includes('omachi')) pId = DEFAULT_OMACHI_ID;
+
+          const locP = localProfiles.find(lp => lp.id === pId) || {} as Partial<PoopProfile>;
+          return {
+            id: pId,
+            name: dbP.profile_name,
+            avatar: dbP.avatar || '😊',
+            gender: (dbP.gender as 'male' | 'female' | 'other') || 'female',
+            age: locP.age || 24,
+            weight: locP.weight || 50,
+            height: locP.height || 160,
+            water_goal: dbP.target_water || 2000,
+            badges: locP.badges || [],
+            is_default: pId === localDefaultId, // ĐỘC LẬP TẠI THIẾT BỊ NÀY!
+          };
+        });
+
+        // Union merge profiles
+        const { merged: rawMergedProfiles, unsyncedLocal: unsyncedProfiles } = smartUnionMerge(localProfiles, mappedDbProfiles);
+        const finalProfiles = rawMergedProfiles.map(p => ({
+          ...p,
+          is_default: p.id === localDefaultId,
+        }));
+
+        for (const p of unsyncedProfiles) {
+          await ensureProfileOnSupabase(p);
+        }
+
+        // Fetch Cloud logs
+        const { data: dbPoops } = await supabase.from('poop_logs').select('*');
+        const { data: dbWaters } = await supabase.from('water_logs').select('*');
+        const { data: dbFoods } = await supabase.from('food_logs').select('*');
+
+        const resolveLogProfileId = (dbProfId: string, dbProfName: string | undefined) => {
+          const nameLower = (dbProfName || '').toLowerCase();
+          if (nameLower.includes('miliket') || dbProfId === DEFAULT_MILIKET_ID) return DEFAULT_MILIKET_ID;
+          if (nameLower.includes('omachi') || dbProfId === DEFAULT_OMACHI_ID) return DEFAULT_OMACHI_ID;
+          const match = finalProfiles.find(p => p.id === dbProfId || p.name === dbProfName);
+          return match ? match.id : dbProfId;
         };
-      });
 
-      // Thêm các local profile chưa có trên DB
-      const dbIds = new Set(mappedDbProfiles.map(p => p.id));
-      localProfiles.forEach(lp => {
-        if (!dbIds.has(lp.id)) {
-          mappedDbProfiles.push(lp);
-        }
-      });
-
-      // Xác định profile active
-      let activeId = localStorage.getItem('pt_active_profile_id');
-      const profileExists = mappedDbProfiles.some(p => p.id === activeId);
-
-      if (!activeId || !profileExists) {
-        const defaultProfile = mappedDbProfiles.find(p => p.is_default) || mappedDbProfiles[0];
-        activeId = defaultProfile ? defaultProfile.id : null;
-        if (activeId) {
-          localStorage.setItem('pt_active_profile_id', activeId);
-        }
-      }
-
-      // 4. Tải logs tương ứng
-      const { data: dbPoops, error: poopErr } = await supabase.from('poop_logs').select('*');
-      const { data: dbWaters, error: waterErr } = await supabase.from('water_logs').select('*');
-      const { data: dbFoods, error: foodErr } = await supabase.from('food_logs').select('*');
-
-      if (poopErr) throw poopErr;
-      if (waterErr) throw waterErr;
-      if (foodErr) throw foodErr;
-
-      // Map dbPoops (profile_id or profile_name -> profile_id, type -> success)
-      const mappedDbPoops: PoopLog[] = (dbPoops || []).map(dbL => {
-        let p = mappedDbProfiles.find(prof => prof.id === dbL.profile_id);
-        if (!p) {
-          p = mappedDbProfiles.find(prof => prof.name === dbL.profile_name);
-        }
-        return {
+        const mappedDbPoops: PoopLog[] = (dbPoops || []).map(dbL => ({
           id: dbL.id,
-          profile_id: p ? p.id : (dbL.profile_id || ''),
+          profile_id: resolveLogProfileId(dbL.profile_id, dbL.profile_name),
           date: dbL.date,
           time: dbL.time,
           success: dbL.type === 'success',
           bristol_type: dbL.bristol_type || 4,
           symptoms: Array.isArray(dbL.symptoms) ? dbL.symptoms : [],
           notes: dbL.notes || '',
-        };
-      }).filter((l: any) => l.profile_id !== '');
+        })).filter((l: any) => l.profile_id !== '');
 
-      set({
-        profiles: mappedDbProfiles,
-        activeProfileId: activeId,
-        poopLogs: mappedDbPoops,
-        waterLogs: dbWaters || [],
-        foodLogs: dbFoods || [],
-        loading: false,
-      });
+        const mappedDbWaters: WaterLog[] = (dbWaters || []).map(dbW => ({
+          id: dbW.id,
+          profile_id: resolveLogProfileId(dbW.profile_id, dbW.profile_name),
+          date: dbW.date,
+          time: dbW.time,
+          amount: Number(dbW.amount),
+          beverage_type: dbW.beverage_type || 'pure_water'
+        }));
 
-      await get().syncWithCloud();
-    } catch (err: any) {
-      console.warn('Đang chạy ở chế độ Offline (LocalStorage Local-First):', err);
-      try {
-        let localProfiles: PoopProfile[] = JSON.parse(localStorage.getItem('pt_profiles') || '[]');
-        
-        if (!localProfiles || localProfiles.length === 0) {
-          localProfiles = [
-            {
-              id: DEFAULT_MILIKET_ID,
-              name: 'Miliket 🍎',
-              avatar: '🍎',
-              gender: 'female',
-              age: 23,
-              weight: 48,
-              height: 158,
-              water_goal: 1800,
-              badges: [],
-              is_default: true,
-            },
-            {
-              id: DEFAULT_OMACHI_ID,
-              name: 'Omachi 🍏',
-              avatar: '🍏',
-              gender: 'female',
-              age: 24,
-              weight: 47,
-              height: 156,
-              water_goal: 1800,
-              badges: [],
-              is_default: false,
-            },
-          ];
-          localStorage.setItem('pt_profiles', JSON.stringify(localProfiles));
-        } else {
-          // Sanitize existing local profiles to migrate non-UUID IDs or missing names
-          let isModified = false;
-          const idMap: Record<string, string> = {};
+        const mappedDbFoods: FoodLog[] = (dbFoods || []).map(dbF => ({
+          id: dbF.id,
+          profile_id: resolveLogProfileId(dbF.profile_id, dbF.profile_name),
+          date: dbF.date,
+          time: dbF.time,
+          food_name: dbF.food_name,
+          meal_type: dbF.meal_type || 'main',
+          portion_size: dbF.portion_size || 'normal'
+        }));
 
-          localProfiles = localProfiles.map((p, idx) => {
-            let updatedId = p.id;
-            if (!isValidUUID(p.id)) {
-              isModified = true;
-              if (p.id === 'miliket-local-id' || idx === 0) {
-                updatedId = DEFAULT_MILIKET_ID;
-              } else if (p.id === 'omachi-local-id' || idx === 1) {
-                updatedId = DEFAULT_OMACHI_ID;
-              } else {
-                updatedId = generateUUID();
-              }
-              idMap[p.id] = updatedId;
-            }
+        // 2-Way Smart Union Merge cho tất cả nhật ký
+        const { merged: finalPoops, unsyncedLocal: unsyncedPoops } = smartUnionMerge(localPoops, mappedDbPoops);
+        const { merged: finalWaters, unsyncedLocal: unsyncedWaters } = smartUnionMerge(localWaters, mappedDbWaters);
+        const { merged: finalFoods, unsyncedLocal: unsyncedFoods } = smartUnionMerge(localFoods, mappedDbFoods);
 
-            const updatedName = (p.name && p.name.trim()) ? p.name : (idx === 0 ? 'Miliket 🍎' : (idx === 1 ? 'Omachi 🍏' : `Hồ sơ ${idx + 1}`));
-            if (updatedName !== p.name || updatedId !== p.id) {
-              isModified = true;
-            }
-
-            return {
-              ...p,
-              id: updatedId,
-              name: updatedName,
-              avatar: p.avatar || (idx === 0 ? '🍎' : '🍏')
-            };
-          });
-
-          if (isModified) {
-            localStorage.setItem('pt_profiles', JSON.stringify(localProfiles));
-            // Cập nhật profile_id trong logs nếu có chuyển đổi ID
-            if (Object.keys(idMap).length > 0) {
-              ['pt_poop_logs', 'pt_water_logs', 'pt_food_logs'].forEach(key => {
-                const logs = JSON.parse(localStorage.getItem(key) || '[]');
-                const updatedLogs = logs.map((l: any) => ({
-                  ...l,
-                  profile_id: idMap[l.profile_id] || l.profile_id
-                }));
-                localStorage.setItem(key, JSON.stringify(updatedLogs));
-              });
-            }
-          }
-        }
-
-        const localPoops = JSON.parse(localStorage.getItem('pt_poop_logs') || '[]');
-        const localWaters = JSON.parse(localStorage.getItem('pt_water_logs') || '[]');
-        const localFoods = JSON.parse(localStorage.getItem('pt_food_logs') || '[]');
-        
-        let localActiveId = localStorage.getItem('pt_active_profile_id');
-        if (!localActiveId || !localProfiles.some(p => p.id === localActiveId)) {
-          const defaultProf = localProfiles.find(p => p.is_default) || localProfiles[0];
-          localActiveId = defaultProf ? defaultProf.id : null;
-          if (localActiveId) {
-            localStorage.setItem('pt_active_profile_id', localActiveId);
-          }
-        }
+        const finalDefaultProf = finalProfiles.find(p => p.is_default) || finalProfiles[0];
+        const finalActiveId = finalDefaultProf ? finalDefaultProf.id : DEFAULT_MILIKET_ID;
+        localStorage.setItem('pt_active_profile_id', finalActiveId);
 
         set({
-          profiles: localProfiles,
-          poopLogs: localPoops,
-          waterLogs: localWaters,
-          foodLogs: localFoods,
-          activeProfileId: localActiveId,
+          profiles: finalProfiles,
+          activeProfileId: finalActiveId,
+          poopLogs: finalPoops,
+          waterLogs: finalWaters,
+          foodLogs: finalFoods,
           loading: false,
-          error: null
         });
-      } catch (localErr) {
-        set({ loading: false, error: (localErr as any).message });
+
+        // Ghi lại bản gộp vào LocalStorage
+        await get().syncWithCloud();
+
+        // Push bù các log được tạo từ máy này lúc offline lên Supabase
+        if (unsyncedPoops.length > 0 || unsyncedWaters.length > 0 || unsyncedFoods.length > 0) {
+          for (const pLog of unsyncedPoops) {
+            const prof = finalProfiles.find(p => p.id === pLog.profile_id);
+            await ensureProfileOnSupabase(prof);
+            await supabase.from('poop_logs').insert([{
+              id: pLog.id,
+              profile_id: pLog.profile_id,
+              profile_name: prof ? prof.name : 'Unknown',
+              type: pLog.success ? 'success' : 'fail',
+              date: pLog.date,
+              time: pLog.time,
+              bristol_type: pLog.bristol_type,
+              symptoms: pLog.symptoms,
+              notes: pLog.notes
+            }]);
+          }
+          for (const wLog of unsyncedWaters) {
+            const prof = finalProfiles.find(p => p.id === wLog.profile_id);
+            await ensureProfileOnSupabase(prof);
+            await supabase.from('water_logs').insert([{
+              id: wLog.id,
+              profile_id: wLog.profile_id,
+              date: wLog.date,
+              time: wLog.time,
+              amount: wLog.amount,
+              beverage_type: wLog.beverage_type
+            }]);
+          }
+          for (const fLog of unsyncedFoods) {
+            const prof = finalProfiles.find(p => p.id === fLog.profile_id);
+            await ensureProfileOnSupabase(prof);
+            await supabase.from('food_logs').insert([{
+              id: fLog.id,
+              profile_id: fLog.profile_id,
+              date: fLog.date,
+              time: fLog.time,
+              food_name: fLog.food_name,
+              meal_type: fLog.meal_type,
+              portion_size: fLog.portion_size
+            }]);
+          }
+        }
+      } catch (cloudErr) {
+        console.warn('Lỗi khi tải từ Supabase Cloud, tiếp tục sử dụng dữ liệu LocalStorage:', cloudErr);
       }
     }
   },
@@ -607,34 +679,14 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
     set({ activeProfileId: id });
   },
 
-  setDefaultProfile: async (id: string) => {
-    try {
-      const updatedProfiles = get().profiles.map(p => ({
-        ...p,
-        is_default: p.id === id,
-      }));
-
-      set({ profiles: updatedProfiles });
-
-      if (supabase) {
-        const { error: err1 } = await supabase
-          .from('poop_profiles')
-          .update({ is_default: false })
-          .not('id', 'eq', id);
-        const { error: err2 } = await supabase
-          .from('poop_profiles')
-          .update({ is_default: true })
-          .eq('id', id);
-
-        if (err1 || err2) {
-          console.warn('Lỗi đồng bộ default profile lên cloud:', err1 || err2);
-        }
-      }
-    } catch (err: any) {
-      console.warn('Lỗi đồng bộ mặc định profile (đang chạy offline):', err);
-    } finally {
-      await get().syncWithCloud();
-    }
+  setDefaultProfile: (id: string) => {
+    localStorage.setItem('pt_default_profile_id', id);
+    const updatedProfiles = get().profiles.map(p => ({
+      ...p,
+      is_default: p.id === id,
+    }));
+    set({ profiles: updatedProfiles });
+    localStorage.setItem('pt_profiles', JSON.stringify(updatedProfiles));
   },
 
   addProfile: async (profile) => {
@@ -645,33 +697,21 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
       is_default: false,
     };
 
+    set(state => ({
+      profiles: [...state.profiles, newProfile],
+    }));
+    localStorage.setItem('pt_profiles', JSON.stringify(get().profiles));
+
     try {
       if (supabase) {
-        const dbPayload = {
-          id: newProfile.id,
-          profile_name: newProfile.name,
-          avatar: newProfile.avatar,
-          target_water: newProfile.water_goal,
-          gender: newProfile.gender,
-        };
-        const { error } = await supabase
-          .from('poop_profiles')
-          .insert([dbPayload]);
-
-        if (error) throw error;
+        await ensureProfileOnSupabase(newProfile);
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ thêm hồ sơ (đang chạy offline):', err);
-    } finally {
-      set(state => ({
-        profiles: [...state.profiles, newProfile],
-      }));
-      localStorage.setItem('pt_profiles', JSON.stringify(get().profiles));
     }
   },
 
   updateProfile: async (id, updates) => {
-    // Luôn cập nhật local state và localStorage trước tiên
     set(state => ({
       profiles: state.profiles.map(p => (p.id === id ? { ...p, ...updates } : p)),
     }));
@@ -679,20 +719,9 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
 
     try {
       if (supabase && isValidUUID(id)) {
-        const dbUpdates: Record<string, any> = {};
-        if (updates.name !== undefined) dbUpdates.profile_name = updates.name;
-        if (updates.avatar !== undefined) dbUpdates.avatar = updates.avatar;
-        if (updates.gender !== undefined) dbUpdates.gender = updates.gender;
-        if (updates.water_goal !== undefined) dbUpdates.target_water = updates.water_goal;
-
-        if (Object.keys(dbUpdates).length > 0) {
-          const { error } = await supabase
-            .from('poop_profiles')
-            .update(dbUpdates)
-            .eq('id', id);
-          if (error) {
-            console.warn('Lỗi Supabase khi update profile:', error);
-          }
+        const p = get().profiles.find(prof => prof.id === id);
+        if (p) {
+          await ensureProfileOnSupabase(p);
         }
       }
     } catch (err: any) {
@@ -738,9 +767,18 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
       profile_id: activeId,
     };
 
+    // 1. Cập nhật ngay Local state và LocalStorage
+    set(state => ({
+      poopLogs: [...state.poopLogs, newLog],
+    }));
+    await get().syncWithCloud();
+
+    // 2. Tự động Push lên Supabase ở background
     try {
       if (supabase) {
         const activeProfile = get().profiles.find(p => p.id === activeId);
+        await ensureProfileOnSupabase(activeProfile);
+
         const profileName = activeProfile ? activeProfile.name : 'Unknown';
 
         const dbPayload = {
@@ -759,19 +797,19 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
           .from('poop_logs')
           .insert([dbPayload]);
 
-        if (error) throw error;
+        if (error) console.warn('Lỗi khi chèn poop_log lên Supabase:', error);
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ ghi nhật ký đại tiện (đang chạy offline):', err);
-    } finally {
-      set(state => ({
-        poopLogs: [...state.poopLogs, newLog],
-      }));
-      await get().syncWithCloud();
     }
   },
 
   updatePoopLog: async (id, log) => {
+    set(state => ({
+      poopLogs: state.poopLogs.map(l => l.id === id ? { ...l, ...log } : l),
+    }));
+    await get().syncWithCloud();
+
     try {
       if (supabase) {
         const dbUpdates: Record<string, any> = {};
@@ -788,33 +826,27 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
             .from('poop_logs')
             .update(dbUpdates)
             .eq('id', id);
-          if (error) throw error;
+          if (error) console.warn('Lỗi khi update poop_log trên Supabase:', error);
         }
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ sửa nhật ký đại tiện:', err);
-    } finally {
-      set(state => ({
-        poopLogs: state.poopLogs.map(l => l.id === id ? { ...l, ...log } : l),
-      }));
-      await get().syncWithCloud();
     }
   },
 
   deletePoopLog: async (id) => {
+    set(state => ({
+      poopLogs: state.poopLogs.filter(l => l.id !== id),
+    }));
+    await get().syncWithCloud();
+
     try {
       if (supabase) {
         const { error } = await supabase.from('poop_logs').delete().eq('id', id);
-        if (error) throw error;
+        if (error) console.warn('Lỗi khi delete poop_log trên Supabase:', error);
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ xóa nhật ký đại tiện (đang chạy offline):', err);
-    } finally {
-      set(state => ({
-        poopLogs: state.poopLogs.filter(l => l.id !== id),
-      }));
-
-      await get().syncWithCloud();
     }
   },
 
@@ -822,7 +854,6 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
     const activeId = get().activeProfileId;
     if (!activeId) return;
 
-    // Lọc sạch payload để chỉ gửi các trường cột hợp lệ cho bảng water_logs trong Supabase DB
     const newLog: WaterLog = {
       id: generateUUID(),
       profile_id: activeId,
@@ -832,72 +863,61 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
       beverage_type: log.beverage_type || 'pure_water'
     };
 
+    // 1. Cập nhật ngay Local state và LocalStorage
+    set(state => ({
+      waterLogs: [...state.waterLogs, newLog],
+    }));
+    await get().syncWithCloud();
+
+    // 2. Tự động Push lên Supabase ở background
     try {
       if (supabase) {
-        const { data, error } = await supabase
-          .from('water_logs')
-          .insert([newLog])
-          .select();
+        const activeProfile = get().profiles.find(p => p.id === activeId);
+        await ensureProfileOnSupabase(activeProfile);
 
-        if (error) throw error;
-        if (data && data[0]) {
-          set(state => ({
-            waterLogs: [...state.waterLogs, data[0]],
-          }));
-        } else {
-          set(state => ({
-            waterLogs: [...state.waterLogs, newLog],
-          }));
-        }
-      } else {
-        set(state => ({
-          waterLogs: [...state.waterLogs, newLog],
-        }));
+        const { error } = await supabase
+          .from('water_logs')
+          .insert([newLog]);
+
+        if (error) console.warn('Lỗi khi chèn water_log lên Supabase:', error);
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ ghi nhật ký nước (đang chạy offline):', err);
-      // Fallback local
-      set(state => ({
-        waterLogs: [...state.waterLogs, newLog],
-      }));
-    } finally {
-      await get().syncWithCloud();
     }
   },
 
   updateWaterLog: async (id, log) => {
+    set(state => ({
+      waterLogs: state.waterLogs.map(l => l.id === id ? { ...l, ...log } : l),
+    }));
+    await get().syncWithCloud();
+
     try {
       if (supabase) {
         const { error } = await supabase
           .from('water_logs')
           .update(log)
           .eq('id', id);
-        if (error) throw error;
+        if (error) console.warn('Lỗi khi update water_log trên Supabase:', error);
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ sửa nhật ký nước:', err);
-    } finally {
-      set(state => ({
-        waterLogs: state.waterLogs.map(l => l.id === id ? { ...l, ...log } : l),
-      }));
-      await get().syncWithCloud();
     }
   },
 
   deleteWaterLog: async (id) => {
+    set(state => ({
+      waterLogs: state.waterLogs.filter(l => l.id !== id),
+    }));
+    await get().syncWithCloud();
+
     try {
       if (supabase) {
         const { error } = await supabase.from('water_logs').delete().eq('id', id);
-        if (error) throw error;
+        if (error) console.warn('Lỗi khi delete water_log trên Supabase:', error);
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ xóa nhật ký nước (đang chạy offline):', err);
-    } finally {
-      set(state => ({
-        waterLogs: state.waterLogs.filter(l => l.id !== id),
-      }));
-
-      await get().syncWithCloud();
     }
   },
 
@@ -911,72 +931,61 @@ export const usePoopTrackerStore = create<PoopTrackerState>((set, get) => ({
       profile_id: activeId,
     };
 
+    // 1. Cập nhật ngay Local state và LocalStorage
+    set(state => ({
+      foodLogs: [...state.foodLogs, newLog],
+    }));
+    await get().syncWithCloud();
+
+    // 2. Tự động Push lên Supabase ở background
     try {
       if (supabase) {
-        const { data, error } = await supabase
-          .from('food_logs')
-          .insert([newLog])
-          .select();
+        const activeProfile = get().profiles.find(p => p.id === activeId);
+        await ensureProfileOnSupabase(activeProfile);
 
-        if (error) throw error;
-        if (data && data[0]) {
-          set(state => ({
-            foodLogs: [...state.foodLogs, data[0]],
-          }));
-        } else {
-          set(state => ({
-            foodLogs: [...state.foodLogs, newLog],
-          }));
-        }
-      } else {
-        set(state => ({
-          foodLogs: [...state.foodLogs, newLog],
-        }));
+        const { error } = await supabase
+          .from('food_logs')
+          .insert([newLog]);
+
+        if (error) console.warn('Lỗi khi chèn food_log lên Supabase:', error);
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ ghi nhật ký ăn uống (đang chạy offline):', err);
-      // Fallback local
-      set(state => ({
-        foodLogs: [...state.foodLogs, newLog],
-      }));
-    } finally {
-      await get().syncWithCloud();
     }
   },
 
   updateFoodLog: async (id, log) => {
+    set(state => ({
+      foodLogs: state.foodLogs.map(l => l.id === id ? { ...l, ...log } : l),
+    }));
+    await get().syncWithCloud();
+
     try {
       if (supabase) {
         const { error } = await supabase
           .from('food_logs')
           .update(log)
           .eq('id', id);
-        if (error) throw error;
+        if (error) console.warn('Lỗi khi update food_log trên Supabase:', error);
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ sửa nhật ký ăn uống:', err);
-    } finally {
-      set(state => ({
-        foodLogs: state.foodLogs.map(l => l.id === id ? { ...l, ...log } : l),
-      }));
-      await get().syncWithCloud();
     }
   },
 
   deleteFoodLog: async (id) => {
+    set(state => ({
+      foodLogs: state.foodLogs.filter(l => l.id !== id),
+    }));
+    await get().syncWithCloud();
+
     try {
       if (supabase) {
         const { error } = await supabase.from('food_logs').delete().eq('id', id);
-        if (error) throw error;
+        if (error) console.warn('Lỗi khi delete food_log trên Supabase:', error);
       }
     } catch (err: any) {
       console.warn('Lỗi đồng bộ xóa nhật ký ăn uống (đang chạy offline):', err);
-    } finally {
-      set(state => ({
-        foodLogs: state.foodLogs.filter(l => l.id !== id),
-      }));
-
-      await get().syncWithCloud();
     }
   },
 
