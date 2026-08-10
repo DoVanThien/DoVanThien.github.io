@@ -1,0 +1,107 @@
+/* iPhone (Light Theme) Design System Tokens */
+
+:root {
+  /* Font Family Tokens */
+  --font-family-primary: 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-family-stack: 'SF Pro Text', 'SF Pro Icons', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+
+  /* Typography Scale Tokens */
+  --font-size-xs: 12px;
+  --font-size-sm: 14px;
+  --font-size-md: 17px;
+  --font-size-lg: 19.89px;
+  --font-size-xl: 24px;
+  --font-size-2xl: 25.5px;
+  --font-size-3xl: 28px;
+  --font-size-4xl: 56px;
+
+  --font-weight-base: 400;
+  --font-line-height-base: 25px;
+
+  /* Light Theme Color Palette Tokens */
+  --color-text-primary: #1d1d1f;
+  --color-text-secondary: #333336;
+  --color-text-tertiary: #0071e3;
+  --color-text-inverse: #ffffff;
+
+  --color-surface-base: #f5f5f7;   /* Clean light background */
+  --color-surface-raised: #ffffff; /* Elevated white card background */
+  --color-surface-muted: #0071e3;  /* Apple Accent Blue */
+  --color-surface-strong: #d2d2d7; /* Subtle borders */
+
+  --color-border-subtle: rgba(0, 0, 0, 0.08);
+  --color-border-strong: #d2d2d7;
+  --color-focus-ring: #0071e3;
+
+  /* Spacing Scale Tokens */
+  --space-1: 8px;
+  --space-2: 9px;
+  --space-3: 10px;
+  --space-4: 11px;
+  --space-5: 13.6px;
+  --space-6: 14px;
+  --space-7: 15px;
+  --space-8: 16px;
+
+  /* Radius Tokens */
+  --radius-xs: 20px;
+  --radius-sm: 28px;
+  --radius-md: 36px;
+  --radius-lg: 980px;
+
+  /* Motion Tokens */
+  --motion-instant: 100ms;
+  --motion-fast: 320ms;
+  --motion-normal: 400ms;
+  --motion-slow: 500ms;
+}
+
+/* Base Utility Classes */
+.apple-font {
+  font-family: var(--font-family-primary);
+}
+
+.apple-card-light {
+  background-color: var(--color-surface-raised);
+  border: 1px solid var(--color-border-subtle);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+  transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+
+.apple-card-light:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+}
+
+.apple-pill-btn-light {
+  border-radius: var(--radius-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  padding: 8px 18px;
+  transition: all var(--motion-fast) ease;
+}
+
+.apple-focus-visible:focus-visible {
+  outline: 2px solid var(--color-focus-ring) !important;
+  outline-offset: 2px !important;
+}
+
+/* Keyframe Animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-fadeIn {
+  animation: fadeIn var(--motion-fast) ease-out forwards;
+}
+
+.animate-slideUp {
+  animation: slideUp var(--motion-normal) cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}

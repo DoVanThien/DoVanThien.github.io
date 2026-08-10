@@ -141,6 +141,39 @@ export default function PortalPage() {
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </div>
           </a>
+
+          {/* App 4: Tech & Game News Hub (Apple Design) */}
+          <Link
+            href="/tech-news"
+            className="group relative flex flex-col p-10 rounded-[24px] border border-white/8 bg-slate-900/60 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-[#0071e3]/40 hover:shadow-[0_20px_40px_-15px_rgba(0,113,227,0.25)] overflow-hidden"
+            onMouseMove={handleMouseMove}
+            style={{
+              backgroundImage: 'radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(0,113,227,0.1), transparent 40%)'
+            } as React.CSSProperties}
+          >
+            <div className="w-16 h-16 rounded-[16px] flex items-center justify-center mb-8 bg-[#0071e3]/10 border border-[#0071e3]/20 text-[#0071e3] transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
+              <Sparkles className="w-8 h-8" />
+            </div>
+            <span className="self-start text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#0071e3]/15 text-[#0071e3] mb-4">
+              Apple Design • News Hub
+            </span>
+            <h2 className="text-2xl font-bold text-slate-100 mb-3 group-hover:text-white transition-colors">
+              Tech & Game News
+            </h2>
+            <p className="text-sm text-slate-400 font-light leading-relaxed mb-8 flex-grow">
+              Đọc tin tức công nghệ game chuyên sâu: Mobile, PC, Unity Engine, C#, AI in Game và Game Hay Phải Chơi. Chuẩn thiết kế Apple Việt Nam & Tóm tắt AI.
+            </p>
+            <div className="flex gap-1.5 flex-wrap mb-8 pt-4 border-t border-white/5">
+              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">Apple Design</span>
+              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">6 Chuyên Mục</span>
+              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">AI Takeaways</span>
+              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">Zustand Store</span>
+            </div>
+            <div className="flex items-center justify-between text-sm font-semibold p-3.5 px-5 rounded-[12px] bg-[#0071e3] text-white border border-[#0071e3] transition-all duration-300 group-hover:bg-[#0066cc] group-hover:shadow-[0_4px_12px_rgba(0,113,227,0.4)]">
+              <span>Đọc Tin Ngay</span>
+              <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </div>
+          </Link>
         </div>
       </div>
 
