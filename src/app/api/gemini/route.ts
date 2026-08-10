@@ -1,8 +1,226 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+// ----------------------------------------------------------------------------
+// 1. TỰ ĐỘNG THU GOM TẤT CẢ API KEYS TỪ ENVIRONMENT VARIABLES
+// ----------------------------------------------------------------------------
+function getApiKeysPool(): string[] {
+  const keysStr = process.env.AI_API_KEYS || process.env.OPENROUTER_API_KEYS || '';
+  const parsedKeys = keysStr.split(/[\n,;]+/).map(k => k.trim()).filter(Boolean);
+
+  const individualKeys = [
+    process.env.GROQ_API_KEY,
+    process.env.CEREBRAS_API_KEY,
+    process.env.GITHUB_API_KEY,
+    process.env.OPENROUTER_API_KEY,
+    process.env.GEMINI_API_KEY,
+    process.env.DEEPSEEK_API_KEY,
+  ].map(k => (k || '').trim()).filter(Boolean);
+
+  return Array.from(new Set([...parsedKeys, ...individualKeys]));
+}
+
+// ----------------------------------------------------------------------------
+// 2. THỰC THI GỌI API THEO ĐÚNG LOẠI KEY CỦA TỪNG NHÀ CUNG CẤP
+// ----------------------------------------------------------------------------
+async function executeCallWithKey(key: string, prompt: string, systemPrompt?: string, responseSchema?: any) {
+  // A. GROQ API (gsk_...) - 14,400 requests/ngày
+  if (key.startsWith('gsk_')) {
+    const groqUrl = 'https://api.groq.com/openai/v1/chat/completions';
+    const messages = [];
+    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+    messages.push({ role: 'user', content: prompt });
+
+    const res = await fetch(groqUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: 'llama-3.3-70b-versatile',
+        messages,
+        temperature: 0.7,
+        ...(responseSchema ? { response_format: { type: 'json_object' } } : {})
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Groq status ${res.status}`);
+    }
+
+    const data = await res.json();
+    const contentText = data.choices?.[0]?.message?.content || '{}';
+    return { candidates: [{ content: { parts: [{ text: contentText }] } }] };
+  }
+
+  // B. CEREBRAS API (csk-...) - 14,400 requests/ngày
+  if (key.startsWith('csk-')) {
+    const url = 'https://api.cerebras.ai/v1/chat/completions';
+    const messages = [];
+    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+    messages.push({ role: 'user', content: prompt });
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: 'llama3.3-70b',
+        messages,
+        temperature: 0.7,
+        ...(responseSchema ? { response_format: { type: 'json_object' } } : {})
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Cerebras status ${res.status}`);
+    }
+
+    const data = await res.json();
+    const contentText = data.choices?.[0]?.message?.content || '{}';
+    return { candidates: [{ content: { parts: [{ text: contentText }] } }] };
+  }
+
+  // C. GITHUB MODELS API (ghp_... hoăc github_pat_...) - 1,000 requests/ngày
+  if (key.startsWith('ghp_') || key.startsWith('github_pat_')) {
+    const url = 'https://models.inference.ai.azure.com/chat/completions';
+    const messages = [];
+    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+    messages.push({ role: 'user', content: prompt });
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: 'Llama-3.3-70B-Instruct',
+        messages,
+        temperature: 0.7,
+        ...(responseSchema ? { response_format: { type: 'json_object' } } : {})
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `GitHub Models status ${res.status}`);
+    }
+
+    const data = await res.json();
+    const contentText = data.choices?.[0]?.message?.content || '{}';
+    return { candidates: [{ content: { parts: [{ text: contentText }] } }] };
+  }
+
+  // D. GOOGLE GEMINI DIRECT API (AIza...)
+  if (key.startsWith('AIza')) {
+    const model = 'gemini-2.0-flash';
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    const body: any = { contents: [{ parts: [{ text: prompt }] }] };
+    if (systemPrompt) body.systemInstruction = { parts: [{ text: systemPrompt }] };
+    if (responseSchema) {
+      body.generationConfig = { responseMimeType: 'application/json', temperature: 0.7, topP: 0.95, responseSchema };
+    }
+
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
+      body: JSON.stringify(body)
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `Google Gemini status ${res.status}`);
+    }
+
+    return await res.json();
+  }
+
+  // E. OPENROUTER API (sk-or-...)
+  if (key.startsWith('sk-or-')) {
+    const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
+    const messages = [];
+    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+    messages.push({ role: 'user', content: prompt });
+
+    const candidateModels = Array.from(new Set([
+      process.env.OPENROUTER_MODEL,
+      'google/gemini-2.0-pro-exp-02-05:free',
+      'google/gemini-2.0-flash-lite-preview-02-05:free',
+      'deepseek/deepseek-r1:free',
+      'qwen/qwen-2.5-72b-instruct:free',
+      'cognitivecomputations/dolphin3.0-r1-mistral-24b:free'
+    ].filter(Boolean))) as string[];
+
+    let openRouterError = '';
+    for (const modelName of candidateModels) {
+      try {
+        const res = await fetch(openRouterUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`,
+            'HTTP-Referer': 'https://github.com/DoVanThien/DoVanThien.github.io',
+            'X-Title': 'AI English Mentor Pro'
+          },
+          body: JSON.stringify({
+            model: modelName,
+            messages,
+            temperature: 0.7,
+            ...(responseSchema ? { response_format: { type: 'json_object' } } : {})
+          })
+        });
+
+        if (res.ok) {
+          const routerData = await res.json();
+          let contentText = routerData.choices?.[0]?.message?.content || '{}';
+          contentText = contentText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+          return { candidates: [{ content: { parts: [{ text: contentText }] } }] };
+        } else {
+          const errData = await res.json().catch(() => ({}));
+          openRouterError = errData.error?.message || `Status ${res.status}`;
+        }
+      } catch (e: any) {
+        openRouterError = e.message || 'Fetch error';
+      }
+    }
+    throw new Error(`OpenRouter (${openRouterError})`);
+  }
+
+  // F. SILICONFLOW / DEEPSEEK DIRECT (sk-...)
+  if (key.startsWith('sk-')) {
+    const isSiliconFlow = key.length > 40 || process.env.USE_SILICONFLOW === 'true';
+    const endpointUrl = isSiliconFlow ? 'https://api.siliconflow.cn/v1/chat/completions' : 'https://api.deepseek.com/v1/chat/completions';
+    const modelName = isSiliconFlow ? 'deepseek-ai/DeepSeek-V3' : 'deepseek-chat';
+    const messages = [];
+    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+    messages.push({ role: 'user', content: prompt });
+
+    const res = await fetch(endpointUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: modelName,
+        messages,
+        temperature: 0.7,
+        ...(responseSchema ? { response_format: { type: 'json_object' } } : {})
+      })
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `DeepSeek status ${res.status}`);
+    }
+
+    const data = await res.json();
+    const contentText = data.choices?.[0]?.message?.content || '{}';
+    return { candidates: [{ content: { parts: [{ text: contentText }] } }] };
+  }
+
+  throw new Error(`Không nhận diện được định dạng API Key: ${key.slice(0, 6)}...`);
+}
+
+// ----------------------------------------------------------------------------
+// 3. MAIN ROUTE HANDLER CHO ROUTE /api/gemini
+// ----------------------------------------------------------------------------
 export async function POST(req: NextRequest) {
   try {
-    // 1. Bảo vệ API khỏi các nguồn spam bên ngoài (CORS Protection)
+    // A. CORS Protection
     const origin = req.headers.get('origin') || '';
     const referer = req.headers.get('referer') || '';
     const host = req.headers.get('host') || '';
@@ -17,7 +235,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Kiểm tra chữ ký xác thực từ React client
+    // B. App Signature Check
     const signature = req.headers.get('x-app-signature');
     if (signature !== 'ai-english-mentor-secure-v2') {
       return NextResponse.json(
@@ -28,272 +246,39 @@ export async function POST(req: NextRequest) {
 
     const { prompt, systemPrompt, responseSchema } = await req.json();
 
-    // Lấy API Key từ biến môi trường (ưu tiên OPENROUTER_API_KEY nếu có, hoặc dùng GEMINI_API_KEY)
-    const apiKey = (process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY || '').trim();
-    if (!apiKey) {
+    // C. Thu gom danh sách Key
+    const keysPool = getApiKeysPool();
+
+    if (keysPool.length === 0) {
       return NextResponse.json(
-        { 
-          error: { 
-            message: 'Chưa cấu hình API Key trên máy chủ (OPENROUTER_API_KEY hoặc GEMINI_API_KEY trong .env.local).' 
-          } 
-        },
+        { error: { message: 'Chưa cấu hình API Key nào trên máy chủ/Vercel (Cấu hình AI_API_KEYS hoặc OPENROUTER_API_KEY trong .env.local / Vercel Environment Variables).' } },
         { status: 500 }
       );
     }
 
-    // ------------------------------------------------------------------------
-    // CASE A: OPENROUTER API (Key bắt đầu bằng "sk-or-")
-    // ------------------------------------------------------------------------
-    if (apiKey.startsWith('sk-or-')) {
-      const openRouterUrl = 'https://openrouter.ai/api/v1/chat/completions';
-      
-      const messages = [];
-      if (systemPrompt) {
-        messages.push({ role: 'system', content: systemPrompt });
+    // D. VÒNG LẶP THỬ LẦN LƯỢT TỪNG KEY TRONG POOL (KEY ROTATION & FAILOVER)
+    let lastErrorMessage = '';
+
+    for (let i = 0; i < keysPool.length; i++) {
+      const key = keysPool[i];
+      try {
+        const result = await executeCallWithKey(key, prompt, systemPrompt, responseSchema);
+        return NextResponse.json(result);
+      } catch (err: any) {
+        lastErrorMessage = err.message || 'Unspecified Error';
+        console.warn(`[Key Failover ${i + 1}/${keysPool.length}] Key prefix "${key.slice(0, 6)}..." failed: ${lastErrorMessage}. Rotating to next key...`);
       }
-      messages.push({ role: 'user', content: prompt });
-
-      // Danh sách các model MIỄN PHÍ chất lượng cao nhất & tốc độ nhanh nhất của OpenRouter
-      const candidateModels = Array.from(new Set([
-        process.env.OPENROUTER_MODEL,
-        'google/gemma-4-26b-a4b-it:free',
-        'openai/gpt-oss-20b:free',
-        'deepseek/deepseek-r1:free',
-        'qwen/qwen-2.5-72b-instruct:free',
-        'meta-llama/llama-3.3-70b-instruct:free'
-      ].filter(Boolean))) as string[];
-
-      let lastErrorMessage = '';
-      let successResponse: Response | null = null;
-
-      for (const modelName of candidateModels) {
-        const requestBody: any = {
-          model: modelName,
-          messages: messages,
-          temperature: 0.7,
-        };
-
-        if (responseSchema) {
-          requestBody.response_format = { type: 'json_object' };
-        }
-
-        try {
-          const res = await fetch(openRouterUrl, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`,
-              'HTTP-Referer': 'https://github.com/DoVanThien/DoVanThien.github.io',
-              'X-Title': 'AI English Mentor Pro'
-            },
-            body: JSON.stringify(requestBody)
-          });
-
-          if (res.ok) {
-            successResponse = res;
-            break;
-          } else {
-            const errorData = await res.json().catch(() => ({}));
-            lastErrorMessage = errorData.error?.message || `Model ${modelName} returned status ${res.status}`;
-            console.warn(`OpenRouter model ${modelName} failed: ${lastErrorMessage}. Trying next fallback model...`);
-          }
-        } catch (e: any) {
-          lastErrorMessage = e.message || 'Fetch error';
-        }
-      }
-
-      if (!successResponse) {
-        return NextResponse.json(
-          { error: { message: `OpenRouter API Error! ${lastErrorMessage}` } },
-          { status: 500 }
-        );
-      }
-
-      const routerData = await successResponse.json();
-      let contentText = routerData.choices?.[0]?.message?.content || '{}';
-
-      // Loại bỏ thẻ suy luận <think>...</think> của các model reasoning như DeepSeek R1 để JSON parse không bị lỗi
-      contentText = contentText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-
-      // Chuyển đổi dữ liệu trả về thành cấu trúc tương thích Gemini Client
-      const geminiCompatibleResponse = {
-        candidates: [
-          {
-            content: {
-              parts: [
-                { text: contentText }
-              ]
-            }
-          }
-        ]
-      };
-
-      return NextResponse.json(geminiCompatibleResponse);
     }
 
-    // ------------------------------------------------------------------------
-    // CASE B: DEEPSEEK DIRECT / SILICONFLOW API (Key bắt đầu bằng "sk-")
-    // ------------------------------------------------------------------------
-    else if (apiKey.startsWith('sk-')) {
-      const isSiliconFlow = apiKey.length > 40 || process.env.USE_SILICONFLOW === 'true';
-      const endpointUrl = isSiliconFlow 
-        ? 'https://api.siliconflow.cn/v1/chat/completions'
-        : 'https://api.deepseek.com/v1/chat/completions';
-      
-      const modelName = isSiliconFlow ? 'deepseek-ai/DeepSeek-V3' : 'deepseek-chat';
-
-      const messages = [];
-      if (systemPrompt) {
-        messages.push({ role: 'system', content: systemPrompt });
-      }
-      messages.push({ role: 'user', content: prompt });
-
-      const requestBody: any = {
-        model: modelName,
-        messages: messages,
-        temperature: 0.7,
-      };
-
-      if (responseSchema) {
-        requestBody.response_format = { type: 'json_object' };
-      }
-
-      const response = await fetch(endpointUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        return NextResponse.json(
-          { error: { message: errorData.error?.message || `DeepSeek API Error! status: ${response.status}` } },
-          { status: response.status }
-        );
-      }
-
-      const deepseekData = await response.json();
-      const contentText = deepseekData.choices?.[0]?.message?.content || '{}';
-
-      const geminiCompatibleResponse = {
-        candidates: [
-          {
-            content: {
-              parts: [
-                { text: contentText }
-              ]
-            }
-          }
-        ]
-      };
-
-      return NextResponse.json(geminiCompatibleResponse);
-    }
-
-    // ------------------------------------------------------------------------
-    // CASE C: GROQ API (Key bắt đầu bằng "gsk_")
-    // ------------------------------------------------------------------------
-    else if (apiKey.startsWith('gsk_')) {
-      const groqUrl = 'https://api.groq.com/openai/v1/chat/completions';
-      
-      const messages = [];
-      if (systemPrompt) {
-        messages.push({ role: 'system', content: systemPrompt });
-      }
-      messages.push({ role: 'user', content: prompt });
-
-      const requestBody: any = {
-        model: 'llama-3.3-70b-versatile',
-        messages: messages,
-        temperature: 0.7,
-      };
-
-      if (responseSchema) {
-        requestBody.response_format = { type: 'json_object' };
-      }
-
-      const response = await fetch(groqUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify(requestBody)
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        return NextResponse.json(
-          { error: { message: errorData.error?.message || `Groq API Error! status: ${response.status}` } },
-          { status: response.status }
-        );
-      }
-
-      const groqData = await response.json();
-      const contentText = groqData.choices?.[0]?.message?.content || '{}';
-
-      const geminiCompatibleResponse = {
-        candidates: [
-          {
-            content: {
-              parts: [
-                { text: contentText }
-              ]
-            }
-          }
-        ]
-      };
-
-      return NextResponse.json(geminiCompatibleResponse);
-    } 
-    
-    // ------------------------------------------------------------------------
-    // CASE D: GOOGLE GEMINI API (Key bắt đầu bằng "AIza...")
-    // ------------------------------------------------------------------------
-    else {
-      const model = 'gemini-2.0-flash';
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
-
-      const body: any = {
-        contents: [{ parts: [{ text: prompt }] }],
-      };
-
-      if (systemPrompt) {
-        body.systemInstruction = { parts: [{ text: systemPrompt }] };
-      }
-
-      if (responseSchema) {
-        body.generationConfig = {
-          responseMimeType: 'application/json',
-          temperature: 0.7,
-          topP: 0.95,
-          responseSchema: responseSchema
-        };
-      }
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-goog-api-key': apiKey,
-        },
-        body: JSON.stringify(body),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        return NextResponse.json(
-          { error: { message: errorData.error?.message || `Google API Error! status: ${response.status}` } },
-          { status: response.status }
-        );
-      }
-
-      const data = await response.json();
-      return NextResponse.json(data);
-    }
+    // E. Nếu tất cả các Key đều dính lỗi/Rate Limit
+    return NextResponse.json(
+      { 
+        error: { 
+          message: `Tất cả ${keysPool.length} API Key trên hệ thống đều dính lỗi hoặc hết lượt sử dụng! (Lỗi gần nhất: ${lastErrorMessage}). Vui lòng thêm Key mới vào AI_API_KEYS trong file .env.local hoặc Vercel Settings.` 
+        } 
+      },
+      { status: 429 }
+    );
   } catch (error: any) {
     console.error('API Server Error:', error);
     return NextResponse.json(

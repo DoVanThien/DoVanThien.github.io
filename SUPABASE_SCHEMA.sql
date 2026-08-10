@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS public.ai_english_profiles (
     user_level TEXT DEFAULT 'B1',
     current_streak INTEGER DEFAULT 0,
     max_streak INTEGER DEFAULT 0,
+    last_study_date TEXT,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 

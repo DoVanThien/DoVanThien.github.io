@@ -19,11 +19,11 @@ export class AIServiceV2 {
     if (apiKey.startsWith('sk-or-')) {
       const candidateModels = Array.from(new Set([
         process.env.OPENROUTER_MODEL,
-        'google/gemma-4-26b-a4b-it:free',
-        'openai/gpt-oss-20b:free',
+        'google/gemini-2.0-pro-exp-02-05:free',
+        'google/gemini-2.0-flash-lite-preview-02-05:free',
         'deepseek/deepseek-r1:free',
         'qwen/qwen-2.5-72b-instruct:free',
-        'meta-llama/llama-3.3-70b-instruct:free'
+        'cognitivecomputations/dolphin3.0-r1-mistral-24b:free'
       ].filter(Boolean))) as string[];
 
       let lastErrorMessage = '';
@@ -55,10 +55,11 @@ export class AIServiceV2 {
             break;
           } else {
             const err = await response.json().catch(() => ({}));
-            lastErrorMessage = err.error?.message || `Status ${response.status}`;
+            const currentError = err.error?.message || `Status ${response.status}`;
+            if (!lastErrorMessage) lastErrorMessage = currentError;
           }
         } catch (e: any) {
-          lastErrorMessage = e.message || 'Fetch error';
+          if (!lastErrorMessage) lastErrorMessage = e.message || 'Fetch error';
         }
       }
 

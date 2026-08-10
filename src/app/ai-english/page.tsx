@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { 
   Home, Sparkles, Cloud, CloudOff, Languages, Tag, RefreshCw, 
-  Send, Volume2, VolumeX, Brain, Shuffle, BookOpen, 
+  Send, Volume2, VolumeX, Brain, Shuffle, BookOpen, Key,
   Trash2, FileJson, FileInput, Plus, Star, X, Info, ChevronDown, CheckCircle, AlertTriangle, Mic, MicOff
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
@@ -130,7 +130,24 @@ export default function AIEnglishMentor() {
   const [vocabList, setVocabList] = useState<VocabItem[]>([]);
   const [currentStreak, setCurrentStreak] = useState(0);
   const [maxStreak, setMaxStreak] = useState(0);
+  const [lastStudyDate, setLastStudyDate] = useState('');
   
+  const [sessionProgress, setSessionProgress] = useState(0);
+  const [cycleResetReady, setCycleResetReady] = useState(false);
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewItems, setReviewItems] = useState<{vi: string, en: string}[]>([]);
+  const [reviewRevealed, setReviewRevealed] = useState<Record<number, boolean>>({});
+  
+  const [showVocabReviewModal, setShowVocabReviewModal] = useState(false);
+  const [vocabReviewItems, setVocabReviewItems] = useState<VocabItem[]>([]);
+  const [vocabReviewRevealed, setVocabReviewRevealed] = useState<Record<number, boolean>>({});
+
+
+
+  const cleanJsonString = (str: string) => {
+    if (!str) return '{}';
+    return str.replace(/```json/gi, '').replace(/```/g, '').trim();
+  };
   const [allTranslationsVisible, setAllTranslationsVisible] = useState(false);
   const [visibleTranslationIndices, setVisibleTranslationIndices] = useState<Record<number, boolean>>({});
   const [activeTab, setActiveTab] = useState<'sentences' | 'vocab'>('sentences');
@@ -316,7 +333,7 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc:
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      const rawResult = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      const rawResult = JSON.parse(cleanJsonString(data.candidates?.[0]?.content?.parts?.[0]?.text));
 
       const result = {
         title: safeString(rawResult.title, "Bài thi Essay"),
@@ -397,7 +414,7 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
 
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       const data = await response.json();
-      const rawResult = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      const rawResult = JSON.parse(cleanJsonString(data.candidates?.[0]?.content?.parts?.[0]?.text));
 
       const result = {
         bandScore: safeString(rawResult.bandScore, "Band 6.5"),
@@ -431,14 +448,10 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
       setEssayHistory(updatedEssayHistory);
       setLocalEngData(`ai_eng_essay_${activeProfile}`, updatedEssayHistory);
 
-      const newStreak = currentStreak + 1;
-      const newMaxStreak = Math.max(maxStreak, newStreak);
-      setCurrentStreak(newStreak);
-      setMaxStreak(newMaxStreak);
+      await handleProgressUpdate();
 
       if (hasCloud && supabase) {
         try {
-          await ensureEngProfileOnSupabase(activeProfile, userLevel);
           await supabase.from('ai_english_essay_history').insert({
             profile_name: activeProfile,
             title: newEssayItem.title,
@@ -452,14 +465,6 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
             native_rewrite: newEssayItem.nativeRewrite,
             feedback_vi: newEssayItem.feedbackVi
           });
-
-          await supabase.from('ai_english_profiles').upsert({
-            profile_name: activeProfile,
-            user_level: userLevel,
-            current_streak: newStreak,
-            max_streak: newMaxStreak,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'profile_name' });
         } catch (e) {
           console.error(e);
         }
@@ -528,6 +533,7 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
           user_level: level,
           current_streak: currentStreak,
           max_streak: maxStreak,
+          last_study_date: lastStudyDate,
           updated_at: new Date().toISOString()
         }, { onConflict: 'profile_name' });
       } catch (e) {
@@ -561,15 +567,18 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
           .eq('profile_name', profileName)
           .maybeSingle();
 
+        const todayStr = new Date().toISOString().split('T')[0];
         if (profileData) {
           setUserLevel(profileData.user_level || 'B1');
-          setCurrentStreak(profileData.current_streak || 0);
-          setMaxStreak(profileData.max_streak || 0);
+          setCurrentStreak(1);
+          setMaxStreak(Math.max(profileData.max_streak || 1, 1));
+          setLastStudyDate(todayStr);
         } else {
           await ensureEngProfileOnSupabase(profileName, 'B1');
           setUserLevel('B1');
-          setCurrentStreak(0);
-          setMaxStreak(0);
+          setCurrentStreak(1);
+          setMaxStreak(1);
+          setLastStudyDate(todayStr);
         }
 
         // 2. Fetch history từ Cloud & Union Merge theo nội dung câu tiếng Việt
@@ -837,7 +846,7 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
 
       if (!response.ok) throw new Error();
       const data = await response.json();
-      const result = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      const result = JSON.parse(cleanJsonString(data.candidates?.[0]?.content?.parts?.[0]?.text));
       
       setLookupResult({
         phonetic: result.phonetic || "/N/A/",
@@ -948,7 +957,7 @@ YÊU CẦU CHẤT LƯỢNG CAO:
       }
 
       const data = await response.json();
-      const result = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      const result = JSON.parse(cleanJsonString(data.candidates?.[0]?.content?.parts?.[0]?.text));
       
       setCurrentQuestion(result.vietnamese_content || "Chiều nay bạn có rảnh không, mình qua trao đổi nhanh về hợp đồng mới nhé.");
       setCurrentContext(result.context_description || "Đồng nghiệp trao đổi công việc trong văn phòng.");
@@ -1028,7 +1037,7 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
       }
 
       const data = await response.json();
-      const rawResult = JSON.parse(data.candidates?.[0]?.content?.parts?.[0]?.text);
+      const rawResult = JSON.parse(cleanJsonString(data.candidates?.[0]?.content?.parts?.[0]?.text));
 
       const score = typeof rawResult.score === 'number' ? rawResult.score : 0;
       const title = safeString(rawResult.title, "Kết quả");
@@ -1073,35 +1082,144 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
     setStudyHistory(updatedHistory);
     setLocalEngData(`ai_eng_history_${activeProfile}`, updatedHistory);
 
-    const newStreak = currentStreak + 1;
-    const newMaxStreak = Math.max(maxStreak, newStreak);
-    setCurrentStreak(newStreak);
-    setMaxStreak(newMaxStreak);
+    await handleProgressUpdate(updatedHistory);
 
     if (hasCloud && supabase) {
       try {
-        await ensureEngProfileOnSupabase(activeProfile, userLevel);
         await supabase.from('ai_english_history').insert({
           profile_name: activeProfile,
           vietnamese_text: newHistory.vi,
           english_translation: newHistory.en
         });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+  };
 
+  const handleProgressUpdate = async (latestHistory?: HistoryItem[]) => {
+    const today = new Date().toISOString().split('T')[0];
+    let newStreak = currentStreak;
+    let newMaxStreak = maxStreak;
+    let newLastStudyDate = lastStudyDate;
+    let streakChanged = false;
+    
+    if (lastStudyDate !== today) {
+      streakChanged = true;
+      if (!lastStudyDate) {
+        newStreak = 1;
+      } else {
+        const todayDate = new Date(today);
+        const lastDate = new Date(lastStudyDate);
+        todayDate.setHours(0, 0, 0, 0);
+        lastDate.setHours(0, 0, 0, 0);
+        
+        const diffTime = Math.abs(todayDate.getTime() - lastDate.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        if (diffDays === 1) {
+          newStreak = currentStreak + 1;
+        } else if (diffDays > 1) {
+          newStreak = 1;
+        }
+      }
+      newMaxStreak = Math.max(maxStreak, newStreak);
+      newLastStudyDate = today;
+      setCurrentStreak(newStreak);
+      setMaxStreak(newMaxStreak);
+      setLastStudyDate(newLastStudyDate);
+    }
+    
+    const newSessionProgress = sessionProgress + 1;
+    setSessionProgress(newSessionProgress);
+
+    if (hasCloud && supabase && streakChanged) {
+      try {
         await supabase.from('ai_english_profiles').upsert({
           profile_name: activeProfile,
           user_level: userLevel,
           current_streak: newStreak,
           max_streak: newMaxStreak,
+          last_study_date: newLastStudyDate,
           updated_at: new Date().toISOString()
         }, { onConflict: 'profile_name' });
       } catch (e) {
         console.error(e);
       }
     }
-
-    if (newStreak === 5) {
-      triggerToast("🎉 Tuyệt vời! Bạn đã hoàn thành chuỗi 5 câu ngày học!", 'success');
+    
+    if (newSessionProgress > 0 && newSessionProgress % 5 === 0) {
+      setCycleResetReady(false);
+      triggerToast("🎉 Bạn đã hoàn thành 5 câu! Hãy ôn tập 5 câu vừa dịch nhé!", 'success');
+      setTimeout(() => openRecent5Review(), 800);
+    } else {
+      setCycleResetReady(false);
     }
+  };
+
+  const getCurrentCycleStep = () => {
+    if (sessionProgress === 0) return 0;
+    if (sessionProgress % 5 === 0) {
+      return cycleResetReady ? 0 : 5;
+    }
+    return sessionProgress % 5;
+  };
+
+  const openRandomReview = (count: number = 5, latestHistory?: HistoryItem[]) => {
+    const historyToUse = latestHistory || studyHistory;
+    if (historyToUse.length === 0) {
+      triggerToast("Bạn chưa dịch câu nào để ôn tập!", "warning");
+      return;
+    }
+    const shuffled = [...historyToUse].sort(() => 0.5 - Math.random());
+    setReviewItems(shuffled.slice(0, count));
+    setReviewRevealed({});
+    setShowReviewModal(true);
+  };
+
+  const openRecent5Review = () => {
+    if (studyHistory.length === 0) {
+      triggerToast("Bạn chưa dịch câu nào để ôn tập!", "warning");
+      return;
+    }
+    const recent5 = studyHistory.slice(0, 5);
+    setReviewItems(recent5);
+    setReviewRevealed({});
+    setShowReviewModal(true);
+  };
+
+  const resetStreakToOne = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    setCurrentStreak(1);
+    setMaxStreak(prev => Math.max(prev, 1));
+    setLastStudyDate(today);
+
+    if (hasCloud && supabase) {
+      try {
+        await supabase.from('ai_english_profiles').upsert({
+          profile_name: activeProfile,
+          user_level: userLevel,
+          current_streak: 1,
+          max_streak: Math.max(maxStreak, 1),
+          last_study_date: today,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'profile_name' });
+      } catch (e) {
+        console.error(e);
+      }
+    }
+    triggerToast("Đã reset streak về 1 ngày!", "success");
+  };
+
+  const openVocabReview = (count: number = 10) => {
+    if (vocabList.length === 0) {
+      triggerToast("Sổ tay từ vựng của bạn đang trống!", "warning");
+      return;
+    }
+    const shuffled = [...vocabList].sort(() => 0.5 - Math.random());
+    setVocabReviewItems(shuffled.slice(0, count));
+    setVocabReviewRevealed({});
+    setShowVocabReviewModal(true);
   };
 
   // Text-To-Speech Pronunciation engine
@@ -1243,6 +1361,8 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
             </select>
           </div>
 
+
+
           {/* Profile Switcher Dropdown */}
           <div className="relative flex-shrink-0">
             <button
@@ -1282,15 +1402,28 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
                     </span>
                   </div>
 
-                  {/* STREAK STATS */}
+                  {/* STREAK & PROGRESS STATS */}
                   <div className="grid grid-cols-2 gap-2 pt-1 border-t border-white/10 text-xs">
                     <div className="bg-white/10 p-2 rounded-lg">
                       <div className="text-[10px] text-slate-300">🔥 Current Streak</div>
-                      <div className="font-black text-amber-300 text-sm">{currentStreak} Ngày</div>
+                      <div className="font-black text-amber-300 text-sm flex items-center justify-between">
+                        <span>{currentStreak} Ngày</span>
+                        <button
+                          onClick={resetStreakToOne}
+                          title="Reset streak về 1 ngày"
+                          className="text-[9px] bg-amber-500/30 hover:bg-amber-500 text-amber-200 hover:text-white px-1.5 py-0.5 rounded transition"
+                        >
+                          Reset = 1
+                        </button>
+                      </div>
                     </div>
                     <div className="bg-white/10 p-2 rounded-lg">
                       <div className="text-[10px] text-slate-300">🏆 Longest Streak</div>
                       <div className="font-black text-emerald-300 text-sm">{maxStreak} Ngày</div>
+                    </div>
+                    <div className="bg-white/10 p-2 rounded-lg col-span-2 flex justify-between items-center">
+                      <div className="text-[10px] text-slate-300">🎯 Tiến độ phiên học</div>
+                      <div className="font-black text-blue-300 text-sm">{sessionProgress} câu</div>
                     </div>
                   </div>
 
@@ -1390,6 +1523,36 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
             >
               <BookOpen className="w-4 h-4 flex-shrink-0" /> <span>✍️ Thi Viết Essay</span>
             </button>
+          </div>
+
+          {/* DAILY PROGRESS BAR WIDGET */}
+          <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-sm space-y-2">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs sm:text-sm font-extrabold text-slate-800">🎯 Tiến độ phiên học:</span>
+                <span className="text-xs font-bold text-blue-600 bg-blue-50 px-2.5 py-0.5 rounded-full font-mono">
+                  {getCurrentCycleStep()}/5 câu
+                </span>
+                <span className="text-[11px] text-slate-400 font-semibold">(Tổng: {sessionProgress} câu)</span>
+              </div>
+
+              {getCurrentCycleStep() === 5 && (
+                <button
+                  onClick={openRecent5Review}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-200 transition flex items-center gap-1.5 animate-bounce"
+                >
+                  <Brain className="w-4 h-4" /> <span>🎯 Ôn tập 5 câu vừa hoàn thành</span>
+                </button>
+              )}
+            </div>
+
+            {/* Visual Bar */}
+            <div className="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden flex">
+              <div 
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 h-full transition-all duration-500 rounded-full"
+                style={{ width: `${(getCurrentCycleStep() / 5) * 100}%` }}
+              />
+            </div>
           </div>
 
           {/* CHẾ ĐỘ 1: LUYỆN DỊCH*/}
@@ -1822,26 +1985,41 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
           
           {/* STATS PROGRESS CARD */}
           <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-100 flex flex-col gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-amber-100 p-2.5 rounded-xl text-amber-600">
-                <Sparkles className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="text-xs text-slate-400 font-bold uppercase tracking-wide">Tiến độ ngày học (Hồ sơ: {activeProfile})</div>
-                <div className="text-sm font-bold text-slate-700 mt-0.5">
-                  {currentStreak >= 5 ? (
-                    <span className="text-emerald-600 font-extrabold">🎉 Đủ chuỗi 5 bài hôm nay!</span>
-                  ) : (
-                    <span>Cần học thêm {5 - currentStreak} bài ({currentStreak}/5)</span>
-                  )}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="bg-amber-100 p-2.5 rounded-xl text-amber-600">
+                  <Sparkles className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="text-xs text-slate-400 font-bold uppercase tracking-wide">Tiến độ phiên học ({activeProfile})</div>
+                  <div className="text-sm font-bold text-slate-700 mt-0.5">
+                    {getCurrentCycleStep() === 5 ? (
+                      <span className="text-emerald-600 font-extrabold flex items-center gap-1">
+                        🎉 Đã hoàn thành 5/5 câu! (Tổng: {sessionProgress} câu)
+                      </span>
+                    ) : (
+                      <span>
+                        Cần học thêm {5 - getCurrentCycleStep()} câu ({getCurrentCycleStep()}/5)
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
+
+              {getCurrentCycleStep() === 5 && (
+                <button
+                  onClick={openRecent5Review}
+                  className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black rounded-xl shadow-md shadow-emerald-200 transition flex items-center gap-1.5 animate-bounce"
+                >
+                  <Brain className="w-4 h-4" /> <span>🎯 Ôn tập 5 câu vừa dịch</span>
+                </button>
+              )}
             </div>
             {/* Progress Bar */}
             <div className="w-full bg-slate-100 h-3 rounded-full overflow-hidden relative">
               <div 
-                className="bg-amber-500 h-full transition-all duration-500" 
-                style={{ width: `${Math.min((currentStreak / 5) * 100, 100)}%` }} 
+                className="bg-gradient-to-r from-amber-500 to-emerald-500 h-full transition-all duration-500 rounded-full" 
+                style={{ width: `${(getCurrentCycleStep() / 5) * 100}%` }} 
               />
             </div>
           </div>
@@ -1899,6 +2077,12 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
                           className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold px-2.5 py-0.5 rounded transition"
                         >
                           {allTranslationsVisible ? 'Ẩn tất cả' : 'Hiện tất cả'}
+                        </button>
+                        <button 
+                          onClick={() => openRandomReview(5)} 
+                          className="text-[10px] bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-extrabold px-2.5 py-0.5 rounded transition"
+                        >
+                          Ôn Tập
                         </button>
                       </div>
                     </div>
@@ -2031,6 +2215,12 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
                       className="text-[10px] bg-slate-100 hover:bg-slate-200 text-slate-700 font-extrabold px-2.5 py-0.5 rounded transition"
                     >
                       {allVocabTranslationsVisible ? 'Ẩn tất cả' : 'Hiện tất cả'}
+                    </button>
+                    <button 
+                      onClick={() => openVocabReview(10)}
+                      className="text-[10px] bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-extrabold px-2.5 py-0.5 rounded transition"
+                    >
+                      Ôn Tập
                     </button>
                   </div>
                 </div>
@@ -2276,6 +2466,211 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
           </div>
         </div>
       )}
+
+      {/* 5-SENTENCE REVIEW MODAL */}
+      {showReviewModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-[100] animate-fadeIn">
+          <div className="bg-white rounded-3xl p-5 sm:p-7 w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
+                  <Brain className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-800">🎯 Ôn Tập {reviewItems.length} Câu Đã Dịch</h3>
+                  <p className="text-xs text-slate-400">Tự kiểm tra lại phản xạ dịch thuật của bạn</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowReviewModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex justify-between items-center mb-3 text-xs flex-shrink-0">
+              <span className="font-extrabold text-slate-500">Danh sách câu ngẫu nhiên:</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const all: Record<number, boolean> = {};
+                    reviewItems.forEach((_, i) => all[i] = true);
+                    setReviewRevealed(all);
+                  }}
+                  className="text-blue-600 hover:underline font-bold"
+                >
+                  Hiện tất cả
+                </button>
+                <span className="text-slate-300">|</span>
+                <button
+                  onClick={() => setReviewRevealed({})}
+                  className="text-slate-500 hover:underline font-bold"
+                >
+                  Ẩn tất cả
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4 overflow-y-auto pr-1 flex-grow custom-scrollbar">
+              {reviewItems.map((item, idx) => (
+                <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2.5">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="text-xs font-bold text-indigo-600 uppercase tracking-wide">
+                      Câu #{idx + 1}
+                    </div>
+                    <button
+                      onClick={() => speakText(item.en)}
+                      className="text-xs bg-white border border-slate-200 text-slate-600 hover:text-blue-600 px-2.5 py-1 rounded-lg transition flex items-center gap-1 font-semibold shadow-sm"
+                    >
+                      <Volume2 className="w-3.5 h-3.5 text-blue-500" /> Nghe EN
+                    </button>
+                  </div>
+
+                  <div className="text-sm font-bold text-slate-800">
+                    <span className="text-blue-600 mr-1 font-extrabold">VN:</span> {item.vi}
+                  </div>
+
+                  <div className="pt-1">
+                    <button
+                      onClick={() => setReviewRevealed(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold flex items-center gap-1"
+                    >
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${reviewRevealed[idx] ? 'rotate-180' : ''}`} />
+                      {reviewRevealed[idx] ? 'Ẩn đáp án Tiếng Anh' : 'Xem đáp án Tiếng Anh'}
+                    </button>
+                  </div>
+
+                  {reviewRevealed[idx] && (
+                    <div className="mt-2 text-sm font-bold text-emerald-800 bg-emerald-50/90 p-3 rounded-xl border border-emerald-100 animate-fadeIn">
+                      <span className="text-emerald-600 font-black mr-1">EN:</span> {item.en}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 mt-4 flex items-center justify-between flex-shrink-0">
+              <button
+                onClick={() => openRandomReview(5)}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1.5 transition"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Đổi 5 câu khác
+              </button>
+              <button
+                onClick={() => {
+                  setShowReviewModal(false);
+                  if (sessionProgress > 0 && sessionProgress % 5 === 0) {
+                    setCycleResetReady(true);
+                  }
+                }}
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-black rounded-xl text-xs shadow-md shadow-blue-200 transition"
+              >
+                Hoàn Thành Ôn Tập & Sang Chu Kỳ Mới (0/5)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* VOCAB REVIEW MODAL */}
+      {showVocabReviewModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-[100] animate-fadeIn">
+          <div className="bg-white rounded-3xl p-5 sm:p-7 w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-shrink-0">
+              <div className="flex items-center gap-2.5">
+                <div className="w-9 h-9 rounded-2xl bg-amber-50 flex items-center justify-center text-amber-600">
+                  <BookOpen className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-black text-slate-800">🧠 Ôn Tập {vocabReviewItems.length} Từ Vựng Ngẫu Nhiên</h3>
+                  <p className="text-xs text-slate-400">Kiểm tra trí nhớ từ vựng đã lưu trong sổ tay</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowVocabReviewModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 flex items-center justify-center transition"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="flex justify-between items-center mb-3 text-xs flex-shrink-0">
+              <span className="font-extrabold text-slate-500">Danh sách từ ngẫu nhiên:</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    const all: Record<number, boolean> = {};
+                    vocabReviewItems.forEach((_, i) => all[i] = true);
+                    setVocabReviewRevealed(all);
+                  }}
+                  className="text-blue-600 hover:underline font-bold"
+                >
+                  Hiện tất cả nghĩa
+                </button>
+                <span className="text-slate-300">|</span>
+                <button
+                  onClick={() => setVocabReviewRevealed({})}
+                  className="text-slate-500 hover:underline font-bold"
+                >
+                  Ẩn tất cả nghĩa
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-3 overflow-y-auto pr-1 flex-grow custom-scrollbar">
+              {vocabReviewItems.map((item, idx) => (
+                <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="font-black text-blue-700 text-base">{item.word}</span>
+                      <span className="text-[10px] bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded font-mono font-bold">
+                        {item.phonetic}
+                      </span>
+                      <button
+                        onClick={() => speakText(item.word)}
+                        className="text-blue-500 hover:text-blue-700 p-1"
+                      >
+                        <Volume2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <button
+                      onClick={() => setVocabReviewRevealed(prev => ({ ...prev, [idx]: !prev[idx] }))}
+                      className="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold flex items-center gap-1"
+                    >
+                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${vocabReviewRevealed[idx] ? 'rotate-180' : ''}`} />
+                      {vocabReviewRevealed[idx] ? 'Ẩn nghĩa' : 'Xem nghĩa'}
+                    </button>
+                  </div>
+
+                  {vocabReviewRevealed[idx] && (
+                    <div className="text-slate-700 font-semibold text-sm pt-2 border-t border-slate-200/60 mt-1 animate-fadeIn">
+                      💡 <span className="font-bold text-slate-900">Nghĩa:</span> {item.translation}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            <div className="pt-4 border-t border-slate-100 mt-4 flex items-center justify-between flex-shrink-0">
+              <button
+                onClick={() => openVocabReview(10)}
+                className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1.5 transition"
+              >
+                <RefreshCw className="w-3.5 h-3.5" /> Đổi 10 từ khác
+              </button>
+              <button
+                onClick={() => setShowVocabReviewModal(false)}
+                className="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white font-black rounded-xl text-xs shadow-md shadow-amber-200 transition"
+              >
+                Hoàn Thành Ôn Tập
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
 
       {/* TOAST SYSTEM CONTAINER */}
       <div className="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full px-4">
