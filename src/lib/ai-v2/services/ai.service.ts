@@ -7,153 +7,16 @@ import { EVALUATION_SYSTEM_PROMPT, buildEvaluationUserPrompt } from '../prompts/
 import { TEACHER_SYSTEM_PROMPT, buildTeacherUserPrompt } from '../prompts/teacher.prompt';
 import { ReflectionService } from './reflection.service';
 import { MemoryService } from './memory.service';
+import { executeAiCall } from '@/lib/ai/ai-client';
 
 export class AIServiceV2 {
   private static async callLLMApi(systemPrompt: string, userPrompt: string): Promise<string> {
-    const apiKey = (process.env.OPENROUTER_API_KEY || process.env.GEMINI_API_KEY || '').trim();
-    if (!apiKey) {
-      throw new Error('API Key missing. Please set OPENROUTER_API_KEY or GEMINI_API_KEY in .env.local');
-    }
-
-    // 1. OpenRouter API (Key: sk-or-...)
-    if (apiKey.startsWith('sk-or-')) {
-      const candidateModels = Array.from(new Set([
-        process.env.OPENROUTER_MODEL,
-        'google/gemini-2.0-pro-exp-02-05:free',
-        'google/gemini-2.0-flash-lite-preview-02-05:free',
-        'deepseek/deepseek-r1:free',
-        'qwen/qwen-2.5-72b-instruct:free',
-        'cognitivecomputations/dolphin3.0-r1-mistral-24b:free'
-      ].filter(Boolean))) as string[];
-
-      let lastErrorMessage = '';
-      let successData: any = null;
-
-      for (const modelName of candidateModels) {
-        try {
-          const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${apiKey}`,
-              'HTTP-Referer': 'https://github.com/DoVanThien/DoVanThien.github.io',
-              'X-Title': 'AI English Mentor Pro'
-            },
-            body: JSON.stringify({
-              model: modelName,
-              messages: [
-                { role: 'system', content: systemPrompt },
-                { role: 'user', content: userPrompt }
-              ],
-              temperature: 0.7,
-              response_format: { type: 'json_object' }
-            })
-          });
-
-          if (response.ok) {
-            successData = await response.json();
-            break;
-          } else {
-            const err = await response.json().catch(() => ({}));
-            const currentError = err.error?.message || `Status ${response.status}`;
-            if (!lastErrorMessage) lastErrorMessage = currentError;
-          }
-        } catch (e: any) {
-          if (!lastErrorMessage) lastErrorMessage = e.message || 'Fetch error';
-        }
-      }
-
-      if (!successData) {
-        throw new Error(`OpenRouter API Error: ${lastErrorMessage}`);
-      }
-
-      let content = successData.choices?.[0]?.message?.content || '{}';
-      content = content.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
-      return content;
-    }
-
-    // 2. DeepSeek / SiliconFlow Direct API (Key: sk-...)
-    if (apiKey.startsWith('sk-')) {
-      const isSiliconFlow = apiKey.length > 40 || process.env.USE_SILICONFLOW === 'true';
-      const endpoint = isSiliconFlow ? 'https://api.siliconflow.cn/v1/chat/completions' : 'https://api.deepseek.com/v1/chat/completions';
-      const modelName = isSiliconFlow ? 'deepseek-ai/DeepSeek-V3' : 'deepseek-chat';
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: modelName,
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          temperature: 0.7,
-          response_format: { type: 'json_object' }
-        })
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error?.message || `DeepSeek API Error status ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.choices?.[0]?.message?.content || '{}';
-    }
-
-    // 3. Groq API (Key: gsk_...)
-    if (apiKey.startsWith('gsk_')) {
-      const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`
-        },
-        body: JSON.stringify({
-          model: 'llama-3.3-70b-versatile',
-          messages: [
-            { role: 'system', content: systemPrompt },
-            { role: 'user', content: userPrompt }
-          ],
-          temperature: 0.7,
-          response_format: { type: 'json_object' }
-        })
-      });
-
-      if (!response.ok) {
-        const err = await response.json().catch(() => ({}));
-        throw new Error(err.error?.message || `Groq API Error status ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.choices?.[0]?.message?.content || '{}';
-    }
-
-    // 4. Google Gemini API (Key: AIza...)
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent`;
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': apiKey
-      },
-      body: JSON.stringify({
-        systemInstruction: { parts: [{ text: systemPrompt }] },
-        contents: [{ parts: [{ text: userPrompt }] }],
-        generationConfig: { responseMimeType: 'application/json', temperature: 0.7 }
-      })
+    const result = await executeAiCall({
+      prompt: userPrompt,
+      systemPrompt,
+      isJsonOutput: true
     });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.error?.message || `Google API Error status ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
+    return result.text;
   }
 
   /**

@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { 
   Home, Sparkles, Cloud, CloudOff, Languages, Tag, RefreshCw, 
   Send, Volume2, VolumeX, Brain, Shuffle, BookOpen, Key,
-  Trash2, FileJson, FileInput, Plus, Star, X, Info, ChevronDown, CheckCircle, AlertTriangle, Mic, MicOff
+  Trash2, FileJson, FileInput, Plus, Star, X, Info, ChevronDown, CheckCircle, AlertTriangle, Mic, MicOff,
+  Edit3, RotateCcw, Eye, EyeOff, Check
 } from 'lucide-react';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
 
@@ -137,6 +138,17 @@ export default function AIEnglishMentor() {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewItems, setReviewItems] = useState<{vi: string, en: string}[]>([]);
   const [reviewRevealed, setReviewRevealed] = useState<Record<number, boolean>>({});
+  const [reviewUserInputs, setReviewUserInputs] = useState<Record<number, string>>({});
+  const [reviewResults, setReviewResults] = useState<Record<number, {
+    isChecked: boolean;
+    score: number;
+    wordComparison: Array<{ word: string; status: 'correct' | 'near' | 'incorrect'; expected?: string }>;
+    targetClean: string;
+    isPerfect: boolean;
+    correctWordsCount: number;
+    totalTargetWords: number;
+  }>>({});
+  const [reviewMode, setReviewMode] = useState<'practice' | 'view'>('practice');
   
   const [showVocabReviewModal, setShowVocabReviewModal] = useState(false);
   const [vocabReviewItems, setVocabReviewItems] = useState<VocabItem[]>([]);
@@ -1165,6 +1177,104 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
     return sessionProgress % 5;
   };
 
+  const normalizeWord = (w: string) =>
+    w.toLowerCase().replace(/[.,/#!$%^&*;:{}=\-_`~()?"'’]/g, '').trim();
+
+  const compareSentenceWordByWord = (userInput: string, target: string) => {
+    const userWords = userInput.trim().split(/\s+/).filter(Boolean);
+    const targetWords = target.trim().split(/\s+/).filter(Boolean);
+
+    if (userWords.length === 0) {
+      return {
+        score: 0,
+        wordComparison: [],
+        targetClean: target,
+        isPerfect: false,
+        correctWordsCount: 0,
+        totalTargetWords: targetWords.length
+      };
+    }
+
+    let exactMatches = 0;
+    let partialMatches = 0;
+
+    const comparison = userWords.map((uWord, idx) => {
+      const cleanU = normalizeWord(uWord);
+      const targetWordAtIdx = targetWords[idx] ? normalizeWord(targetWords[idx]) : null;
+      const isExact = cleanU === targetWordAtIdx;
+      const isPresent = targetWords.some(t => normalizeWord(t) === cleanU);
+
+      if (isExact) {
+        exactMatches++;
+        return { word: uWord, status: 'correct' as const, expected: targetWords[idx] };
+      } else if (isPresent) {
+        partialMatches++;
+        return { word: uWord, status: 'near' as const, expected: targetWords[idx] };
+      } else {
+        return { word: uWord, status: 'incorrect' as const, expected: targetWords[idx] };
+      }
+    });
+
+    const totalTargetWords = Math.max(1, targetWords.length);
+    const score = Math.min(100, Math.round(((exactMatches + partialMatches * 0.5) / totalTargetWords) * 100));
+    const isPerfect = normalizeWord(userInput) === normalizeWord(target);
+
+    return {
+      score: isPerfect ? 100 : score,
+      wordComparison: comparison,
+      targetClean: target,
+      isPerfect,
+      correctWordsCount: exactMatches,
+      totalTargetWords: targetWords.length
+    };
+  };
+
+  const handleCheckSentence = (idx: number) => {
+    const input = reviewUserInputs[idx] || '';
+    if (!input.trim()) {
+      triggerToast("Vui lòng nhập bản dịch trước khi kiểm tra!", "warning");
+      return;
+    }
+    const target = reviewItems[idx]?.en || '';
+    const res = compareSentenceWordByWord(input, target);
+    setReviewResults(prev => ({
+      ...prev,
+      [idx]: {
+        isChecked: true,
+        ...res
+      }
+    }));
+  };
+
+  const handleCheckAllSentences = () => {
+    const newResults: Record<number, any> = {};
+    let checkedCount = 0;
+    reviewItems.forEach((item, idx) => {
+      const input = reviewUserInputs[idx] || '';
+      if (input.trim()) {
+        const res = compareSentenceWordByWord(input, item.en);
+        newResults[idx] = { isChecked: true, ...res };
+        checkedCount++;
+      }
+    });
+    if (checkedCount === 0) {
+      triggerToast("Vui lòng nhập bản dịch cho ít nhất 1 câu!", "warning");
+      return;
+    }
+    setReviewResults(prev => ({ ...prev, ...newResults }));
+    triggerToast(`Đã đối chiếu ${checkedCount} câu thành công!`, "success");
+  };
+
+  const handleResetSentence = (idx: number) => {
+    setReviewUserInputs(prev => ({ ...prev, [idx]: '' }));
+    setReviewResults(prev => {
+      const copy = { ...prev };
+      delete copy[idx];
+      return copy;
+    });
+    setReviewRevealed(prev => ({ ...prev, [idx]: false }));
+  };
+
   const openRandomReview = (count: number = 5, latestHistory?: HistoryItem[]) => {
     const historyToUse = latestHistory || studyHistory;
     if (historyToUse.length === 0) {
@@ -1174,6 +1284,9 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
     const shuffled = [...historyToUse].sort(() => 0.5 - Math.random());
     setReviewItems(shuffled.slice(0, count));
     setReviewRevealed({});
+    setReviewUserInputs({});
+    setReviewResults({});
+    setReviewMode('practice');
     setShowReviewModal(true);
   };
 
@@ -1185,6 +1298,9 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
     const recent5 = studyHistory.slice(0, 5);
     setReviewItems(recent5);
     setReviewRevealed({});
+    setReviewUserInputs({});
+    setReviewResults({});
+    setReviewMode('practice');
     setShowReviewModal(true);
   };
 
@@ -2467,18 +2583,19 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
         </div>
       )}
 
-      {/* 5-SENTENCE REVIEW MODAL */}
+      {/* 5-SENTENCE INTERACTIVE TRANSLATION REVIEW MODAL */}
       {showReviewModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 z-[100] animate-fadeIn">
-          <div className="bg-white rounded-3xl p-5 sm:p-7 w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[85vh] flex flex-col">
-            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-4 flex-shrink-0">
+          <div className="bg-white rounded-3xl p-5 sm:p-7 w-full max-w-2xl shadow-2xl border border-slate-100 max-h-[90vh] flex flex-col">
+            {/* Header */}
+            <div className="flex items-center justify-between pb-4 border-b border-slate-100 mb-3 flex-shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                   <Brain className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-black text-slate-800">🎯 Ôn Tập {reviewItems.length} Câu Đã Dịch</h3>
-                  <p className="text-xs text-slate-400">Tự kiểm tra lại phản xạ dịch thuật của bạn</p>
+                  <h3 className="text-lg font-black text-slate-800">🎯 Ôn Tập & Thực Hành Dịch {reviewItems.length} Câu</h3>
+                  <p className="text-xs text-slate-500">Tự gõ bản dịch để đối chiếu từ vựng theo thời gian thực (0 tốn token AI)</p>
                 </div>
               </div>
               <button
@@ -2489,68 +2606,277 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
               </button>
             </div>
 
-            <div className="flex justify-between items-center mb-3 text-xs flex-shrink-0">
-              <span className="font-extrabold text-slate-500">Danh sách câu ngẫu nhiên:</span>
-              <div className="flex gap-2">
+            {/* Mode Selector & Quick Tools Bar */}
+            <div className="flex items-center justify-between gap-2 mb-3 px-1 py-1.5 bg-slate-50 rounded-2xl border border-slate-100 flex-shrink-0 text-xs">
+              <div className="flex items-center gap-1">
                 <button
-                  onClick={() => {
-                    const all: Record<number, boolean> = {};
-                    reviewItems.forEach((_, i) => all[i] = true);
-                    setReviewRevealed(all);
-                  }}
-                  className="text-blue-600 hover:underline font-bold"
+                  onClick={() => setReviewMode('practice')}
+                  className={`px-3 py-1.5 rounded-xl font-black transition flex items-center gap-1.5 ${
+                    reviewMode === 'practice'
+                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+                      : 'text-slate-600 hover:bg-slate-200/60'
+                  }`}
                 >
-                  Hiện tất cả
+                  <Edit3 className="w-3.5 h-3.5" /> Thực hành gõ dịch
                 </button>
-                <span className="text-slate-300">|</span>
                 <button
-                  onClick={() => setReviewRevealed({})}
-                  className="text-slate-500 hover:underline font-bold"
+                  onClick={() => setReviewMode('view')}
+                  className={`px-3 py-1.5 rounded-xl font-black transition flex items-center gap-1.5 ${
+                    reviewMode === 'view'
+                      ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-200'
+                      : 'text-slate-600 hover:bg-slate-200/60'
+                  }`}
                 >
-                  Ẩn tất cả
+                  <Eye className="w-3.5 h-3.5" /> Xem đáp án nhanh
                 </button>
               </div>
-            </div>
 
-            <div className="space-y-4 overflow-y-auto pr-1 flex-grow custom-scrollbar">
-              {reviewItems.map((item, idx) => (
-                <div key={idx} className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-2.5">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="text-xs font-bold text-indigo-600 uppercase tracking-wide">
-                      Câu #{idx + 1}
-                    </div>
-                    <button
-                      onClick={() => speakText(item.en)}
-                      className="text-xs bg-white border border-slate-200 text-slate-600 hover:text-blue-600 px-2.5 py-1 rounded-lg transition flex items-center gap-1 font-semibold shadow-sm"
-                    >
-                      <Volume2 className="w-3.5 h-3.5 text-blue-500" /> Nghe EN
-                    </button>
-                  </div>
-
-                  <div className="text-sm font-bold text-slate-800">
-                    <span className="text-blue-600 mr-1 font-extrabold">VN:</span> {item.vi}
-                  </div>
-
-                  <div className="pt-1">
-                    <button
-                      onClick={() => setReviewRevealed(prev => ({ ...prev, [idx]: !prev[idx] }))}
-                      className="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold flex items-center gap-1"
-                    >
-                      <ChevronDown className={`w-3.5 h-3.5 transition-transform ${reviewRevealed[idx] ? 'rotate-180' : ''}`} />
-                      {reviewRevealed[idx] ? 'Ẩn đáp án Tiếng Anh' : 'Xem đáp án Tiếng Anh'}
-                    </button>
-                  </div>
-
-                  {reviewRevealed[idx] && (
-                    <div className="mt-2 text-sm font-bold text-emerald-800 bg-emerald-50/90 p-3 rounded-xl border border-emerald-100 animate-fadeIn">
-                      <span className="text-emerald-600 font-black mr-1">EN:</span> {item.en}
-                    </div>
-                  )}
+              {reviewMode === 'view' ? (
+                <div className="flex items-center gap-2 pr-2">
+                  <button
+                    onClick={() => {
+                      const all: Record<number, boolean> = {};
+                      reviewItems.forEach((_, i) => (all[i] = true));
+                      setReviewRevealed(all);
+                    }}
+                    className="text-blue-600 hover:underline font-bold"
+                  >
+                    Hiện tất cả
+                  </button>
+                  <span className="text-slate-300">|</span>
+                  <button
+                    onClick={() => setReviewRevealed({})}
+                    className="text-slate-500 hover:underline font-bold"
+                  >
+                    Ẩn tất cả
+                  </button>
                 </div>
-              ))}
+              ) : (
+                <div className="flex items-center gap-2 pr-2">
+                  <button
+                    onClick={handleCheckAllSentences}
+                    className="text-indigo-600 hover:text-indigo-800 font-extrabold flex items-center gap-1"
+                  >
+                    <Check className="w-3.5 h-3.5" /> Kiểm tra tất cả
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="pt-4 border-t border-slate-100 mt-4 flex items-center justify-between flex-shrink-0">
+            {/* List of Sentences */}
+            <div className="space-y-4 overflow-y-auto pr-1 flex-grow custom-scrollbar">
+              {reviewItems.map((item, idx) => {
+                const res = reviewResults[idx];
+                const isRevealed = reviewRevealed[idx];
+                const userInput = reviewUserInputs[idx] || '';
+
+                return (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded-2xl border transition-all space-y-3 ${
+                      res?.isChecked
+                        ? res.isPerfect || res.score >= 80
+                          ? 'bg-emerald-50/40 border-emerald-200'
+                          : 'bg-amber-50/40 border-amber-200'
+                        : 'bg-slate-50 border-slate-100'
+                    }`}
+                  >
+                    {/* Sentence Top Bar */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-black px-2.5 py-0.5 rounded-lg bg-white border border-slate-200 text-indigo-700 shadow-sm">
+                          Câu #{idx + 1}
+                        </span>
+                        {res?.isChecked && (
+                          <span
+                            className={`text-[11px] font-black px-2.5 py-0.5 rounded-lg flex items-center gap-1 ${
+                              res.isPerfect
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                                : res.score >= 70
+                                ? 'bg-blue-100 text-blue-800 border border-blue-300'
+                                : 'bg-amber-100 text-amber-800 border border-amber-300'
+                            }`}
+                          >
+                            {res.isPerfect ? '🎉 100% Hoàn hảo' : `🎯 ${res.score}% Khớp (${res.correctWordsCount}/${res.totalTargetWords} từ)`}
+                          </span>
+                        )}
+                      </div>
+
+                      <button
+                        onClick={() => speakText(item.en)}
+                        className="text-xs bg-white border border-slate-200 text-slate-600 hover:text-blue-600 px-2.5 py-1 rounded-lg transition flex items-center gap-1 font-semibold shadow-sm"
+                        title="Nghe phát âm chuẩn bản ngữ"
+                      >
+                        <Volume2 className="w-3.5 h-3.5 text-blue-500" /> Nghe EN
+                      </button>
+                    </div>
+
+                    {/* Vietnamese Prompt */}
+                    <div className="text-sm font-bold text-slate-800 leading-relaxed bg-white/80 p-3 rounded-xl border border-slate-100">
+                      <span className="text-blue-600 mr-1.5 font-black">🇻🇳 VN:</span>
+                      <span>{item.vi}</span>
+                    </div>
+
+                    {/* Mode: PRACTICE TRANSLATION */}
+                    {reviewMode === 'practice' ? (
+                      <div className="space-y-2.5">
+                        <div className="relative">
+                          <textarea
+                            value={userInput}
+                            onChange={(e) =>
+                              setReviewUserInputs((prev) => ({ ...prev, [idx]: e.target.value }))
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' && !e.shiftKey) {
+                                e.preventDefault();
+                                handleCheckSentence(idx);
+                              }
+                            }}
+                            placeholder="Gõ bản dịch Tiếng Anh của bạn (VD: I'm stuck in traffic...)..."
+                            rows={2}
+                            className="w-full text-sm p-3 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500 font-medium text-slate-800 placeholder-slate-400 resize-none transition"
+                          />
+                        </div>
+
+                        {/* Practice Action Buttons */}
+                        <div className="flex items-center justify-between gap-2 pt-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              onClick={() => handleCheckSentence(idx)}
+                              className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-black rounded-xl transition flex items-center gap-1 shadow-sm shadow-indigo-200"
+                            >
+                              <CheckCircle className="w-3.5 h-3.5" /> Kiểm tra từng từ
+                            </button>
+                            <button
+                              onClick={() => handleResetSentence(idx)}
+                              className="px-2.5 py-1.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 text-xs font-semibold rounded-xl transition flex items-center gap-1"
+                              title="Xóa để gõ lại"
+                            >
+                              <RotateCcw className="w-3 h-3 text-slate-400" /> Làm lại
+                            </button>
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              setReviewRevealed((prev) => ({ ...prev, [idx]: !prev[idx] }))
+                            }
+                            className="text-xs text-slate-500 hover:text-indigo-600 font-bold flex items-center gap-1"
+                          >
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 transition-transform ${
+                                isRevealed ? 'rotate-180' : ''
+                              }`}
+                            />
+                            {isRevealed ? 'Ẩn đáp án' : 'Xem đáp án'}
+                          </button>
+                        </div>
+
+                        {/* Word-by-Word Validation Result Breakdown */}
+                        {res?.isChecked && (
+                          <div className="p-3.5 bg-white rounded-xl border border-slate-200 space-y-2.5 animate-fadeIn">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="font-extrabold text-slate-700 flex items-center gap-1.5">
+                                <span>🔍 Chi tiết đối chiếu từng từ:</span>
+                              </span>
+                              <span className="text-[11px] text-slate-400">
+                                🟩 Đúng vị trí | 🟨 Khác vị trí | 🟥 Sai
+                              </span>
+                            </div>
+
+                            {/* Word Chips */}
+                            <div className="flex flex-wrap gap-1.5 pt-1">
+                              {res.wordComparison.length > 0 ? (
+                                res.wordComparison.map((w, wIdx) => {
+                                  if (w.status === 'correct') {
+                                    return (
+                                      <span
+                                        key={wIdx}
+                                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-emerald-100/90 text-emerald-800 border border-emerald-300 shadow-xs"
+                                        title={`Từ đúng: "${w.word}"`}
+                                      >
+                                        <Check className="w-3 h-3 text-emerald-600" />
+                                        {w.word}
+                                      </span>
+                                    );
+                                  } else if (w.status === 'near') {
+                                    return (
+                                      <span
+                                        key={wIdx}
+                                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-amber-100/90 text-amber-800 border border-amber-300 shadow-xs"
+                                        title={`Có trong câu mẫu nhưng khác vị trí: "${w.word}"`}
+                                      >
+                                        ~ {w.word}
+                                      </span>
+                                    );
+                                  } else {
+                                    return (
+                                      <span
+                                        key={wIdx}
+                                        className="inline-flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-bold bg-rose-100/90 text-rose-800 border border-rose-300 line-through opacity-85 shadow-xs"
+                                        title={`Không khớp từ mẫu: "${w.word}"`}
+                                      >
+                                        ✗ {w.word}
+                                      </span>
+                                    );
+                                  }
+                                })
+                              ) : (
+                                <span className="text-xs text-slate-400 italic">Chưa có từ nào</span>
+                              )}
+                            </div>
+
+                            {/* Always show target reference for clarity */}
+                            <div className="pt-2 border-t border-slate-100 text-xs font-semibold text-slate-700 flex flex-col gap-1">
+                              <span className="text-emerald-700 font-extrabold flex items-center gap-1">
+                                🎯 Đáp án chuẩn:
+                              </span>
+                              <span className="font-bold text-slate-900 bg-slate-50 p-2 rounded-lg border border-slate-200">
+                                {item.en}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Explicit Revealed Target (when clicked 'Xem đáp án') */}
+                        {isRevealed && !res?.isChecked && (
+                          <div className="text-sm font-bold text-emerald-800 bg-emerald-50/90 p-3 rounded-xl border border-emerald-100 animate-fadeIn">
+                            <span className="text-emerald-600 font-black mr-1">EN:</span> {item.en}
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      /* Mode: QUICK VIEW */
+                      <div className="space-y-2">
+                        <div className="pt-1">
+                          <button
+                            onClick={() =>
+                              setReviewRevealed((prev) => ({ ...prev, [idx]: !prev[idx] }))
+                            }
+                            className="text-xs text-indigo-600 hover:text-indigo-800 font-extrabold flex items-center gap-1"
+                          >
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 transition-transform ${
+                                isRevealed ? 'rotate-180' : ''
+                              }`}
+                            />
+                            {isRevealed ? 'Ẩn đáp án Tiếng Anh' : 'Xem đáp án Tiếng Anh'}
+                          </button>
+                        </div>
+
+                        {isRevealed && (
+                          <div className="text-sm font-bold text-emerald-800 bg-emerald-50/90 p-3 rounded-xl border border-emerald-100 animate-fadeIn">
+                            <span className="text-emerald-600 font-black mr-1">EN:</span> {item.en}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Footer */}
+            <div className="pt-4 border-t border-slate-100 mt-3 flex items-center justify-between flex-shrink-0">
               <button
                 onClick={() => openRandomReview(5)}
                 className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs flex items-center gap-1.5 transition"

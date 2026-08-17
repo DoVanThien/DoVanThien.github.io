@@ -566,6 +566,7 @@ export default function PoopTrackerPage() {
                     const monthDateStr = `${year}-${String(mIdx + 1).padStart(2, '0')}-${String(dayNum).padStart(2, '0')}`;
                     const todayStr = new Date().toISOString().split('T')[0];
                     const isToday = monthDateStr === todayStr;
+                    const isPast = monthDateStr < todayStr;
                     const poopsOfDay = profilePoops.filter(p => p.date === monthDateStr);
                     const watersOfDay = profileWaters.filter(w => w.date === monthDateStr);
                     const foodsOfDay = profileFoods.filter(f => f.date === monthDateStr);
@@ -573,20 +574,31 @@ export default function PoopTrackerPage() {
                     let dotColor = theme === 'light' ? 'bg-slate-200/90' : 'bg-slate-700/80';
                     let tooltipText = `${dayNum}/${mIdx + 1}/${year}`;
 
-                    if (poopsOfDay.length > 0 || watersOfDay.length > 0 || foodsOfDay.length > 0) {
-                      tooltipText += ` - ${poopsOfDay.length} đại tiện, ${watersOfDay.length} nước, ${foodsOfDay.length} món ăn`;
-                      
-                      if (poopsOfDay.length > 0) {
-                        const hasDanger = poopsOfDay.some(p => p.success && (p.bristol_type === 6 || p.bristol_type === 7));
-                        const hasRed = poopsOfDay.some(p => p.success && (p.bristol_type === 1 || p.bristol_type === 2));
-                        const hasYellow = poopsOfDay.some(p => !p.success || p.bristol_type === 5);
-                        const hasGreen = poopsOfDay.some(p => p.success && (p.bristol_type === 3 || p.bristol_type === 4));
+                    if (poopsOfDay.length > 0) {
+                      tooltipText += ` - ${poopsOfDay.length} đại tiện`;
+                      if (watersOfDay.length > 0 || foodsOfDay.length > 0) {
+                        tooltipText += `, ${watersOfDay.length} nước, ${foodsOfDay.length} món ăn`;
+                      }
 
-                        if (hasDanger) dotColor = 'bg-purple-500 shadow-xs ring-1 ring-purple-300';
-                        else if (hasRed) dotColor = 'bg-rose-500 shadow-xs ring-1 ring-rose-300';
-                        else if (hasYellow) dotColor = 'bg-amber-500 shadow-xs ring-1 ring-amber-300';
-                        else if (hasGreen) dotColor = 'bg-emerald-500 shadow-xs ring-1 ring-emerald-300';
-                      } else if (watersOfDay.length > 0) {
+                      const hasDanger = poopsOfDay.some(p => p.success && (p.bristol_type === 6 || p.bristol_type === 7));
+                      const hasRed = poopsOfDay.some(p => p.success && (p.bristol_type === 1 || p.bristol_type === 2));
+                      const hasYellow = poopsOfDay.some(p => !p.success || p.bristol_type === 5);
+                      const hasGreen = poopsOfDay.some(p => p.success && (p.bristol_type === 3 || p.bristol_type === 4));
+
+                      if (hasDanger) dotColor = 'bg-purple-500 shadow-xs ring-1 ring-purple-300';
+                      else if (hasRed) dotColor = 'bg-rose-500 shadow-xs ring-1 ring-rose-300';
+                      else if (hasYellow) dotColor = 'bg-amber-500 shadow-xs ring-1 ring-amber-300';
+                      else if (hasGreen) dotColor = 'bg-emerald-500 shadow-xs ring-1 ring-emerald-300';
+                    } else if (isPast) {
+                      // Ngày đã qua không có log đại tiện -> Tự động đánh dấu không đi (🌵)
+                      dotColor = 'bg-amber-500/85 dark:bg-amber-500/80 shadow-xs ring-1 ring-amber-400/40';
+                      tooltipText += ' - Không đi đại tiện (🌵)';
+                      if (watersOfDay.length > 0 || foodsOfDay.length > 0) {
+                        tooltipText += ` (${watersOfDay.length} nước, ${foodsOfDay.length} món ăn)`;
+                      }
+                    } else if (watersOfDay.length > 0 || foodsOfDay.length > 0) {
+                      tooltipText += ` - ${watersOfDay.length} nước, ${foodsOfDay.length} món ăn`;
+                      if (watersOfDay.length > 0) {
                         dotColor = 'bg-sky-500 shadow-xs ring-1 ring-sky-300';
                       } else if (foodsOfDay.length > 0) {
                         dotColor = 'bg-amber-500 shadow-xs ring-1 ring-amber-300';
@@ -676,7 +688,20 @@ export default function PoopTrackerPage() {
                       <span className="text-[10px] font-bold text-slate-400 block">Đại tiện</span>
                       <div className="flex items-center gap-1 mt-0.5 min-h-[22px]">
                         {poops.length === 0 ? (
-                          <span className="text-xs text-slate-400 opacity-60">-</span>
+                          dateStr < todayStr ? (
+                            <span
+                              className="text-xs font-bold text-amber-700 dark:text-amber-300 flex items-center gap-1 bg-amber-500/10 dark:bg-amber-500/20 px-2 py-0.5 rounded-lg border border-amber-500/25 shadow-xs"
+                              title="Không đi đại tiện"
+                            >
+                              <span className="text-sm leading-none">🌵</span> Không đi
+                            </span>
+                          ) : isToday ? (
+                            <span className="text-xs text-indigo-500 font-semibold flex items-center gap-1" title="Hôm nay chưa ghi nhận">
+                              <span className="text-xs">⏳</span> Chưa ghi
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400 opacity-60">-</span>
+                          )
                         ) : (
                           poops.map((p, pIdx) => {
                             let emoji = '🍏';
@@ -780,6 +805,7 @@ export default function PoopTrackerPage() {
           const poopsOfDay = profilePoops.filter(p => p.date === item.dateStr);
           const todayStr = new Date().toISOString().split('T')[0];
           const isToday = item.dateStr === todayStr;
+          const isPast = item.dateStr < todayStr;
           
           let dayStatusClass = theme === 'light' ? 'bg-slate-100/90 border-slate-200' : 'bg-white/5 border-white/10';
           let emoji = '';
@@ -803,6 +829,10 @@ export default function PoopTrackerPage() {
               dayStatusClass = 'bg-emerald-500/25 border-emerald-500/50 text-emerald-300 font-bold';
               emoji = '🍏';
             }
+          } else if (isPast && item.isCurrentMonth) {
+            // Ngày đã qua không có log đại tiện -> Tự động đánh dấu không đi (🌵)
+            dayStatusClass = 'bg-amber-500/15 border-amber-500/35 text-amber-700 dark:text-amber-300 font-bold shadow-xs';
+            emoji = '🌵';
           }
 
           if (isToday) {
@@ -829,7 +859,7 @@ export default function PoopTrackerPage() {
               )}
 
               {/* Tooltip */}
-              {poopsOfDay.length > 0 && (
+              {poopsOfDay.length > 0 ? (
                 <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-48 bg-slate-900/95 text-white text-[11px] p-2.5 rounded-2xl border border-white/10 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-30 shadow-xl backdrop-blur-md">
                   <div className="font-bold text-indigo-400 mb-1">{item.dateStr}</div>
                   {poopsOfDay.map((p, pIdx) => (
@@ -841,7 +871,12 @@ export default function PoopTrackerPage() {
                     </div>
                   ))}
                 </div>
-              )}
+              ) : isPast && item.isCurrentMonth ? (
+                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-40 bg-slate-900/95 text-white text-[11px] p-2 rounded-2xl border border-white/10 opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity duration-200 z-30 shadow-xl backdrop-blur-md text-center">
+                  <div className="font-bold text-amber-400 mb-0.5">{item.dateStr}</div>
+                  <div className="text-slate-300 font-semibold">🌵 Không đi đại tiện</div>
+                </div>
+              ) : null}
             </div>
           );
         })}
@@ -1380,27 +1415,31 @@ export default function PoopTrackerPage() {
                       {/* Render grid */}
                       {renderCalendarGrid()}
 
-                      {/* Legends matching [Ảnh 1] 100% */}
-                      <div className="grid grid-cols-2 gap-3 border-t border-slate-200/80 dark:border-white/10 pt-4 mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
+                      {/* Legends */}
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-slate-200/80 dark:border-white/10 pt-4 mt-2 text-xs font-semibold text-slate-600 dark:text-slate-300">
                         <div className="flex items-center gap-2">
                           <span className="w-3 h-3 rounded-full bg-slate-300 dark:bg-slate-600" />
-                          <span>Chưa ghi nhận</span>
+                          <span>Chưa ghi / Tương lai</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full bg-emerald-500" />
+                          <span className="w-3 h-3 rounded-full bg-amber-500 shadow-xs ring-1 ring-amber-400/40" />
+                          <span>Không đi ngoài (🌵)</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-xs" />
                           <span>Đi đều (Táo xanh 🍏)</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full bg-red-500" />
+                          <span className="w-3 h-3 rounded-full bg-red-500 shadow-xs" />
                           <span>Táo bón (Táo đỏ 🍎)</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="w-3 h-3 rounded-full bg-amber-400" />
-                          <span>Thiếu xơ/K.thành công (Táo vàng 🍋)</span>
+                          <span className="w-3 h-3 rounded-full bg-amber-400 shadow-xs" />
+                          <span>Thiếu xơ/Khó (Táo vàng 🍋)</span>
                         </div>
-                        <div className="flex items-center gap-2 col-span-2">
-                          <span className="w-3 h-3 rounded-full bg-purple-600" />
-                          <span>Tiêu chảy nguy hiểm (Táo tím 🍇)</span>
+                        <div className="flex items-center gap-2">
+                          <span className="w-3 h-3 rounded-full bg-purple-600 shadow-xs" />
+                          <span>Tiêu chảy (Táo tím 🍇)</span>
                         </div>
                       </div>
                     </div>
@@ -2275,8 +2314,22 @@ export default function PoopTrackerPage() {
                   const dayWaters = waterLogs.filter(w => w.profile_id === activeProfile?.id && w.date === selectedCalendarDate);
                   const dayFoods = foodLogs.filter(f => f.profile_id === activeProfile?.id && f.date === selectedCalendarDate);
                   const hasLogs = dayPoops.length > 0 || dayWaters.length > 0 || dayFoods.length > 0;
+                  const todayStr = new Date().toISOString().split('T')[0];
 
-                  if (!hasLogs) return null;
+                  if (!hasLogs) {
+                    if (selectedCalendarDate < todayStr) {
+                      return (
+                        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 text-amber-800 dark:text-amber-300 text-xs font-bold flex items-center gap-2.5 mb-2 shadow-xs">
+                          <span className="text-xl shrink-0">🌵</span>
+                          <div>
+                            <div className="font-extrabold text-sm">Không có ghi nhận đại tiện</div>
+                            <div className="text-[11px] font-normal text-amber-700/85 dark:text-amber-300/80">Ngày này được tự động đánh dấu là không đi ngoài.</div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }
 
                   return (
                     <div className="history-log-section mb-2">
