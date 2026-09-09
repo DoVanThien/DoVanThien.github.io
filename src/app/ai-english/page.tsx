@@ -283,13 +283,21 @@ export default function AIEnglishMentor() {
 
     if (hasCloud && supabase) {
       try {
-        await supabase
+        const payload: any = {
+          profile_name: activeProfile,
+          user_level: lvl,
+          session_progress: sessionProgress,
+          updated_at: new Date().toISOString()
+        };
+        const { error } = await supabase
           .from('ai_english_profiles')
-          .upsert({
-            profile_name: activeProfile,
-            user_level: lvl,
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'profile_name' });
+          .upsert(payload, { onConflict: 'profile_name' });
+        if (error && error.message?.includes('session_progress')) {
+          delete payload.session_progress;
+          await supabase
+            .from('ai_english_profiles')
+            .upsert(payload, { onConflict: 'profile_name' });
+        }
       } catch (e) {
         console.error('Error updating level in Supabase:', e);
       }
@@ -537,17 +545,42 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
     }
   };
 
-  const ensureEngProfileOnSupabase = async (pName: string, level = userLevel) => {
+  const getLocalEngProgress = (profileName: string): number => {
+    if (typeof window === 'undefined') return 0;
+    try {
+      const val = localStorage.getItem(`ai_eng_session_progress_${profileName}`);
+      return val !== null ? parseInt(val, 10) || 0 : 0;
+    } catch {
+      return 0;
+    }
+  };
+
+  const setLocalEngProgress = (profileName: string, progress: number) => {
+    if (typeof window === 'undefined') return;
+    try {
+      localStorage.setItem(`ai_eng_session_progress_${profileName}`, String(progress));
+    } catch (e) {
+      console.error('LocalStorage write error:', e);
+    }
+  };
+
+  const ensureEngProfileOnSupabase = async (pName: string, level = userLevel, progress = sessionProgress) => {
     if (hasCloud && supabase) {
       try {
-        await supabase.from('ai_english_profiles').upsert({
+        const payload: any = {
           profile_name: pName,
           user_level: level,
           current_streak: currentStreak,
           max_streak: maxStreak,
           last_study_date: lastStudyDate,
+          session_progress: progress,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'profile_name' });
+        };
+        const { error } = await supabase.from('ai_english_profiles').upsert(payload, { onConflict: 'profile_name' });
+        if (error && error.message?.includes('session_progress')) {
+          delete payload.session_progress;
+          await supabase.from('ai_english_profiles').upsert(payload, { onConflict: 'profile_name' });
+        }
       } catch (e) {
         console.warn('Lỗi ensureEngProfileOnSupabase:', e);
       }
@@ -564,10 +597,15 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
     const localHistory = getLocalEngData<HistoryItem>(keyHistory);
     const localEssay = getLocalEngData<EssayHistoryItem>(keyEssay);
     const localVocab = getLocalEngData<VocabItem>(keyVocab);
+    const localProgress = getLocalEngProgress(profileName);
 
     setStudyHistory(localHistory);
     setEssayHistory(localEssay);
     setVocabList(localVocab);
+
+    // Nếu có localProgress thì dùng, nếu chưa có nhưng đã có lịch sử câu thoại thì lấy số câu thoại làm tiến độ
+    const initialProgress = localProgress > 0 ? localProgress : (localHistory.length || 0);
+    setSessionProgress(initialProgress);
 
     // Step 2: Nếu có Supabase, thực hiện Smart Union Merge 2 chiều
     if (hasCloud && supabase) {
@@ -582,15 +620,43 @@ Trả về JSON đúng cấu trúc yêu cầu.`;
         const todayStr = new Date().toISOString().split('T')[0];
         if (profileData) {
           setUserLevel(profileData.user_level || 'B1');
-          setCurrentStreak(1);
-          setMaxStreak(Math.max(profileData.max_streak || 1, 1));
-          setLastStudyDate(todayStr);
+
+          // Tính toán streak chính xác từ database thay vì ép về 1
+          const lastDate = profileData.last_study_date;
+          const streakFromDb = profileData.current_streak || 0;
+          if (!lastDate) {
+            setCurrentStreak(0);
+          } else {
+            const todayDate = new Date(todayStr);
+            const lastStudy = new Date(lastDate);
+            todayDate.setHours(0, 0, 0, 0);
+            lastStudy.setHours(0, 0, 0, 0);
+            const diffDays = Math.ceil(Math.abs(todayDate.getTime() - lastStudy.getTime()) / (1000 * 60 * 60 * 24));
+            if (diffDays <= 1) {
+              setCurrentStreak(streakFromDb);
+            } else {
+              setCurrentStreak(0); // Quá 1 ngày không học -> reset streak về 0
+            }
+          }
+          setMaxStreak(Math.max(profileData.max_streak || 0, streakFromDb));
+          setLastStudyDate(lastDate || '');
+
+          // Đồng bộ sessionProgress từ Cloud nếu có
+          const cloudProgress = typeof profileData.session_progress === 'number' ? profileData.session_progress : null;
+          if (cloudProgress !== null && cloudProgress >= 0) {
+            setSessionProgress(cloudProgress);
+            setLocalEngProgress(profileName, cloudProgress);
+          } else if (initialProgress > 0) {
+            setSessionProgress(initialProgress);
+            setLocalEngProgress(profileName, initialProgress);
+          }
         } else {
-          await ensureEngProfileOnSupabase(profileName, 'B1');
+          await ensureEngProfileOnSupabase(profileName, 'B1', initialProgress);
           setUserLevel('B1');
-          setCurrentStreak(1);
-          setMaxStreak(1);
-          setLastStudyDate(todayStr);
+          setCurrentStreak(0);
+          setMaxStreak(0);
+          setLastStudyDate('');
+          setSessionProgress(initialProgress);
         }
 
         // 2. Fetch history từ Cloud & Union Merge theo nội dung câu tiếng Việt
@@ -1144,19 +1210,26 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
     
     const newSessionProgress = sessionProgress + 1;
     setSessionProgress(newSessionProgress);
+    setLocalEngProgress(activeProfile, newSessionProgress);
 
-    if (hasCloud && supabase && streakChanged) {
+    if (hasCloud && supabase) {
       try {
-        await supabase.from('ai_english_profiles').upsert({
+        const payload: any = {
           profile_name: activeProfile,
           user_level: userLevel,
           current_streak: newStreak,
           max_streak: newMaxStreak,
           last_study_date: newLastStudyDate,
+          session_progress: newSessionProgress,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'profile_name' });
+        };
+        const { error } = await supabase.from('ai_english_profiles').upsert(payload, { onConflict: 'profile_name' });
+        if (error && error.message?.includes('session_progress')) {
+          delete payload.session_progress;
+          await supabase.from('ai_english_profiles').upsert(payload, { onConflict: 'profile_name' });
+        }
       } catch (e) {
-        console.error(e);
+        console.error('Error updating progress in Supabase:', e);
       }
     }
     
@@ -1312,14 +1385,20 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
 
     if (hasCloud && supabase) {
       try {
-        await supabase.from('ai_english_profiles').upsert({
+        const payload: any = {
           profile_name: activeProfile,
           user_level: userLevel,
           current_streak: 1,
           max_streak: Math.max(maxStreak, 1),
           last_study_date: today,
+          session_progress: sessionProgress,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'profile_name' });
+        };
+        const { error } = await supabase.from('ai_english_profiles').upsert(payload, { onConflict: 'profile_name' });
+        if (error && error.message?.includes('session_progress')) {
+          delete payload.session_progress;
+          await supabase.from('ai_english_profiles').upsert(payload, { onConflict: 'profile_name' });
+        }
       } catch (e) {
         console.error(e);
       }
@@ -1401,7 +1480,9 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
   const clearHistory = async () => {
     setStudyHistory([]);
     setCurrentStreak(0);
+    setSessionProgress(0);
     setLocalEngData(`ai_eng_history_${activeProfile}`, []);
+    setLocalEngProgress(activeProfile, 0);
 
     if (hasCloud && supabase) {
       try {
@@ -1410,10 +1491,19 @@ Trả về dữ liệu dưới dạng JSON đúng cấu trúc yêu cầu.`;
           .delete()
           .eq('profile_name', activeProfile);
 
-        await supabase
+        const updatePayload: any = { current_streak: 0, session_progress: 0, updated_at: new Date().toISOString() };
+        const { error } = await supabase
           .from('ai_english_profiles')
-          .update({ current_streak: 0, updated_at: new Date().toISOString() })
+          .update(updatePayload)
           .eq('profile_name', activeProfile);
+
+        if (error && error.message?.includes('session_progress')) {
+          delete updatePayload.session_progress;
+          await supabase
+            .from('ai_english_profiles')
+            .update(updatePayload)
+            .eq('profile_name', activeProfile);
+        }
       } catch (e) {
         console.error(e);
       }

@@ -57,8 +57,12 @@ CREATE TABLE IF NOT EXISTS public.ai_english_profiles (
     current_streak INTEGER DEFAULT 0,
     max_streak INTEGER DEFAULT 0,
     last_study_date TEXT,
+    session_progress INTEGER DEFAULT 0,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc'::text, now()) NOT NULL
 );
+
+-- Chạy lệnh này nếu đã tạo bảng từ trước để bổ sung cột session_progress:
+ALTER TABLE public.ai_english_profiles ADD COLUMN IF NOT EXISTS session_progress INTEGER DEFAULT 0;
 
 -- 6. Bảng lịch sử dịch câu AI English (ai_english_history)
 CREATE TABLE IF NOT EXISTS public.ai_english_history (
