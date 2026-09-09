@@ -17,6 +17,17 @@ export function getApiKeysPool(): string[] {
   const keysStr = process.env.AI_API_KEYS || process.env.OPENROUTER_API_KEYS || '';
   const parsedKeys = keysStr.split(/[\n,;]+/).map(k => k.trim()).filter(Boolean);
 
+  // AgentRouter keys: hỗ trợ AGENTROUTER_API_KEY hoặc AGENT_ROUTER_API_KEY
+  const agentRouterDirect = [
+    process.env.AGENTROUTER_API_KEY,
+    process.env.AGENT_ROUTER_API_KEY,
+  ].map(k => (k || '').trim()).filter(Boolean);
+
+  // Nếu cung cấp qua biến chuyên dụng AGENTROUTER_API_KEY, gắn tag agentrouter: để router nhận diện chính xác
+  const formattedAgentRouterKeys = agentRouterDirect.map(k =>
+    k.startsWith('agentrouter:') || k.startsWith('ar:') ? k : `agentrouter:${k}`
+  );
+
   const individualKeys = [
     process.env.GROQ_API_KEY,
     process.env.CEREBRAS_API_KEY,
@@ -24,13 +35,14 @@ export function getApiKeysPool(): string[] {
     process.env.OPENROUTER_API_KEY,
     process.env.GEMINI_API_KEY,
     process.env.DEEPSEEK_API_KEY,
+    ...formattedAgentRouterKeys,
   ].map(k => (k || '').trim()).filter(Boolean);
 
   return Array.from(new Set([...parsedKeys, ...individualKeys]));
 }
 
 // ----------------------------------------------------------------------------
-// 2. DANH SÁCH MODEL OPENROUTER ACTIVE VÀ KHẢ DỤNG
+// 2. DANH SÁCH MODEL OPENROUTER & AGENTROUTER ACTIVE VÀ KHẢ DỤNG
 // ----------------------------------------------------------------------------
 const OPENROUTER_CANDIDATE_MODELS = [
   process.env.OPENROUTER_MODEL,
@@ -40,6 +52,17 @@ const OPENROUTER_CANDIDATE_MODELS = [
   'deepseek/deepseek-chat:free',
   'mistralai/mistral-7b-instruct:free',
   'qwen/qwen-2.5-coder-32b-instruct:free'
+].filter(Boolean) as string[];
+
+const AGENTROUTER_CANDIDATE_MODELS = [
+  process.env.AGENTROUTER_MODEL,
+  process.env.AGENT_ROUTER_MODEL,
+  'deepseek-chat',
+  'gpt-4o-mini',
+  'claude-3-5-sonnet',
+  'deepseek-ai/DeepSeek-V3',
+  'meta-llama/llama-3.3-70b-instruct',
+  'gpt-4o'
 ].filter(Boolean) as string[];
 
 // ----------------------------------------------------------------------------
@@ -209,7 +232,63 @@ export async function executeCallWithKey(
     throw new Error(`OpenRouter (${lastError})`);
   }
 
-  // F. SILICONFLOW / DEEPSEEK DIRECT (sk-...)
+  // F. AGENT ROUTER (agentrouter.org) (Hỗ trợ tiền tố agentrouter:sk-... hoặc biến AGENTROUTER_API_KEY)
+  if (
+    key.startsWith('agentrouter:') ||
+    key.startsWith('ar:') ||
+    key.startsWith('ar-') ||
+    (key.startsWith('sk-') && process.env.USE_AGENTROUTER === 'true')
+  ) {
+    const rawKey = key.replace(/^(agentrouter:|ar:)/, '');
+    const agentRouterUrls = [
+      'https://agentrouter.org/v1/chat/completions',
+      'https://co.agentrouter.org/v1/chat/completions'
+    ];
+
+    const messages = [];
+    if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
+    messages.push({ role: 'user', content: prompt });
+
+    let lastError = '';
+    for (const modelName of AGENTROUTER_CANDIDATE_MODELS) {
+      for (const endpointUrl of agentRouterUrls) {
+        try {
+          const res = await fetch(endpointUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${rawKey}`,
+              'HTTP-Referer': 'https://github.com/DoVanThien/DoVanThien.github.io',
+              'X-Title': 'AI English Mentor Pro'
+            },
+            body: JSON.stringify({
+              model: modelName,
+              messages,
+              temperature: 0.7,
+              ...(wantJson ? { response_format: { type: 'json_object' } } : {})
+            })
+          });
+
+          if (res.ok) {
+            const routerData = await res.json();
+            let contentText = routerData.choices?.[0]?.message?.content || '{}';
+            contentText = contentText.replace(/<think>[\s\S]*?<\/think>/gi, '').trim();
+            return { text: contentText, raw: routerData };
+          } else {
+            const errData = await res.json().catch(() => ({}));
+            const errMsg = errData.error?.message || `Status ${res.status}`;
+            lastError = errMsg;
+            console.warn(`[AgentRouter Failover] ${endpointUrl} (Model: ${modelName}) failed: ${errMsg}. Trying next...`);
+          }
+        } catch (e: any) {
+          lastError = e.message || 'Fetch error';
+        }
+      }
+    }
+    throw new Error(`AgentRouter (${lastError})`);
+  }
+
+  // G. SILICONFLOW / DEEPSEEK DIRECT (sk-...)
   if (key.startsWith('sk-')) {
     const isSiliconFlow = key.length > 40 || process.env.USE_SILICONFLOW === 'true';
     const endpointUrl = isSiliconFlow
@@ -252,7 +331,7 @@ export async function executeAiCall(options: AICallOptions): Promise<AICallResul
 
   if (keysPool.length === 0) {
     throw new Error(
-      'Chưa cấu hình API Key nào trên máy chủ/Vercel (Cấu hình AI_API_KEYS hoặc OPENROUTER_API_KEY trong .env.local / Vercel Environment Variables).'
+      'Chưa cấu hình API Key nào trên máy chủ/Vercel (Cấu hình AGENTROUTER_API_KEY, AI_API_KEYS hoặc OPENROUTER_API_KEY trong .env.local / Vercel Environment Variables).'
     );
   }
 

@@ -29,11 +29,14 @@
 ## Bước 4: Cấu hình Biến môi trường (Quan trọng)
 Trước khi bấm nút Deploy, bạn cần cấu hình các biến môi trường để Vercel chạy được AI và kết nối Database:
 1. Cuộn xuống phần **Environment Variables**.
-2. Thêm lần lượt 3 biến sau (lấy giá trị từ file `.env.local` của bạn):
+2. Thêm các biến sau (tùy theo dịch vụ bạn sử dụng):
    - **Tên:** `NEXT_PUBLIC_SUPABASE_URL` -> **Giá trị:** *(URL supabase của bạn)*
    - **Tên:** `NEXT_PUBLIC_SUPABASE_ANON_KEY` -> **Giá trị:** *(Anon key supabase của bạn)*
-   - **Tên:** `GEMINI_API_KEY` -> **Giá trị:** *(API key Gemini của bạn)*
-3. Bấm **Add** cho từng biến.
+   - **Tên:** `GEMINI_API_KEY` -> **Giá trị:** *(API key Gemini của bạn - bắt đầu bằng AIza...)*
+   - **Tên:** `AGENTROUTER_API_KEY` -> **Giá trị:** *(API key từ agentrouter.org/console/token - bắt đầu bằng sk-...)*
+   - *(Tùy chọn)* **Tên:** `AGENTROUTER_MODEL` -> **Giá trị:** `deepseek-chat` (hoặc `gpt-4o-mini`, `claude-3-5-sonnet`)
+   - *(Tùy chọn nâng cao)* **Tên:** `AI_API_KEYS` -> Chứa nhiều API key xoay vòng cách nhau bởi dấu phẩy hoặc xuống dòng (hỗ trợ cả `agentrouter:sk-...`, `gsk_...`, `AIza...`, `csk-...`, v.v.).
+3. Bấm **Add** (hoặc **Save**) cho từng biến.
 
 ---
 
