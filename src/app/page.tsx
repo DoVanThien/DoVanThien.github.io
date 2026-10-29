@@ -42,7 +42,40 @@ export default function PortalPage() {
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 w-full animate-fadeInUp">
-          {/* App 1: AI English Mentor Pro */}
+          {/* App 1: Roommate Hub (Structured Design) */}
+          <Link
+            href="/roommate"
+            className="group relative flex flex-col p-10 rounded-[24px] border border-white/8 bg-slate-900/60 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-[#E88D72]/50 hover:shadow-[0_20px_40px_-15px_rgba(232,141,114,0.22)] overflow-hidden"
+            onMouseMove={handleMouseMove}
+            style={{
+              backgroundImage: 'radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(232,141,114,0.12), transparent 40%)'
+            } as React.CSSProperties}
+          >
+            <div className="w-16 h-16 rounded-[16px] flex items-center justify-center mb-8 bg-[#E88D72]/15 border border-[#E88D72]/30 text-[#E88D72] transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
+              <Home className="w-8 h-8" />
+            </div>
+            <span className="self-start text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#E88D72]/15 text-[#E88D72] mb-4">
+              Structured UI • Shared Living
+            </span>
+            <h2 className="text-2xl font-bold text-slate-100 mb-3 group-hover:text-white transition-colors">
+              Roommate Hub
+            </h2>
+            <p className="text-sm text-slate-400 font-light leading-relaxed mb-8 flex-grow">
+              Ứng dụng quản lý nhà trọ & sống chung: Lịch việc nhà xoay tua thông minh (kiểm soát làm bù & tích hộ), khấu trừ công nợ chéo tự động, mã VietQR và biểu đồ điện nước.
+            </p>
+            <div className="flex gap-1.5 flex-wrap mb-8 pt-4 border-t border-white/5">
+              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">Structured Design</span>
+              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">Chore Rotation</span>
+              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">Debt Simplifier</span>
+              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">VietQR & Charts</span>
+            </div>
+            <div className="flex items-center justify-between text-sm font-semibold p-3.5 px-5 rounded-[12px] bg-[#AD4A2A] text-white border border-[#AD4A2A] transition-all duration-300 group-hover:bg-[#963F23] group-hover:shadow-[0_4px_12px_rgba(232,141,114,0.4)]">
+              <span>Vào Phòng Chung</span>
+              <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
+            </div>
+          </Link>
+
+          {/* App 2: AI English Mentor Pro */}
           <Link
             href="/ai-english"
             className="group relative flex flex-col p-10 rounded-[24px] border border-white/8 bg-slate-900/60 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-indigo-500/40 hover:shadow-[0_20px_40px_-15px_rgba(99,102,241,0.15)] overflow-hidden"
@@ -76,7 +109,7 @@ export default function PortalPage() {
             </div>
           </Link>
 
-          {/* App 2: Poop Tracker */}
+          {/* App 3: Poop Tracker */}
           <Link
             href="/poop-tracker"
             className="group relative flex flex-col p-10 rounded-[24px] border border-white/8 bg-slate-900/60 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-emerald-500/40 hover:shadow-[0_20px_40px_-15px_rgba(16,185,129,0.15)] overflow-hidden"
@@ -109,7 +142,7 @@ export default function PortalPage() {
             </div>
           </Link>
 
-          {/* App 3: Demon Slayer Gallery */}
+          {/* App 4: Demon Slayer Gallery */}
           <a
             href="/hw1/index.html"
             className="group relative flex flex-col p-10 rounded-[24px] border border-white/8 bg-slate-900/60 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-rose-500/40 hover:shadow-[0_20px_40px_-15px_rgba(244,63,94,0.15)] overflow-hidden"
@@ -142,7 +175,7 @@ export default function PortalPage() {
             </div>
           </a>
 
-          {/* App 4: Tech & Game News Hub (Apple Design) */}
+          {/* App 5: Tech & Game News Hub (Apple Design) */}
           <Link
             href="/tech-news"
             className="group relative flex flex-col p-10 rounded-[24px] border border-white/8 bg-slate-900/60 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-[#0071e3]/40 hover:shadow-[0_20px_40px_-15px_rgba(0,113,227,0.25)] overflow-hidden"
@@ -171,39 +204,6 @@ export default function PortalPage() {
             </div>
             <div className="flex items-center justify-between text-sm font-semibold p-3.5 px-5 rounded-[12px] bg-[#0071e3] text-white border border-[#0071e3] transition-all duration-300 group-hover:bg-[#0066cc] group-hover:shadow-[0_4px_12px_rgba(0,113,227,0.4)]">
               <span>Đọc Tin Ngay</span>
-              <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
-            </div>
-          </Link>
-
-          {/* App 5: Roommate Hub (Structured Design) */}
-          <Link
-            href="/roommate"
-            className="group relative flex flex-col p-10 rounded-[24px] border border-white/8 bg-slate-900/60 backdrop-blur-2xl transition-all duration-500 hover:-translate-y-2 hover:border-[#E88D72]/50 hover:shadow-[0_20px_40px_-15px_rgba(232,141,114,0.22)] overflow-hidden"
-            onMouseMove={handleMouseMove}
-            style={{
-              backgroundImage: 'radial-gradient(800px circle at var(--x, 0px) var(--y, 0px), rgba(232,141,114,0.12), transparent 40%)'
-            } as React.CSSProperties}
-          >
-            <div className="w-16 h-16 rounded-[16px] flex items-center justify-center mb-8 bg-[#E88D72]/15 border border-[#E88D72]/30 text-[#E88D72] transition-all duration-500 group-hover:scale-110 group-hover:rotate-6">
-              <Home className="w-8 h-8" />
-            </div>
-            <span className="self-start text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#E88D72]/15 text-[#E88D72] mb-4">
-              Structured UI • Shared Living
-            </span>
-            <h2 className="text-2xl font-bold text-slate-100 mb-3 group-hover:text-white transition-colors">
-              Roommate Hub
-            </h2>
-            <p className="text-sm text-slate-400 font-light leading-relaxed mb-8 flex-grow">
-              Ứng dụng quản lý nhà trọ & sống chung: Lịch việc nhà xoay tua thông minh (kiểm soát làm bù & tích hộ), khấu trừ công nợ chéo tự động, mã VietQR và biểu đồ điện nước.
-            </p>
-            <div className="flex gap-1.5 flex-wrap mb-8 pt-4 border-t border-white/5">
-              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">Structured Design</span>
-              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">Chore Rotation</span>
-              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">Debt Simplifier</span>
-              <span className="text-[10px] text-slate-400 bg-white/5 border border-white/5 px-2.5 py-1 rounded">VietQR & Charts</span>
-            </div>
-            <div className="flex items-center justify-between text-sm font-semibold p-3.5 px-5 rounded-[12px] bg-[#AD4A2A] text-white border border-[#AD4A2A] transition-all duration-300 group-hover:bg-[#963F23] group-hover:shadow-[0_4px_12px_rgba(232,141,114,0.4)]">
-              <span>Vào Phòng Chung</span>
               <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />
             </div>
           </Link>
