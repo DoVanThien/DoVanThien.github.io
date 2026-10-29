@@ -55,3 +55,21 @@ Trước khi bấm nút Deploy, bạn cần cấu hình các biến môi trườ
    - Chọn **Thêm vào MH chính (Add to Home Screen)**.
    - Ứng dụng sẽ xuất hiện trên màn hình chính như một app native thực thụ!
 3. **Sử dụng:** Chọn cùng một **Tên hồ sơ (Profile)** trên các thiết bị, dữ liệu dịch bài và từ vựng sẽ tự động đồng bộ qua đám mây ngay lập tức nhờ Supabase.
+
+---
+
+## Roommate Hub (`/roommate`) — Bật đồng bộ cho cả phòng
+
+Roommate Hub dùng chung Supabase của dự án (`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`).
+
+1. Mở **Supabase Dashboard → SQL Editor → New query**.
+2. Dán toàn bộ nội dung file `supabase/roommate_schema.sql` và bấm **Run**.
+   - File chạy lại nhiều lần vẫn an toàn.
+   - Nếu trước đây đã chạy bản schema cũ (id kiểu UUID, mảng JSONB), file sẽ **tự nâng cấp bảng mà vẫn giữ nguyên dữ liệu**.
+3. (Khuyến nghị) **Database → Replication**: kiểm tra 6 bảng `roommate_*` đã nằm trong publication `supabase_realtime` — file SQL đã tự thêm, mục này chỉ để kiểm tra. Nếu Realtime tắt, app vẫn tự đồng bộ mỗi 45 giây và khi mở lại app.
+4. Mở `/roommate`, vào **Cần mua & cài đặt → Đồng bộ & dữ liệu**: dòng trạng thái phải là **“Đã đồng bộ với cả phòng”**.
+
+Ghi chú:
+- App hoạt động ngoại tuyến: thay đổi được lưu trên máy và tự gửi lên khi có mạng.
+- Không có đăng nhập (đúng thiết kế): ai có link app đều vào được phòng. Không nên chia sẻ link công khai.
+- Có thể “Thêm vào màn hình chính” trên iPhone/Android để dùng như một app (manifest riêng: `/roommate-manifest.json`).

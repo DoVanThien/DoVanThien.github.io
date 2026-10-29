@@ -1,0 +1,109 @@
+<h2>Tổng quan giao diện & Chọn phong cách điều hướng</h2>
+<p class="subtitle">Xem bản phác thảo luồng hoạt động chính (Việc nhà xoay tua & Khấu trừ công nợ) và chọn bố cục điều hướng bạn thích nhất</p>
+
+<div class="section">
+  <div class="label">1. Bản nháp các thành phần cốt lõi bạn đã chốt</div>
+  <div class="split" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 10px;">
+    
+    <!-- Mockup 1: Việc nhà xoay tua -->
+    <div class="mockup">
+      <div class="mockup-header">🧹 Việc Nhà & Luật Xoay Tua</div>
+      <div class="mockup-body" style="padding: 14px; font-size: 13px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(255,255,255,0.1);">
+          <div>
+            <strong>Dọn Khu Vực Chung</strong>
+            <div style="font-size:11px; opacity:0.7;">Chu kỳ: Hàng tuần • Vòng: Minh → Lan → Hùng</div>
+          </div>
+          <span style="background:#3b82f6; color:#fff; padding:3px 8px; border-radius:12px; font-size:11px; font-weight:600;">Lượt: Minh</span>
+        </div>
+        
+        <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
+          <label style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.04); padding:8px; border-radius:6px;">
+            <input type="checkbox" checked disabled>
+            <span style="text-decoration:line-through; opacity:0.7; flex:1;">Quét & lau phòng khách</span>
+            <span style="font-size:10px; background:rgba(16,185,129,0.2); color:#34d399; padding:2px 6px; border-radius:4px;">Minh đã tích</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; background:rgba(245,158,11,0.1); border:1px solid rgba(245,158,11,0.3); padding:8px; border-radius:6px;">
+            <input type="checkbox" checked disabled>
+            <span style="text-decoration:line-through; opacity:0.85; flex:1;">Cọ rửa nhà vệ sinh</span>
+            <span style="font-size:10px; background:rgba(245,158,11,0.25); color:#fbbf24; padding:2px 6px; border-radius:4px;">⚡ Lan tích hộ</span>
+          </label>
+          <label style="display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.04); padding:8px; border-radius:6px;">
+            <input type="checkbox" disabled>
+            <span style="flex:1;">Đổ rác sinh hoạt</span>
+            <span style="font-size:10px; opacity:0.5;">Chưa xong</span>
+          </label>
+        </div>
+
+        <div style="background:rgba(239,68,68,0.12); border-left:3px solid #ef4444; padding:8px 10px; border-radius:4px; font-size:11.5px;">
+          ⚠️ <strong>Trạng thái đợt tới:</strong> Do có mục <em>Lan tích hộ</em> (và chưa xong 100%), tuần sau <strong>Minh</strong> vẫn giữ nguyên đầu việc này!
+        </div>
+      </div>
+    </div>
+
+    <!-- Mockup 2: Chi tiêu & Khấu trừ công nợ -->
+    <div class="mockup">
+      <div class="mockup-header">💸 Khấu Trừ Công Nợ & Hóa Đơn Cố Định</div>
+      <div class="mockup-body" style="padding: 14px; font-size: 13px;">
+        <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.25); padding:10px; border-radius:8px; margin-bottom:12px;">
+          <div style="font-size:11px; text-transform:uppercase; letter-spacing:0.5px; opacity:0.8; margin-bottom:6px;">⚡ Tối giản giao dịch (Đã cấn trừ chéo)</div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+            <span><strong>Hùng</strong> chuyển cho <strong>Minh</strong></span>
+            <strong style="color:#34d399;">420.000đ</strong>
+          </div>
+          <div style="display:flex; gap:6px; margin-top:8px;">
+            <button class="mock-button" style="flex:1; font-size:11px; padding:5px 8px; background:#3b82f6; color:white; border:none; border-radius:4px;">📱 Hiện mã VietQR</button>
+            <button class="mock-button" style="flex:1; font-size:11px; padding:5px 8px; background:rgba(255,255,255,0.1); color:white; border:none; border-radius:4px;">✅ Đã thanh toán</button>
+          </div>
+        </div>
+
+        <div style="font-size:11.5px; font-weight:600; margin-bottom:6px; opacity:0.8;">📊 Hóa đơn cố định tháng 10 (Tự cộng vào nợ chung)</div>
+        <div style="display:flex; gap:8px; margin-bottom:8px;">
+          <div style="flex:1; background:rgba(255,255,255,0.04); padding:8px; border-radius:6px;">
+            <div style="font-size:11px; opacity:0.7;">⚡ Tiền điện</div>
+            <div style="font-weight:bold; margin:2px 0;">960.000đ</div>
+            <div style="font-size:10px; color:#f87171;">▲ +12% vs T9</div>
+          </div>
+          <div style="flex:1; background:rgba(255,255,255,0.04); padding:8px; border-radius:6px;">
+            <div style="font-size:11px; opacity:0.7;">💧 Tiền nước</div>
+            <div style="font-weight:bold; margin:2px 0;">180.000đ</div>
+            <div style="font-size:10px; color:#34d399;">▼ -5% vs T9</div>
+          </div>
+        </div>
+        <div style="font-size:11px; opacity:0.65; text-align:center;">+ Biểu đồ đường/cột so sánh biến động 6-12 tháng</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="section">
+  <div class="label">2. Chọn bố cục màn hình chính (Navigation Layout)</div>
+  <p style="font-size:13px; opacity:0.8; margin-bottom:12px;">Vì mọi người trong trọ chủ yếu mở bằng điện thoại (nhưng đôi khi xem trên laptop), bạn thích kiểu bố cục nào hơn?</p>
+
+  <div class="options">
+    <div class="option" data-choice="layout-tabs" onclick="toggleSelect(this)">
+      <div class="letter">A</div>
+      <div class="content">
+        <h3>App Di Động 4 Tab Đáy (Mobile-First Bottom Tabs) — Khuyên dùng</h3>
+        <p>Tối ưu cho thao tác 1 ngón tay trên điện thoại, thanh điều hướng cố định ở đáy màn hình chia làm 4 khu vực rõ ràng: <strong>1. Việc nhà & Lịch</strong> • <strong>2. Chi tiêu & Công nợ</strong> • <strong>3. Hóa đơn cố định (Chart)</strong> • <strong>4. Cần mua & Cài đặt</strong>. Trên máy tính tự động chuyển thành thanh menu bên trái.</p>
+      </div>
+    </div>
+
+    <div class="option" data-choice="layout-dashboard" onclick="toggleSelect(this)">
+      <div class="letter">B</div>
+      <div class="content">
+        <h3>Bảng Điều Khiển Tổng Hợp (All-in-One Dashboard)</h3>
+        <p>Vào app thấy ngay một trang tổng quan duy nhất gồm: <em>Việc của tôi hôm nay + Số tiền tôi đang nợ/được nhận + Đồ cần mua gấp</em>, bấm vào từng thẻ mới mở rộng ra chi tiết lịch hoặc biểu đồ.</p>
+      </div>
+    </div>
+
+    <div class="option" data-choice="layout-hybrid" onclick="toggleSelect(this)">
+      <div class="letter">C</div>
+      <div class="content">
+        <h3>Kết hợp: Trang chủ Tóm tắt nhanh + Các Tab chuyên biệt</h3>
+        <p>Có thanh Tab ở dưới nhưng Tab đầu tiên là <strong>Tổng quan phòng (Home)</strong> tóm tắt việc đến hạn & nợ hiện tại của riêng người đang mở máy, kèm các tab con <strong>Việc nhà</strong>, <strong>Chi tiêu</strong>, <strong>Điện Nước</strong>.</p>
+      </div>
+    </div>
+  </div>
+</div>
